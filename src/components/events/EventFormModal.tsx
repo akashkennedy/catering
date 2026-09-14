@@ -119,9 +119,11 @@ export function EventFormModal({ opened, event, onClose }: EventFormModalProps) 
       const headcountChanged = event.headcount !== values.headcount;
       updateEvent(event.id, {
         ...input,
-        employees: event.employees,
+        employees: event.employees ?? [],
         ingredients:
-          templateChanged || headcountChanged ? scaledIngredients : event.ingredients,
+          templateChanged || headcountChanged
+            ? scaledIngredients
+            : event.ingredients ?? [],
       });
     } else {
       addEvent(input);

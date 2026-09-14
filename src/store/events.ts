@@ -103,8 +103,9 @@ export const useEventsStore = create<EventsState>()(
         const state = persistedState as EventsState;
         return {
           ...state,
-          events: state.events.map((event) => ({
+          events: (state.events ?? []).map((event) => ({
             ...event,
+            ingredients: event.ingredients ?? [],
             employees: event.employees ?? [],
           })),
         };

@@ -55,6 +55,9 @@ export function EventDetail() {
     label: template.name,
   }));
 
+  const eventIngredients = event.ingredients ?? [];
+  const eventEmployees = event.employees ?? [];
+
   const update = (patch: {
     headcount?: number;
     templateId?: string | null;
@@ -70,8 +73,8 @@ export function EventDetail() {
       status: event.status,
       templateId: event.templateId,
       clientPaymentStatus: event.clientPaymentStatus,
-      ingredients: event.ingredients,
-      employees: event.employees,
+      ingredients: eventIngredients,
+      employees: eventEmployees,
       ...patch,
     });
   };
@@ -91,14 +94,14 @@ export function EventDetail() {
 
   const handleLineChange = (lineId: string, patch: { qty?: number; price?: number }) => {
     update({
-      ingredients: event.ingredients.map((line) =>
+      ingredients: eventIngredients.map((line) =>
         line.id === lineId ? { ...line, ...patch } : line
       ),
     });
   };
 
   const assignableEmployees = masterEmployees.filter(
-    (employee) => !event.employees.some((line) => line.employeeId === employee.id)
+    (employee) => !eventEmployees.some((line) => line.employeeId === employee.id)
   );
 
   const handleAddAssigned = (employeeId: string) => {
@@ -106,7 +109,7 @@ export function EventDetail() {
     if (!employee) return;
     update({
       employees: [
-        ...event.employees,
+        ...eventEmployees,
         {
           id: crypto.randomUUID(),
           employeeId: employee.id,
@@ -127,7 +130,7 @@ export function EventDetail() {
   }) => {
     update({
       employees: [
-        ...event.employees,
+        ...eventEmployees,
         {
           id: crypto.randomUUID(),
           employeeId: input.employeeId,
@@ -142,19 +145,19 @@ export function EventDetail() {
 
   const handleEmployeeLineChange = (lineId: string, patch: { toPay?: number; paid?: number }) => {
     update({
-      employees: event.employees.map((line) =>
+      employees: eventEmployees.map((line) =>
         line.id === lineId ? { ...line, ...patch } : line
       ),
     });
   };
 
   const handleEmployeeRemove = (lineId: string) => {
-    update({ employees: event.employees.filter((line) => line.id !== lineId) });
+    update({ employees: eventEmployees.filter((line) => line.id !== lineId) });
   };
 
-  const runningTotal = event.ingredients.reduce((sum, line) => sum + line.price, 0);
-  const totalToPay = event.employees.reduce((sum, line) => sum + line.toPay, 0);
-  const totalPaid = event.employees.reduce((sum, line) => sum + line.paid, 0);
+  const runningTotal = eventIngredients.reduce((sum, line) => sum + line.price, 0);
+  const totalToPay = eventEmployees.reduce((sum, line) => sum + line.toPay, 0);
+  const totalPaid = eventEmployees.reduce((sum, line) => sum + line.paid, 0);
   const totalPending = totalToPay - totalPaid;
 
   return (
@@ -208,7 +211,7 @@ export function EventDetail() {
         </Tabs.List>
 
         <Tabs.Panel value="ingredients" pt="md">
-          {event.ingredients.length === 0 ? (
+          {eventIngredients.length === 0 ? (
             <Text c="dimmed">
               No ingredients yet. Select a template and set a headcount to generate the scaled
               ingredient list.
@@ -216,12 +219,12 @@ export function EventDetail() {
           ) : (
             <Stack gap="md">
               <EventIngredientTable
-                lines={event.ingredients}
+                lines={eventIngredients}
                 ingredients={ingredients}
                 onLineChange={handleLineChange}
               />
               <EventIngredientCards
-                lines={event.ingredients}
+                lines={eventIngredients}
                 ingredients={ingredients}
                 onLineChange={handleLineChange}
               />
@@ -268,19 +271,19 @@ export function EventDetail() {
               Default rate is pre-filled from the master list and can be edited per event.
             </Text>
 
-            {event.employees.length === 0 ? (
+            {eventEmployees.length === 0 ? (
               <Text c="dimmed">
                 No employees assigned yet. Assign an existing employee or add a one-off.
               </Text>
             ) : (
               <Stack gap="md">
                 <EventEmployeeTable
-                  lines={event.employees}
+                  lines={eventEmployees}
                   onLineChange={handleEmployeeLineChange}
                   onRemove={handleEmployeeRemove}
                 />
                 <EventEmployeeCards
-                  lines={event.employees}
+                  lines={eventEmployees}
                   onLineChange={handleEmployeeLineChange}
                   onRemove={handleEmployeeRemove}
                 />

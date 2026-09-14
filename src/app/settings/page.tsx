@@ -1,9 +1,14 @@
-import { Title } from "@mantine/core";
+"use client";
+
+import { SettingsPanel } from "@/components/settings/SettingsPanel";
+import { useHydrated } from "@/hooks/useHydrated";
 
 export default function SettingsPage() {
-  return (
-    <div>
-      <Title order={1}>Settings</Title>
-    </div>
-  );
+  const hydrated = useHydrated();
+
+  if (!hydrated) {
+    return null;
+  }
+
+  return <SettingsPanel />;
 }

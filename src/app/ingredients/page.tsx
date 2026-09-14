@@ -1,9 +1,14 @@
-import { Title } from "@mantine/core";
+"use client";
+
+import { IngredientsManager } from "@/components/ingredients/IngredientsManager";
+import { useHydrated } from "@/hooks/useHydrated";
 
 export default function IngredientsPage() {
-  return (
-    <div>
-      <Title order={1}>Ingredients</Title>
-    </div>
-  );
+  const hydrated = useHydrated();
+
+  if (!hydrated) {
+    return null;
+  }
+
+  return <IngredientsManager />;
 }

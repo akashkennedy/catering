@@ -1,9 +1,14 @@
-import { Title } from "@mantine/core";
+"use client";
+
+import { VendorsManager } from "@/components/vendors/VendorsManager";
+import { useHydrated } from "@/hooks/useHydrated";
 
 export default function VendorsPage() {
-  return (
-    <div>
-      <Title order={1}>Vendors</Title>
-    </div>
-  );
+  const hydrated = useHydrated();
+
+  if (!hydrated) {
+    return null;
+  }
+
+  return <VendorsManager />;
 }

@@ -1,0 +1,64 @@
+"use client";
+
+import { ActionIcon, Group, Table } from "@mantine/core";
+import { Pencil, Trash } from "lucide-react";
+
+import type { FoodTemplate } from "@/store/templates";
+
+type TemplateTableProps = {
+  templates: FoodTemplate[];
+  onEdit: (template: FoodTemplate) => void;
+  onDelete: (template: FoodTemplate) => void;
+};
+
+export function TemplateTable({ templates, onEdit, onDelete }: TemplateTableProps) {
+  return (
+    <div className="hidden sm:block">
+      <Table striped highlightOnHover withTableBorder>
+        <Table.Thead>
+          <Table.Tr>
+            <Table.Th>Name</Table.Th>
+            <Table.Th>Dishes</Table.Th>
+            <Table.Th>Ingredients</Table.Th>
+            <Table.Th>Actions</Table.Th>
+          </Table.Tr>
+        </Table.Thead>
+        <Table.Tbody>
+          {templates.map((template) => {
+            const dishCount = template.dishes.length;
+            const ingredientCount = template.dishes.reduce(
+              (sum, dish) => sum + dish.ingredients.length,
+              0
+            );
+            return (
+              <Table.Tr key={template.id}>
+                <Table.Td>{template.name}</Table.Td>
+                <Table.Td>{dishCount}</Table.Td>
+                <Table.Td>{ingredientCount}</Table.Td>
+                <Table.Td>
+                  <Group gap="xs">
+                    <ActionIcon
+                      variant="subtle"
+                      aria-label={`Edit ${template.name}`}
+                      onClick={() => onEdit(template)}
+                    >
+                      <Pencil size={16} />
+                    </ActionIcon>
+                    <ActionIcon
+                      variant="subtle"
+                      color="red"
+                      aria-label={`Delete ${template.name}`}
+                      onClick={() => onDelete(template)}
+                    >
+                      <Trash size={16} />
+                    </ActionIcon>
+                  </Group>
+                </Table.Td>
+              </Table.Tr>
+            );
+          })}
+        </Table.Tbody>
+      </Table>
+    </div>
+  );
+}

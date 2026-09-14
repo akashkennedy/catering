@@ -1,9 +1,14 @@
-import { Title } from "@mantine/core";
+"use client";
+
+import { TemplatesManager } from "@/components/templates/TemplatesManager";
+import { useHydrated } from "@/hooks/useHydrated";
 
 export default function TemplatesPage() {
-  return (
-    <div>
-      <Title order={1}>Templates</Title>
-    </div>
-  );
+  const hydrated = useHydrated();
+
+  if (!hydrated) {
+    return null;
+  }
+
+  return <TemplatesManager />;
 }

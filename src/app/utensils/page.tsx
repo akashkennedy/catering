@@ -1,9 +1,14 @@
-import { Title } from "@mantine/core";
+"use client";
+
+import { UtensilsManager } from "@/components/utensils/UtensilsManager";
+import { useHydrated } from "@/hooks/useHydrated";
 
 export default function UtensilsPage() {
-  return (
-    <div>
-      <Title order={1}>Utensils</Title>
-    </div>
-  );
+  const hydrated = useHydrated();
+
+  if (!hydrated) {
+    return null;
+  }
+
+  return <UtensilsManager />;
 }

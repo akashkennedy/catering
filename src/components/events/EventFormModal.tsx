@@ -15,7 +15,9 @@ import { z } from "zod";
 import { useEffect } from "react";
 
 import { useTemplatesStore } from "@/store/templates";
+import { useIngredientsStore } from "@/store/ingredients";
 import {
+  buildScaledIngredients,
   useEventsStore,
   type CateringEvent,
   type CateringEventInput,
@@ -59,6 +61,7 @@ export function EventFormModal({ opened, event, onClose }: EventFormModalProps) 
   const addEvent = useEventsStore((state) => state.addEvent);
   const updateEvent = useEventsStore((state) => state.updateEvent);
   const templates = useTemplatesStore((state) => state.templates);
+  const ingredients = useIngredientsStore((state) => state.ingredients);
 
   const {
     register,
@@ -100,9 +103,28 @@ export function EventFormModal({ opened, event, onClose }: EventFormModalProps) 
   }));
 
   const onSubmit = (values: EventFormValues) => {
-    const input: CateringEventInput = values;
+    const selectedTemplate = templates.find((template) => template.id === values.templateId) ?? null;
+    const scaledIngredients = buildScaledIngredients(
+      selectedTemplate,
+      ingredients,
+      values.headcount
+    );
+    const input: CateringEventInput = {
+      ...values,
+      ingredients: scaledIngredients,
+      employees: [],
+    };
     if (event) {
-      updateEvent(event.id, input);
+      const templateChanged = event.templateId !== values.templateId;
+      const headcountChanged = event.headcount !== values.headcount;
+      updateEvent(event.id, {
+        ...input,
+        employees: event.employees ?? [],
+        ingredients:
+          templateChanged || headcountChanged
+            ? scaledIngredients
+            : event.ingredients ?? [],
+      });
     } else {
       addEvent(input);
     }

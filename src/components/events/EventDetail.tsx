@@ -1,0 +1,329 @@
+"use client";
+
+import { useState } from "react";
+import { useParams } from "next/navigation";
+import Link from "next/link";
+import {
+  Anchor,
+  Button,
+  Group,
+  NumberInput,
+  Paper,
+  Select,
+  Stack,
+  Tabs,
+  Text,
+  Title,
+} from "@mantine/core";
+import { Plus, Salad, Users, UtensilsCrossed } from "lucide-react";
+
+import { EventEmployeeCards } from "./EventEmployeeCards";
+import { EventEmployeeFormModal } from "./EventEmployeeFormModal";
+import { EventEmployeeTable } from "./EventEmployeeTable";
+import { EventIngredientCards } from "./EventIngredientCards";
+import { EventIngredientTable } from "./EventIngredientTable";
+import { useEventsStore, buildScaledIngredients } from "@/store/events";
+import { useEmployeesStore } from "@/store/employees";
+import { useIngredientsStore } from "@/store/ingredients";
+import { useTemplatesStore } from "@/store/templates";
+
+export function EventDetail() {
+  const params = useParams<{ id: string }>();
+  const id = params.id;
+  const event = useEventsStore((state) => state.events.find((item) => item.id === id));
+  const updateEvent = useEventsStore((state) => state.updateEvent);
+  const templates = useTemplatesStore((state) => state.templates);
+  const ingredients = useIngredientsStore((state) => state.ingredients);
+  const masterEmployees = useEmployeesStore((state) => state.employees);
+  const [employeeFormOpened, setEmployeeFormOpened] = useState(false);
+  const [assignValue, setAssignValue] = useState<string | null>(null);
+
+  if (!event) {
+    return (
+      <Stack gap="md">
+        <Title order={1}>Event Detail</Title>
+        <Text c="dimmed">Event not found.</Text>
+        <Anchor component={Link} href="/events">
+          Back to events
+        </Anchor>
+      </Stack>
+    );
+  }
+
+  const templateOptions = templates.map((template) => ({
+    value: template.id,
+    label: template.name,
+  }));
+
+  const eventIngredients = event.ingredients ?? [];
+  const eventEmployees = event.employees ?? [];
+
+  const update = (patch: {
+    headcount?: number;
+    templateId?: string | null;
+    ingredients?: typeof event.ingredients;
+    employees?: typeof event.employees;
+  }) => {
+    updateEvent(event.id, {
+      name: event.name,
+      phone: event.phone,
+      location: event.location,
+      headcount: event.headcount,
+      date: event.date,
+      status: event.status,
+      templateId: event.templateId,
+      clientPaymentStatus: event.clientPaymentStatus,
+      ingredients: eventIngredients,
+      employees: eventEmployees,
+      ...patch,
+    });
+  };
+
+  const handleHeadcountChange = (headcount: number) => {
+    const template = templates.find((item) => item.id === event.templateId) ?? null;
+    update({ headcount, ingredients: buildScaledIngredients(template, ingredients, headcount) });
+  };
+
+  const handleTemplateChange = (templateId: string | null) => {
+    const template = templates.find((item) => item.id === templateId) ?? null;
+    update({
+      templateId,
+      ingredients: buildScaledIngredients(template, ingredients, event.headcount),
+    });
+  };
+
+  const handleLineChange = (lineId: string, patch: { qty?: number; price?: number }) => {
+    update({
+      ingredients: eventIngredients.map((line) =>
+        line.id === lineId ? { ...line, ...patch } : line
+      ),
+    });
+  };
+
+  const assignableEmployees = masterEmployees.filter(
+    (employee) => !eventEmployees.some((line) => line.employeeId === employee.id)
+  );
+
+  const handleAddAssigned = (employeeId: string) => {
+    const employee = masterEmployees.find((item) => item.id === employeeId);
+    if (!employee) return;
+    update({
+      employees: [
+        ...eventEmployees,
+        {
+          id: crypto.randomUUID(),
+          employeeId: employee.id,
+          name: employee.name,
+          phone: employee.phone,
+          toPay: employee.defaultRate,
+          paid: 0,
+        },
+      ],
+    });
+  };
+
+  const handleAddAdhoc = (input: {
+    employeeId: string | null;
+    name: string;
+    phone: string;
+    toPay: number;
+  }) => {
+    update({
+      employees: [
+        ...eventEmployees,
+        {
+          id: crypto.randomUUID(),
+          employeeId: input.employeeId,
+          name: input.name,
+          phone: input.phone,
+          toPay: input.toPay,
+          paid: 0,
+        },
+      ],
+    });
+  };
+
+  const handleEmployeeLineChange = (lineId: string, patch: { toPay?: number; paid?: number }) => {
+    update({
+      employees: eventEmployees.map((line) =>
+        line.id === lineId ? { ...line, ...patch } : line
+      ),
+    });
+  };
+
+  const handleEmployeeRemove = (lineId: string) => {
+    update({ employees: eventEmployees.filter((line) => line.id !== lineId) });
+  };
+
+  const runningTotal = eventIngredients.reduce((sum, line) => sum + line.price, 0);
+  const totalToPay = eventEmployees.reduce((sum, line) => sum + line.toPay, 0);
+  const totalPaid = eventEmployees.reduce((sum, line) => sum + line.paid, 0);
+  const totalPending = totalToPay - totalPaid;
+
+  return (
+    <Stack gap="md">
+      <Group justify="space-between" align="baseline">
+        <div>
+          <Title order={1}>{event.name}</Title>
+          <Text size="sm" c="dimmed">
+            {event.date || "No date"} · {event.headcount} guests
+          </Text>
+        </div>
+        <Anchor component={Link} href="/events" size="sm">
+          Back to events
+        </Anchor>
+      </Group>
+
+      <Paper withBorder p="md">
+        <Stack gap="md">
+          <Text fw={600}>Event details</Text>
+          <Group gap="md" wrap="wrap">
+            <NumberInput
+              label="Headcount"
+              value={event.headcount}
+              min={1}
+              allowNegative={false}
+              w={160}
+              onChange={(value) => handleHeadcountChange(typeof value === "number" ? value : 1)}
+            />
+            <Select
+              label="Template"
+              placeholder="Select a template"
+              data={templateOptions}
+              searchable
+              clearable
+              w={260}
+              value={event.templateId ?? null}
+              onChange={(value) => handleTemplateChange(value ?? null)}
+            />
+          </Group>
+          <Text size="sm" c="dimmed">
+            Changing the headcount or template recalculates the ingredient list below.
+          </Text>
+        </Stack>
+      </Paper>
+
+      <Tabs defaultValue="ingredients">
+        <Tabs.List>
+          <Tabs.Tab value="ingredients" leftSection={<Salad size={16} />}>
+            Ingredients
+          </Tabs.Tab>
+          <Tabs.Tab value="employees" leftSection={<Users size={16} />}>
+            Employees
+          </Tabs.Tab>
+          <Tabs.Tab value="utensils" leftSection={<UtensilsCrossed size={16} />}>
+            Utensils
+          </Tabs.Tab>
+        </Tabs.List>
+
+        <Tabs.Panel value="ingredients" pt="md">
+          {eventIngredients.length === 0 ? (
+            <Text c="dimmed">
+              No ingredients yet. Select a template and set a headcount to generate the scaled
+              ingredient list.
+            </Text>
+          ) : (
+            <Stack gap="md">
+              <EventIngredientTable
+                lines={eventIngredients}
+                ingredients={ingredients}
+                onLineChange={handleLineChange}
+              />
+              <EventIngredientCards
+                lines={eventIngredients}
+                ingredients={ingredients}
+                onLineChange={handleLineChange}
+              />
+              <Paper withBorder p="md">
+                <Group justify="space-between" wrap="nowrap">
+                  <Text fw={600}>Running total</Text>
+                  <Text fw={700}>₹{runningTotal.toFixed(2)}</Text>
+                </Group>
+              </Paper>
+            </Stack>
+          )}
+        </Tabs.Panel>
+
+        <Tabs.Panel value="employees" pt="md">
+          <Stack gap="md">
+            <Group gap="md" align="flex-end" wrap="wrap">
+              <Select
+                label="Assign existing employee"
+                placeholder="Pick an employee"
+                data={assignableEmployees.map((employee) => ({
+                  value: employee.id,
+                  label: employee.phone
+                    ? `${employee.name} (${employee.phone})`
+                    : employee.name,
+                }))}
+                searchable
+                clearable
+                w={280}
+                value={assignValue}
+                onChange={(value) => {
+                  setAssignValue(null);
+                  if (value) handleAddAssigned(value);
+                }}
+              />
+              <Button
+                leftSection={<Plus size={18} />}
+                variant="default"
+                onClick={() => setEmployeeFormOpened(true)}
+              >
+                Add one-off employee
+              </Button>
+            </Group>
+            <Text size="xs" c="dimmed">
+              Default rate is pre-filled from the master list and can be edited per event.
+            </Text>
+
+            {eventEmployees.length === 0 ? (
+              <Text c="dimmed">
+                No employees assigned yet. Assign an existing employee or add a one-off.
+              </Text>
+            ) : (
+              <Stack gap="md">
+                <EventEmployeeTable
+                  lines={eventEmployees}
+                  onLineChange={handleEmployeeLineChange}
+                  onRemove={handleEmployeeRemove}
+                />
+                <EventEmployeeCards
+                  lines={eventEmployees}
+                  onLineChange={handleEmployeeLineChange}
+                  onRemove={handleEmployeeRemove}
+                />
+                <Paper withBorder p="md">
+                  <Stack gap={6}>
+                    <Group justify="space-between" wrap="nowrap">
+                      <Text fw={500}>Total to pay</Text>
+                      <Text fw={600}>₹{totalToPay.toFixed(2)}</Text>
+                    </Group>
+                    <Group justify="space-between" wrap="nowrap">
+                      <Text fw={500}>Total paid</Text>
+                      <Text fw={600}>₹{totalPaid.toFixed(2)}</Text>
+                    </Group>
+                    <Group justify="space-between" wrap="nowrap">
+                      <Text fw={600}>Total pending</Text>
+                      <Text fw={700}>₹{totalPending.toFixed(2)}</Text>
+                    </Group>
+                  </Stack>
+                </Paper>
+              </Stack>
+            )}
+
+            <EventEmployeeFormModal
+              opened={employeeFormOpened}
+              onClose={() => setEmployeeFormOpened(false)}
+              onAdd={handleAddAdhoc}
+            />
+          </Stack>
+        </Tabs.Panel>
+
+        <Tabs.Panel value="utensils" pt="md">
+          <Text c="dimmed">Utensils tab coming soon.</Text>
+        </Tabs.Panel>
+      </Tabs>
+    </Stack>
+  );
+}

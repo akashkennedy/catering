@@ -32,6 +32,12 @@
 @import "@mantine/core/styles/Stack.layer.css";
 @import "@mantine/core/styles/Button.layer.css";
 
+@import "@mantine/core/styles/Modal.layer.css";
+@import "@mantine/core/styles/NumberInput.layer.css";
+@import "@mantine/core/styles/Table.layer.css";
+@import "@mantine/core/styles/Card.layer.css";
+@import "@mantine/core/styles/SegmentedControl.layer.css";
+
 @theme inline {
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);

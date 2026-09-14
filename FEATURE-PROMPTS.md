@@ -1,14 +1,13 @@
 You are implementing ONE feature for the Catering CRM app. Refer to SPEC.md
 in this repo for full context on the data model, tech stack, and overall app.
 
-FEATURE: Project Scaffold
+FEATURE: Global Settings + Ingredient Master List
 
-Scope: Next.js 16.3 (App Router) + TypeScript project init, Tailwind, Mantine, Zustand, React Hook Form + Zod, Lucide React installed and configured. Base layout with nav shell (empty routes per SPEC.md §5). Git repo initialized with a .gitignore. Acceptance criteria:
-npm run dev runs with no errors
-Mantine theme provider wraps the app
-Empty pages exist for all routes in SPEC.md §5 (can just render a placeholder heading)
-Tailwind + Mantine don't visually conflict (test one styled button)
-Initial commit made
+Scope: SPEC.md §3.3, §3.7, §4.7. Ingredient CRUD (name, Tamil name, unit, global price) stored in Zustand+localStorage. Global Settings screen to edit prices and default language. Acceptance criteria:
+Can add/edit/delete an ingredient with all fields
+Data survives a page refresh (localStorage persistence working)
+Global settings screen lets you edit default language and see/edit ingredient prices
+Mobile: list becomes stacked cards below ~640px
 
 DO NOT:
 

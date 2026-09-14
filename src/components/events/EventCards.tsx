@@ -1,6 +1,7 @@
 "use client";
 
-import { ActionIcon, Badge, Card, Group, Stack, Text } from "@mantine/core";
+import { ActionIcon, Anchor, Badge, Card, Group, Stack, Text } from "@mantine/core";
+import Link from "next/link";
 import { Pencil, Trash } from "lucide-react";
 
 import type { CateringEvent, ClientPaymentStatus, EventStatus } from "@/store/events";
@@ -37,7 +38,9 @@ export function EventCards({ events, onEdit, onDelete }: EventCardsProps) {
         <Card key={event.id} withBorder padding="sm">
           <Group justify="space-between" align="flex-start" wrap="nowrap">
             <Stack gap={4}>
-              <Text fw={600}>{event.name}</Text>
+              <Anchor component={Link} href={`/events/${event.id}`} fw={600}>
+                {event.name}
+              </Anchor>
               <Group gap="xs">
                 <Badge color={STATUS_COLORS[event.status]} variant="light" size="sm">
                   {statusLabel(event.status)}

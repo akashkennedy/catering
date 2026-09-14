@@ -1,9 +1,14 @@
-import { Title } from "@mantine/core";
+"use client";
+
+import { EventDetail } from "@/components/events/EventDetail";
+import { useHydrated } from "@/hooks/useHydrated";
 
 export default function EventDetailPage() {
-  return (
-    <div>
-      <Title order={1}>Event Detail</Title>
-    </div>
-  );
+  const hydrated = useHydrated();
+
+  if (!hydrated) {
+    return null;
+  }
+
+  return <EventDetail />;
 }

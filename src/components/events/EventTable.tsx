@@ -1,6 +1,7 @@
 "use client";
 
-import { ActionIcon, Badge, Group, Table } from "@mantine/core";
+import { ActionIcon, Anchor, Badge, Group, Table } from "@mantine/core";
+import Link from "next/link";
 import { Pencil, Trash } from "lucide-react";
 
 import type { CateringEvent, ClientPaymentStatus, EventStatus } from "@/store/events";
@@ -47,7 +48,11 @@ export function EventTable({ events, onEdit, onDelete }: EventTableProps) {
         <Table.Tbody>
           {events.map((event) => (
             <Table.Tr key={event.id}>
-              <Table.Td>{event.name}</Table.Td>
+              <Table.Td>
+                <Anchor component={Link} href={`/events/${event.id}`} fw={500}>
+                  {event.name}
+                </Anchor>
+              </Table.Td>
               <Table.Td>{event.date || "—"}</Table.Td>
               <Table.Td>{event.headcount}</Table.Td>
               <Table.Td>

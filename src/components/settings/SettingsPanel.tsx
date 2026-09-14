@@ -43,7 +43,7 @@ export function SettingsPanel() {
           {ingredients.length === 0 ? (
             <Text c="dimmed">No ingredients yet. Add them from the Ingredients page.</Text>
           ) : (
-            ingredients.map((ingredient) => (
+            ingredients.map((ingredient, index) => (
               <Group key={ingredient.id} justify="space-between" wrap="nowrap" gap="md">
                 <Stack gap={0}>
                   <Text fw={500}>{ingredient.name}</Text>
@@ -54,6 +54,7 @@ export function SettingsPanel() {
                   )}
                 </Stack>
                 <NumberInput
+                  aria-label={`Global price for ${ingredient.name}, item ${index + 1}`}
                   w={120}
                   value={ingredient.globalPrice}
                   min={0}

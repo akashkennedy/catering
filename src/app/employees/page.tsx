@@ -1,9 +1,14 @@
-import { Title } from "@mantine/core";
+"use client";
+
+import { EmployeesManager } from "@/components/employees/EmployeesManager";
+import { useHydrated } from "@/hooks/useHydrated";
 
 export default function EmployeesPage() {
-  return (
-    <div>
-      <Title order={1}>Employees</Title>
-    </div>
-  );
+  const hydrated = useHydrated();
+
+  if (!hydrated) {
+    return null;
+  }
+
+  return <EmployeesManager />;
 }

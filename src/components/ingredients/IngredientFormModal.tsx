@@ -16,7 +16,10 @@ const ingredientSchema = z.object({
   name: z.string().trim().min(1, "Name is required"),
   tamilName: z.string().trim(),
   unit: z.string().trim().min(1, "Unit is required"),
-  globalPrice: z.coerce.number().min(0, "Price must be 0 or more"),
+  globalPrice: z
+    .coerce.number()
+    .finite("Price must be a finite number")
+    .min(0, "Price must be 0 or more"),
 });
 
 type IngredientFormValues = z.infer<typeof ingredientSchema>;
@@ -36,6 +39,7 @@ export function IngredientFormModal({ opened, ingredient, onClose }: IngredientF
     handleSubmit,
     reset,
     control,
+    setError,
     formState: { errors },
   } = useForm<IngredientFormValues>({
     resolver: zodResolver(ingredientSchema),
@@ -58,6 +62,14 @@ export function IngredientFormModal({ opened, ingredient, onClose }: IngredientF
   }, [opened, ingredient, reset]);
 
   const onSubmit = (values: IngredientFormValues) => {
+    if (!Number.isFinite(values.globalPrice)) {
+      setError("globalPrice", {
+        type: "validate",
+        message: "Price must be a finite number",
+      });
+      return;
+    }
+
     const input: IngredientInput = values;
     if (ingredient) {
       updateIngredient(ingredient.id, input);

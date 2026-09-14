@@ -1,9 +1,6 @@
-import { Title } from "@mantine/core";
+import { EventsManager } from "@/components/events/EventsManager";
 
 export default function EventsPage() {
-  return (
-    <div>
-      <Title order={1}>Events</Title>
-    </div>
-  );
+  return <EventsManager />;
 }
+

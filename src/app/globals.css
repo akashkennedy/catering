@@ -1,0 +1,38 @@
+@layer theme, base, mantine, components, utilities;
+@import "tailwindcss/theme.css" layer(theme);
+@import "tailwindcss/preflight.css" layer(base);
+@import "tailwindcss/utilities.css" layer(utilities);
+
+@import "@mantine/core/styles/baseline.layer.css";
+@import "@mantine/core/styles/default-css-variables.layer.css";
+@import "@mantine/core/styles/global.layer.css";
+
+@import "@mantine/core/styles/ScrollArea.layer.css";
+@import "@mantine/core/styles/UnstyledButton.layer.css";
+@import "@mantine/core/styles/VisuallyHidden.layer.css";
+@import "@mantine/core/styles/Paper.layer.css";
+@import "@mantine/core/styles/Popover.layer.css";
+@import "@mantine/core/styles/CloseButton.layer.css";
+@import "@mantine/core/styles/Group.layer.css";
+@import "@mantine/core/styles/Loader.layer.css";
+@import "@mantine/core/styles/Overlay.layer.css";
+@import "@mantine/core/styles/ModalBase.layer.css";
+@import "@mantine/core/styles/Input.layer.css";
+@import "@mantine/core/styles/InlineInput.layer.css";
+@import "@mantine/core/styles/Flex.layer.css";
+@import "@mantine/core/styles/FloatingIndicator.layer.css";
+@import "@mantine/core/styles/ActionIcon.layer.css";
+@import "@mantine/core/styles/ThemeIcon.layer.css";
+
+@import "@mantine/core/styles/AppShell.layer.css";
+@import "@mantine/core/styles/Burger.layer.css";
+@import "@mantine/core/styles/NavLink.layer.css";
+@import "@mantine/core/styles/Title.layer.css";
+@import "@mantine/core/styles/Text.layer.css";
+@import "@mantine/core/styles/Stack.layer.css";
+@import "@mantine/core/styles/Button.layer.css";
+
+@theme inline {
+  --font-sans: var(--font-geist-sans);
+  --font-mono: var(--font-geist-mono);
+}

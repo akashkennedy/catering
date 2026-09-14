@@ -15,6 +15,15 @@ export type EventIngredientLine = {
   price: number;
 };
 
+export type EventEmployeeLine = {
+  id: string;
+  employeeId: string | null;
+  name: string;
+  phone: string;
+  toPay: number;
+  paid: number;
+};
+
 export type CateringEvent = {
   id: string;
   name: string;
@@ -26,6 +35,7 @@ export type CateringEvent = {
   templateId: string | null;
   clientPaymentStatus: ClientPaymentStatus;
   ingredients: EventIngredientLine[];
+  employees: EventEmployeeLine[];
 };
 
 export type CateringEventInput = Omit<CateringEvent, "id">;
@@ -88,6 +98,17 @@ export const useEventsStore = create<EventsState>()(
     {
       name: "catering-events",
       storage: createJSONStorage(() => localStorage),
+      version: 1,
+      migrate: (persistedState) => {
+        const state = persistedState as EventsState;
+        return {
+          ...state,
+          events: state.events.map((event) => ({
+            ...event,
+            employees: event.employees ?? [],
+          })),
+        };
+      },
     }
   )
 );

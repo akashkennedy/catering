@@ -109,12 +109,17 @@ export function EventFormModal({ opened, event, onClose }: EventFormModalProps) 
       ingredients,
       values.headcount
     );
-    const input: CateringEventInput = { ...values, ingredients: scaledIngredients };
+    const input: CateringEventInput = {
+      ...values,
+      ingredients: scaledIngredients,
+      employees: [],
+    };
     if (event) {
       const templateChanged = event.templateId !== values.templateId;
       const headcountChanged = event.headcount !== values.headcount;
       updateEvent(event.id, {
         ...input,
+        employees: event.employees,
         ingredients:
           templateChanged || headcountChanged ? scaledIngredients : event.ingredients,
       });

@@ -12,7 +12,7 @@ export type EmployeeInput = Omit<Employee, "id">;
 
 type EmployeesState = {
   employees: Employee[];
-  addEmployee: (input: EmployeeInput) => void;
+  addEmployee: (input: EmployeeInput) => string;
   updateEmployee: (id: string, input: EmployeeInput) => void;
   deleteEmployee: (id: string) => void;
 };
@@ -21,10 +21,13 @@ export const useEmployeesStore = create<EmployeesState>()(
   persist(
     (set) => ({
       employees: [],
-      addEmployee: (input) =>
+      addEmployee: (input) => {
+        const id = crypto.randomUUID();
         set((state) => ({
-          employees: [...state.employees, { id: crypto.randomUUID(), ...input }],
-        })),
+          employees: [...state.employees, { id, ...input }],
+        }));
+        return id;
+      },
       updateEmployee: (id, input) =>
         set((state) => ({
           employees: state.employees.map((employee) =>

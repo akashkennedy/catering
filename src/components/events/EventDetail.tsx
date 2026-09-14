@@ -15,7 +15,7 @@ import {
   Text,
   Title,
 } from "@mantine/core";
-import { Plus } from "lucide-react";
+import { Plus, Salad, Users, UtensilsCrossed } from "lucide-react";
 
 import { EventEmployeeCards } from "./EventEmployeeCards";
 import { EventEmployeeFormModal } from "./EventEmployeeFormModal";
@@ -205,9 +205,15 @@ export function EventDetail() {
 
       <Tabs defaultValue="ingredients">
         <Tabs.List>
-          <Tabs.Tab value="ingredients">Ingredients</Tabs.Tab>
-          <Tabs.Tab value="employees">Employees</Tabs.Tab>
-          <Tabs.Tab value="utensils">Utensils</Tabs.Tab>
+          <Tabs.Tab value="ingredients" leftSection={<Salad size={16} />}>
+            Ingredients
+          </Tabs.Tab>
+          <Tabs.Tab value="employees" leftSection={<Users size={16} />}>
+            Employees
+          </Tabs.Tab>
+          <Tabs.Tab value="utensils" leftSection={<UtensilsCrossed size={16} />}>
+            Utensils
+          </Tabs.Tab>
         </Tabs.List>
 
         <Tabs.Panel value="ingredients" pt="md">

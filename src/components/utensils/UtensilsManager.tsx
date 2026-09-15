@@ -19,7 +19,7 @@ export function UtensilsManager() {
   return (
     <>
       <Group justify="space-between" mb="md">
-        <Title order={1}>Utensils</Title>
+        <Title order={1}>Rental</Title>
         <Button
           leftSection={<Plus size={18} />}
           onClick={() => {

@@ -15,7 +15,6 @@ import {
   CalendarDays,
   ClipboardList,
   CookingPot,
-  Handshake,
   LayoutDashboard,
   Settings,
   ShoppingBasket,
@@ -34,8 +33,7 @@ const NAV_ITEMS: NavItem[] = [
   { label: "Templates", href: "/templates", icon: ClipboardList },
   { label: "Ingredients", href: "/ingredients", icon: ShoppingBasket },
   { label: "Employees", href: "/employees", icon: UserRound },
-  { label: "Vendors", href: "/vendors", icon: Handshake },
-  { label: "Utensils", href: "/utensils", icon: CookingPot },
+  { label: "Rental", href: "/utensils", icon: CookingPot },
   { label: "Settings", href: "/settings", icon: Settings },
 ];
 

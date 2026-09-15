@@ -5,6 +5,7 @@ import { useParams } from "next/navigation";
 import Link from "next/link";
 import {
   Anchor,
+  Autocomplete,
   Button,
   Group,
   NumberInput,
@@ -31,7 +32,7 @@ import { useEmployeesStore } from "@/store/employees";
 import { useIngredientsStore } from "@/store/ingredients";
 import { useSettingsStore } from "@/store/settings";
 import { useTemplatesStore } from "@/store/templates";
-import { useVendorsStore } from "@/store/vendors";
+import { useVendorSuggestionsStore } from "@/store/vendorSuggestions";
 import { generateEventPdf } from "@/lib/pdf";
 import { formatINR } from "@/lib/format";
 import { formatPhone } from "@/lib/phone";
@@ -44,12 +45,13 @@ export function EventDetail() {
   const templates = useTemplatesStore((state) => state.templates);
   const ingredients = useIngredientsStore((state) => state.ingredients);
   const masterEmployees = useEmployeesStore((state) => state.employees);
-  const masterVendors = useVendorsStore((state) => state.vendors);
+  const vendorSuggestions = useVendorSuggestionsStore((state) => state.vendorSuggestions);
+  const addVendorSuggestion = useVendorSuggestionsStore((state) => state.addVendorSuggestion);
   const defaultLanguage = useSettingsStore((state) => state.defaultLanguage);
   const [employeeFormOpened, setEmployeeFormOpened] = useState(false);
   const [utensilFormOpened, setUtensilFormOpened] = useState(false);
   const [assignValue, setAssignValue] = useState<string | null>(null);
-  const [utensilVendorValue, setUtensilVendorValue] = useState<string | null>(null);
+  const [utensilVendorName, setUtensilVendorName] = useState("");
   const [pdfLang, setPdfLang] = useState<"en" | "ta">(defaultLanguage);
   const [generatingPdf, setGeneratingPdf] = useState(false);
 
@@ -181,15 +183,15 @@ export function EventDetail() {
     dateFrom: string;
     dateTo: string;
   }) => {
-    const vendor = masterVendors.find((v) => v.id === utensilVendorValue) ?? null;
+    const vendorName = utensilVendorName.trim() || "Unknown vendor";
+    addVendorSuggestion(vendorName);
     update({
       utensils: [
         ...eventUtensils,
         {
           id: crypto.randomUUID(),
-          vendorId: vendor?.id ?? null,
-          vendorName: vendor?.name ?? "Unknown vendor",
-          vendorPhone: vendor?.phone ?? "",
+          vendorName,
+          vendorPhone: "",
           utensilId: input.utensilId,
           utensilName: input.utensilName,
           qty: input.qty,
@@ -318,7 +320,7 @@ export function EventDetail() {
             Employees
           </Tabs.Tab>
           <Tabs.Tab value="utensils" leftSection={<UtensilsCrossed size={16} />}>
-            Utensils
+            Rental
           </Tabs.Tab>
         </Tabs.List>
 
@@ -429,37 +431,31 @@ export function EventDetail() {
         <Tabs.Panel value="utensils" pt="md">
           <Stack gap="md">
             <Group gap="md" align="flex-end" wrap="wrap">
-              <Select
-                label="Assign vendor"
-                placeholder="Pick a vendor"
-                data={masterVendors.map((vendor) => ({
-                  value: vendor.id,
-                  label: vendor.phone
-                    ? `${vendor.name} (${formatPhone(vendor.phone)})`
-                    : vendor.name,
-                }))}
-                searchable
-                clearable
+              <Autocomplete
+                label="Vendor"
+                placeholder="Type a vendor name"
+                data={vendorSuggestions}
                 w={280}
-                value={utensilVendorValue}
-                onChange={(value) => setUtensilVendorValue(value)}
+                value={utensilVendorName}
+                onChange={(value) => setUtensilVendorName(value)}
               />
               <Button
                 leftSection={<Plus size={18} />}
                 variant="default"
-                disabled={!utensilVendorValue}
+                disabled={!utensilVendorName.trim()}
                 onClick={() => setUtensilFormOpened(true)}
               >
                 Add utensil
               </Button>
             </Group>
             <Text size="xs" c="dimmed">
-              Select a vendor first, then add utensils with quantities and rental prices.
+              Vendor names are remembered from past entries. Add utensils with quantities and rental
+              prices.
             </Text>
 
             {eventUtensils.length === 0 ? (
               <Text c="dimmed">
-                No utensils assigned yet. Select a vendor and add utensils.
+                No rental items yet. Enter a vendor name and add utensils.
               </Text>
             ) : (
               <Stack gap="md">
@@ -477,7 +473,7 @@ export function EventDetail() {
                 />
                 <Paper withBorder p="md">
                   <Group justify="space-between" wrap="nowrap">
-                    <Text fw={600}>Total utensil cost</Text>
+                    <Text fw={600}>Total rental cost</Text>
                     <Text fw={700}>{formatINR(totalUtensilCost)}</Text>
                   </Group>
                 </Paper>

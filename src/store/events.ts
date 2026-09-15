@@ -26,7 +26,6 @@ export type EventEmployeeLine = {
 
 export type EventUtensilLine = {
   id: string;
-  vendorId: string | null;
   vendorName: string;
   vendorPhone: string;
   utensilId: string | null;
@@ -113,16 +112,33 @@ export const useEventsStore = create<EventsState>()(
     {
       name: "catering-events",
       storage: createJSONStorage(() => localStorage),
-      version: 1,
+      version: 2,
       migrate: (persistedState) => {
-        const state = persistedState as EventsState;
+        const state = persistedState as {
+          events?: Array<{
+            ingredients?: unknown;
+            employees?: unknown;
+            utensils?: unknown;
+          }> | null;
+        };
         return {
           ...state,
           events: (state.events ?? []).map((event) => ({
             ...event,
             ingredients: event.ingredients ?? [],
             employees: event.employees ?? [],
-            utensils: event.utensils ?? [],
+            utensils: ((event.utensils ?? []) as Array<Record<string, unknown>>).map((rawLine) => {
+              const line = { ...rawLine };
+              delete line.vendorId;
+              return {
+                ...line,
+                vendorName:
+                  typeof line.vendorName === "string" && line.vendorName.trim()
+                    ? line.vendorName
+                    : "Unknown vendor",
+                vendorPhone: typeof line.vendorPhone === "string" ? line.vendorPhone : "",
+              };
+            }),
           })),
         };
       },

@@ -39,21 +39,43 @@ export const CLIENT_PAYMENT_OPTIONS: { value: ClientPaymentStatus; label: string
   { value: "paid", label: "Paid" },
 ];
 
-const eventSchema = z.object({
-  name: z.string().trim().min(1, "Name is required"),
-  phone: z.string().trim().refine(
-    (val) => val === "" || validatePhone(val),
-    "Enter a valid 10-digit Indian mobile number"
-  ),
-  location: z.string().trim(),
-  headcount: z.coerce.number().min(1, "Headcount must be 1 or more"),
-  date: z.string().min(1, "Date is required"),
-  status: z.enum(["planned", "confirmed", "completed", "cancelled"]),
-  templateId: z.string().nullable(),
-  clientPaymentStatus: z.enum(["pending", "partial", "paid"]),
-});
+const todayISO = () => new Date().toISOString().slice(0, 10);
 
-type EventFormValues = z.infer<typeof eventSchema>;
+function buildEventSchema(isNew: boolean, currentDate?: string) {
+  return z.object({
+    name: z.string().trim().min(1, "Name is required"),
+    phone: z.string().trim().refine(
+      (val) => val === "" || validatePhone(val),
+      "Enter a valid 10-digit Indian mobile number"
+    ),
+    location: z.string().trim(),
+    headcount: z.coerce.number().min(1, "Headcount must be 1 or more"),
+    date: z
+      .string()
+      .min(1, "Date is required")
+      .refine(
+        (val) =>
+          !isNew
+            ? val >= todayISO() || val === currentDate
+            : val >= todayISO(),
+        "Cannot select a date in the past"
+      ),
+    status: z.enum(["planned", "confirmed", "completed", "cancelled"]),
+    templateId: z.string().nullable(),
+    clientPaymentStatus: z.enum(["pending", "partial", "paid"]),
+  });
+}
+
+type EventFormValues = {
+  name: string;
+  phone: string;
+  location: string;
+  headcount: number;
+  date: string;
+  status: EventStatus;
+  templateId: string | null;
+  clientPaymentStatus: ClientPaymentStatus;
+};
 
 type EventFormModalProps = {
   opened: boolean;
@@ -74,7 +96,7 @@ export function EventFormModal({ opened, event, onClose }: EventFormModalProps) 
     control,
     formState: { errors },
   } = useForm<EventFormValues>({
-    resolver: zodResolver(eventSchema),
+    resolver: zodResolver(buildEventSchema(!event, event?.date)),
     defaultValues: {
       name: "",
       phone: "",
@@ -190,6 +212,7 @@ export function EventFormModal({ opened, event, onClose }: EventFormModalProps) 
             type="date"
             withAsterisk
             {...register("date")}
+            min={!event ? todayISO() : undefined}
             error={errors.date?.message}
           />
           <Controller

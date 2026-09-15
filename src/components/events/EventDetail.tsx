@@ -33,6 +33,8 @@ import { useSettingsStore } from "@/store/settings";
 import { useTemplatesStore } from "@/store/templates";
 import { useVendorsStore } from "@/store/vendors";
 import { generateEventPdf } from "@/lib/pdf";
+import { formatINR } from "@/lib/format";
+import { formatPhone } from "@/lib/phone";
 
 export function EventDetail() {
   const params = useParams<{ id: string }>();
@@ -285,6 +287,9 @@ export function EventDetail() {
               min={1}
               allowNegative={false}
               w={160}
+              onKeyDown={(e) => {
+                if (e.key === "ArrowUp" || e.key === "ArrowDown") e.preventDefault();
+              }}
               onChange={(value) => handleHeadcountChange(typeof value === "number" ? value : 1)}
             />
             <Select
@@ -338,7 +343,7 @@ export function EventDetail() {
               <Paper withBorder p="md">
                 <Group justify="space-between" wrap="nowrap">
                   <Text fw={600}>Running total</Text>
-                  <Text fw={700}>₹{runningTotal.toFixed(2)}</Text>
+                  <Text fw={700}>{formatINR(runningTotal)}</Text>
                 </Group>
               </Paper>
             </Stack>
@@ -354,7 +359,7 @@ export function EventDetail() {
                 data={assignableEmployees.map((employee) => ({
                   value: employee.id,
                   label: employee.phone
-                    ? `${employee.name} (${employee.phone})`
+                    ? `${employee.name} (${formatPhone(employee.phone)})`
                     : employee.name,
                 }))}
                 searchable
@@ -398,15 +403,15 @@ export function EventDetail() {
                   <Stack gap={6}>
                     <Group justify="space-between" wrap="nowrap">
                       <Text fw={500}>Total to pay</Text>
-                      <Text fw={600}>₹{totalToPay.toFixed(2)}</Text>
+                      <Text fw={600}>{formatINR(totalToPay)}</Text>
                     </Group>
                     <Group justify="space-between" wrap="nowrap">
                       <Text fw={500}>Total paid</Text>
-                      <Text fw={600}>₹{totalPaid.toFixed(2)}</Text>
+                      <Text fw={600}>{formatINR(totalPaid)}</Text>
                     </Group>
                     <Group justify="space-between" wrap="nowrap">
                       <Text fw={600}>Total pending</Text>
-                      <Text fw={700}>₹{totalPending.toFixed(2)}</Text>
+                      <Text fw={700}>{formatINR(totalPending)}</Text>
                     </Group>
                   </Stack>
                 </Paper>
@@ -430,7 +435,7 @@ export function EventDetail() {
                 data={masterVendors.map((vendor) => ({
                   value: vendor.id,
                   label: vendor.phone
-                    ? `${vendor.name} (${vendor.phone})`
+                    ? `${vendor.name} (${formatPhone(vendor.phone)})`
                     : vendor.name,
                 }))}
                 searchable
@@ -473,7 +478,7 @@ export function EventDetail() {
                 <Paper withBorder p="md">
                   <Group justify="space-between" wrap="nowrap">
                     <Text fw={600}>Total utensil cost</Text>
-                    <Text fw={700}>₹{totalUtensilCost.toFixed(2)}</Text>
+                    <Text fw={700}>{formatINR(totalUtensilCost)}</Text>
                   </Group>
                 </Paper>
               </Stack>

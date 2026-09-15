@@ -4,6 +4,7 @@ import { ActionIcon, Card, Group, Stack, Text } from "@mantine/core";
 import { Pencil, Trash } from "lucide-react";
 
 import type { Utensil } from "@/store/utensils";
+import { formatINR } from "@/lib/format";
 
 type UtensilCardsProps = {
   utensils: Utensil[];
@@ -20,7 +21,7 @@ export function UtensilCards({ utensils, onEdit, onDelete }: UtensilCardsProps) 
             <Stack gap={2}>
               <Text fw={600}>{utensil.name}</Text>
               <Text size="sm" fw={500}>
-                Reference rent price: {utensil.rentPrice}
+                Reference rent price: {formatINR(utensil.rentPrice)}
               </Text>
             </Stack>
             <Group gap="xs">

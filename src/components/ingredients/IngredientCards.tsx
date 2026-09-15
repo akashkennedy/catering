@@ -4,6 +4,7 @@ import { ActionIcon, Card, Group, Stack, Text } from "@mantine/core";
 import { Pencil, Trash } from "lucide-react";
 
 import type { Ingredient } from "@/store/ingredients";
+import { formatINR } from "@/lib/format";
 
 type IngredientCardsProps = {
   ingredients: Ingredient[];
@@ -26,7 +27,7 @@ export function IngredientCards({ ingredients, onEdit, onDelete }: IngredientCar
               )}
               <Text size="sm">Unit: {ingredient.unit}</Text>
               <Text size="sm" fw={500}>
-                Price: {ingredient.globalPrice}
+                Price: {formatINR(ingredient.globalPrice)}
               </Text>
             </Stack>
             <Group gap="xs">

@@ -4,6 +4,7 @@ import { ActionIcon, Group, Table } from "@mantine/core";
 import { Pencil, Trash } from "lucide-react";
 
 import type { Vendor } from "@/store/vendors";
+import { formatPhone } from "@/lib/phone";
 
 type VendorTableProps = {
   vendors: Vendor[];
@@ -26,7 +27,7 @@ export function VendorTable({ vendors, onEdit, onDelete }: VendorTableProps) {
           {vendors.map((vendor) => (
             <Table.Tr key={vendor.id}>
               <Table.Td>{vendor.name}</Table.Td>
-              <Table.Td>{vendor.phone || "—"}</Table.Td>
+              <Table.Td>{vendor.phone ? formatPhone(vendor.phone) : "—"}</Table.Td>
               <Table.Td>
                 <Group gap="xs">
                   <ActionIcon

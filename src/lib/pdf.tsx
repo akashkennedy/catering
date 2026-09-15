@@ -4,6 +4,7 @@ import type { DocumentProps } from "@react-pdf/renderer";
 import type { CateringEvent } from "@/store/events";
 import type { Ingredient } from "@/store/ingredients";
 import type { DefaultLanguage } from "@/store/settings";
+import { formatINR } from "@/lib/format";
 
 const TAMIL_FAMILY = "NotoSansTamil";
 
@@ -141,7 +142,7 @@ function buildDocument(
                 <Text style={[styles.tableCell, { flex: 1, fontFamily: ff }]}>{String(line.qty)}</Text>
                 <Text style={[styles.tableCell, { flex: 1, fontFamily: ff }]}>{unit}</Text>
                 <Text style={[styles.tableCell, { flex: 1, fontFamily: ff, textAlign: "right" }]}>
-                  {`\u20B9${line.price.toFixed(2)}`}
+                  {formatINR(line.price)}
                 </Text>
               </View>
             );
@@ -151,7 +152,7 @@ function buildDocument(
             <Text style={[styles.tableFooterText, { flex: 1, fontFamily: ff }]} />
             <Text style={[styles.tableFooterText, { flex: 1, fontFamily: ff }]}>{l.total}</Text>
             <Text style={[styles.tableFooterText, { flex: 1, fontFamily: ff, textAlign: "right" }]}>
-              {`\u20B9${ingredientTotal.toFixed(2)}`}
+              {formatINR(ingredientTotal)}
             </Text>
           </View>
         </View>

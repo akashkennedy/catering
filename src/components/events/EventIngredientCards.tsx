@@ -42,6 +42,9 @@ export function EventIngredientCards({
                   value={line.qty}
                   min={0}
                   allowNegative={false}
+                  onKeyDown={(e) => {
+                    if (e.key === "ArrowUp" || e.key === "ArrowDown") e.preventDefault();
+                  }}
                   onChange={(value) =>
                     onLineChange(line.id, { qty: typeof value === "number" ? value : 0 })
                   }
@@ -53,6 +56,9 @@ export function EventIngredientCards({
                   allowNegative={false}
                   decimalScale={2}
                   leftSection="₹"
+                  onKeyDown={(e) => {
+                    if (e.key === "ArrowUp" || e.key === "ArrowDown") e.preventDefault();
+                  }}
                   onChange={(value) =>
                     onLineChange(line.id, { price: typeof value === "number" ? value : 0 })
                   }

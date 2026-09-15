@@ -16,6 +16,7 @@ import { useEffect } from "react";
 
 import { useTemplatesStore } from "@/store/templates";
 import { useIngredientsStore } from "@/store/ingredients";
+import { validatePhone, formatPhone } from "@/lib/phone";
 import {
   buildScaledIngredients,
   useEventsStore,
@@ -40,7 +41,10 @@ export const CLIENT_PAYMENT_OPTIONS: { value: ClientPaymentStatus; label: string
 
 const eventSchema = z.object({
   name: z.string().trim().min(1, "Name is required"),
-  phone: z.string().trim(),
+  phone: z.string().trim().refine(
+    (val) => val === "" || validatePhone(val),
+    "Enter a valid 10-digit Indian mobile number"
+  ),
   location: z.string().trim(),
   headcount: z.coerce.number().min(1, "Headcount must be 1 or more"),
   date: z.string().min(1, "Date is required"),
@@ -111,6 +115,7 @@ export function EventFormModal({ opened, event, onClose }: EventFormModalProps) 
     );
     const input: CateringEventInput = {
       ...values,
+      phone: formatPhone(values.phone),
       ingredients: scaledIngredients,
       employees: [],
       utensils: [],
@@ -173,6 +178,9 @@ export function EventFormModal({ opened, event, onClose }: EventFormModalProps) 
                 allowNegative={false}
                 withAsterisk
                 {...field}
+                onKeyDown={(e) => {
+                  if (e.key === "ArrowUp" || e.key === "ArrowDown") e.preventDefault();
+                }}
                 error={errors.headcount?.message}
               />
             )}

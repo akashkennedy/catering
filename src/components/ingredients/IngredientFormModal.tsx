@@ -105,7 +105,12 @@ export function IngredientFormModal({ opened, ingredient, onClose }: IngredientF
                 placeholder="e.g. 150"
                 min={0}
                 allowNegative={false}
+                decimalScale={2}
+                leftSection="₹"
                 {...field}
+                onKeyDown={(e) => {
+                  if (e.key === "ArrowUp" || e.key === "ArrowDown") e.preventDefault();
+                }}
                 error={errors.globalPrice?.message}
               />
             )}

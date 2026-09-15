@@ -4,6 +4,8 @@ import { ActionIcon, NumberInput, Table, Text } from "@mantine/core";
 import { X } from "lucide-react";
 
 import type { EventEmployeeLine } from "@/store/events";
+import { formatINR } from "@/lib/format";
+import { formatPhone } from "@/lib/phone";
 
 type EventEmployeeTableProps = {
   lines: EventEmployeeLine[];
@@ -31,7 +33,7 @@ export function EventEmployeeTable({ lines, onLineChange, onRemove }: EventEmplo
               <Table.Td>
                 <Text fw={500}>{line.name}</Text>
               </Table.Td>
-              <Table.Td>{line.phone || "—"}</Table.Td>
+              <Table.Td>{line.phone ? formatPhone(line.phone) : "—"}</Table.Td>
               <Table.Td>
                 <NumberInput
                   value={line.toPay}
@@ -40,6 +42,9 @@ export function EventEmployeeTable({ lines, onLineChange, onRemove }: EventEmplo
                   decimalScale={2}
                   w={130}
                   leftSection="₹"
+                  onKeyDown={(e) => {
+                    if (e.key === "ArrowUp" || e.key === "ArrowDown") e.preventDefault();
+                  }}
                   onChange={(value) =>
                     onLineChange(line.id, { toPay: typeof value === "number" ? value : 0 })
                   }
@@ -53,13 +58,16 @@ export function EventEmployeeTable({ lines, onLineChange, onRemove }: EventEmplo
                   decimalScale={2}
                   w={130}
                   leftSection="₹"
+                  onKeyDown={(e) => {
+                    if (e.key === "ArrowUp" || e.key === "ArrowDown") e.preventDefault();
+                  }}
                   onChange={(value) =>
                     onLineChange(line.id, { paid: typeof value === "number" ? value : 0 })
                   }
                 />
               </Table.Td>
               <Table.Td>
-                <Text fw={600}>₹{(line.toPay - line.paid).toFixed(2)}</Text>
+                <Text fw={600}>{formatINR(line.toPay - line.paid)}</Text>
               </Table.Td>
               <Table.Td>
                 <ActionIcon

@@ -4,6 +4,8 @@ import { ActionIcon, Card, Group, Stack, Text } from "@mantine/core";
 import { Pencil, Trash } from "lucide-react";
 
 import type { Employee } from "@/store/employees";
+import { formatINR } from "@/lib/format";
+import { formatPhone } from "@/lib/phone";
 
 type EmployeeCardsProps = {
   employees: Employee[];
@@ -21,11 +23,11 @@ export function EmployeeCards({ employees, onEdit, onDelete }: EmployeeCardsProp
               <Text fw={600}>{employee.name}</Text>
               {employee.phone && (
                 <Text size="sm" c="dimmed">
-                  {employee.phone}
+                  {formatPhone(employee.phone)}
                 </Text>
               )}
               <Text size="sm" fw={500}>
-                Rate: {employee.defaultRate}
+                Rate: {formatINR(employee.defaultRate)}
               </Text>
             </Stack>
             <Group gap="xs">

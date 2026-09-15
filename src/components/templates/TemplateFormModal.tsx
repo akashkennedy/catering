@@ -137,6 +137,9 @@ function DishIngredientFields({
                   allowNegative={false}
                   style={{ width: 110 }}
                   {...qtyField}
+                  onKeyDown={(e) => {
+                    if (e.key === "ArrowUp" || e.key === "ArrowDown") e.preventDefault();
+                  }}
                   error={qtyError?.message}
                 />
               )}

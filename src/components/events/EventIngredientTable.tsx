@@ -46,6 +46,9 @@ export function EventIngredientTable({
                     min={0}
                     allowNegative={false}
                     w={110}
+                    onKeyDown={(e) => {
+                      if (e.key === "ArrowUp" || e.key === "ArrowDown") e.preventDefault();
+                    }}
                     onChange={(value) =>
                       onLineChange(line.id, { qty: typeof value === "number" ? value : 0 })
                     }
@@ -60,6 +63,9 @@ export function EventIngredientTable({
                     decimalScale={2}
                     w={130}
                     leftSection="₹"
+                    onKeyDown={(e) => {
+                      if (e.key === "ArrowUp" || e.key === "ArrowDown") e.preventDefault();
+                    }}
                     onChange={(value) =>
                       onLineChange(line.id, { price: typeof value === "number" ? value : 0 })
                     }

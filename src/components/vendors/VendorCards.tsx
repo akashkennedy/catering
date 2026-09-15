@@ -4,6 +4,7 @@ import { ActionIcon, Card, Group, Stack, Text } from "@mantine/core";
 import { Pencil, Trash } from "lucide-react";
 
 import type { Vendor } from "@/store/vendors";
+import { formatPhone } from "@/lib/phone";
 
 type VendorCardsProps = {
   vendors: Vendor[];
@@ -21,7 +22,7 @@ export function VendorCards({ vendors, onEdit, onDelete }: VendorCardsProps) {
               <Text fw={600}>{vendor.name}</Text>
               {vendor.phone && (
                 <Text size="sm" c="dimmed">
-                  {vendor.phone}
+                  {formatPhone(vendor.phone)}
                 </Text>
               )}
             </Stack>

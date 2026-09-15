@@ -4,6 +4,8 @@ import { ActionIcon, Card, Group, NumberInput, Stack, Text } from "@mantine/core
 import { X } from "lucide-react";
 
 import type { EventEmployeeLine } from "@/store/events";
+import { formatINR } from "@/lib/format";
+import { formatPhone } from "@/lib/phone";
 
 type EventEmployeeCardsProps = {
   lines: EventEmployeeLine[];
@@ -22,7 +24,7 @@ export function EventEmployeeCards({ lines, onLineChange, onRemove }: EventEmplo
                 <Text fw={600}>{line.name}</Text>
                 {line.phone && (
                   <Text size="sm" c="dimmed">
-                    {line.phone}
+                    {formatPhone(line.phone)}
                   </Text>
                 )}
               </Stack>
@@ -42,6 +44,9 @@ export function EventEmployeeCards({ lines, onLineChange, onRemove }: EventEmplo
               allowNegative={false}
               decimalScale={2}
               leftSection="₹"
+              onKeyDown={(e) => {
+                if (e.key === "ArrowUp" || e.key === "ArrowDown") e.preventDefault();
+              }}
               onChange={(value) =>
                 onLineChange(line.id, { toPay: typeof value === "number" ? value : 0 })
               }
@@ -53,12 +58,15 @@ export function EventEmployeeCards({ lines, onLineChange, onRemove }: EventEmplo
               allowNegative={false}
               decimalScale={2}
               leftSection="₹"
+              onKeyDown={(e) => {
+                if (e.key === "ArrowUp" || e.key === "ArrowDown") e.preventDefault();
+              }}
               onChange={(value) =>
                 onLineChange(line.id, { paid: typeof value === "number" ? value : 0 })
               }
             />
             <Text size="sm" fw={600}>
-              Pending: ₹{(line.toPay - line.paid).toFixed(2)}
+              Pending: {formatINR(line.toPay - line.paid)}
             </Text>
           </Stack>
         </Card>

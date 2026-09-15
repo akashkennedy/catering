@@ -11,7 +11,7 @@ export type VendorInput = Omit<Vendor, "id">;
 
 type VendorsState = {
   vendors: Vendor[];
-  addVendor: (input: VendorInput) => void;
+  addVendor: (input: VendorInput) => string;
   updateVendor: (id: string, input: VendorInput) => void;
   deleteVendor: (id: string) => void;
 };
@@ -20,10 +20,13 @@ export const useVendorsStore = create<VendorsState>()(
   persist(
     (set) => ({
       vendors: [],
-      addVendor: (input) =>
+      addVendor: (input) => {
+        const id = crypto.randomUUID();
         set((state) => ({
-          vendors: [...state.vendors, { id: crypto.randomUUID(), ...input }],
-        })),
+          vendors: [...state.vendors, { id, ...input }],
+        }));
+        return id;
+      },
       updateVendor: (id, input) =>
         set((state) => ({
           vendors: state.vendors.map((vendor) =>

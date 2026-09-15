@@ -113,6 +113,7 @@ export function EventFormModal({ opened, event, onClose }: EventFormModalProps) 
       ...values,
       ingredients: scaledIngredients,
       employees: [],
+      utensils: [],
     };
     if (event) {
       const templateChanged = event.templateId !== values.templateId;
@@ -120,6 +121,7 @@ export function EventFormModal({ opened, event, onClose }: EventFormModalProps) 
       updateEvent(event.id, {
         ...input,
         employees: event.employees ?? [],
+        utensils: event.utensils ?? [],
         ingredients:
           templateChanged || headcountChanged
             ? scaledIngredients

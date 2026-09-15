@@ -22,10 +22,14 @@ import { EventEmployeeFormModal } from "./EventEmployeeFormModal";
 import { EventEmployeeTable } from "./EventEmployeeTable";
 import { EventIngredientCards } from "./EventIngredientCards";
 import { EventIngredientTable } from "./EventIngredientTable";
+import { EventUtensilCards } from "./EventUtensilCards";
+import { EventUtensilFormModal } from "./EventUtensilFormModal";
+import { EventUtensilTable } from "./EventUtensilTable";
 import { useEventsStore, buildScaledIngredients } from "@/store/events";
 import { useEmployeesStore } from "@/store/employees";
 import { useIngredientsStore } from "@/store/ingredients";
 import { useTemplatesStore } from "@/store/templates";
+import { useVendorsStore } from "@/store/vendors";
 
 export function EventDetail() {
   const params = useParams<{ id: string }>();
@@ -35,8 +39,11 @@ export function EventDetail() {
   const templates = useTemplatesStore((state) => state.templates);
   const ingredients = useIngredientsStore((state) => state.ingredients);
   const masterEmployees = useEmployeesStore((state) => state.employees);
+  const masterVendors = useVendorsStore((state) => state.vendors);
   const [employeeFormOpened, setEmployeeFormOpened] = useState(false);
+  const [utensilFormOpened, setUtensilFormOpened] = useState(false);
   const [assignValue, setAssignValue] = useState<string | null>(null);
+  const [utensilVendorValue, setUtensilVendorValue] = useState<string | null>(null);
 
   if (!event) {
     return (
@@ -57,12 +64,14 @@ export function EventDetail() {
 
   const eventIngredients = event.ingredients ?? [];
   const eventEmployees = event.employees ?? [];
+  const eventUtensils = event.utensils ?? [];
 
   const update = (patch: {
     headcount?: number;
     templateId?: string | null;
     ingredients?: typeof event.ingredients;
     employees?: typeof event.employees;
+    utensils?: typeof event.utensils;
   }) => {
     updateEvent(event.id, {
       name: event.name,
@@ -75,6 +84,7 @@ export function EventDetail() {
       clientPaymentStatus: event.clientPaymentStatus,
       ingredients: eventIngredients,
       employees: eventEmployees,
+      utensils: eventUtensils,
       ...patch,
     });
   };
@@ -155,10 +165,66 @@ export function EventDetail() {
     update({ employees: eventEmployees.filter((line) => line.id !== lineId) });
   };
 
+  const handleAddUtensilLine = (input: {
+    utensilId: string | null;
+    utensilName: string;
+    qty: number;
+    rentalPrice: number;
+    dateFrom: string;
+    dateTo: string;
+  }) => {
+    const vendor = masterVendors.find((v) => v.id === utensilVendorValue) ?? null;
+    update({
+      utensils: [
+        ...eventUtensils,
+        {
+          id: crypto.randomUUID(),
+          vendorId: vendor?.id ?? null,
+          vendorName: vendor?.name ?? "Unknown vendor",
+          vendorPhone: vendor?.phone ?? "",
+          utensilId: input.utensilId,
+          utensilName: input.utensilName,
+          qty: input.qty,
+          rentalPrice: input.rentalPrice,
+          dateFrom: input.dateFrom,
+          dateTo: input.dateTo,
+          returned: false,
+        },
+      ],
+    });
+  };
+
+  const handleUtensilLineChange = (
+    lineId: string,
+    patch: { qty?: number; rentalPrice?: number }
+  ) => {
+    update({
+      utensils: eventUtensils.map((line) =>
+        line.id === lineId ? { ...line, ...patch } : line
+      ),
+    });
+  };
+
+  const handleToggleReturned = (lineId: string) => {
+    update({
+      utensils: eventUtensils.map((line) =>
+        line.id === lineId ? { ...line, returned: !line.returned } : line
+      ),
+    });
+  };
+
+  const handleUtensilRemove = (lineId: string) => {
+    update({ utensils: eventUtensils.filter((line) => line.id !== lineId) });
+  };
+
   const runningTotal = eventIngredients.reduce((sum, line) => sum + line.price, 0);
   const totalToPay = eventEmployees.reduce((sum, line) => sum + line.toPay, 0);
   const totalPaid = eventEmployees.reduce((sum, line) => sum + line.paid, 0);
   const totalPending = totalToPay - totalPaid;
+  const totalUtensilCost = eventUtensils.reduce(
+    (sum, line) => sum + line.qty * line.rentalPrice,
+    0
+  );
 
   return (
     <Stack gap="md">
@@ -321,7 +387,69 @@ export function EventDetail() {
         </Tabs.Panel>
 
         <Tabs.Panel value="utensils" pt="md">
-          <Text c="dimmed">Utensils tab coming soon.</Text>
+          <Stack gap="md">
+            <Group gap="md" align="flex-end" wrap="wrap">
+              <Select
+                label="Assign vendor"
+                placeholder="Pick a vendor"
+                data={masterVendors.map((vendor) => ({
+                  value: vendor.id,
+                  label: vendor.phone
+                    ? `${vendor.name} (${vendor.phone})`
+                    : vendor.name,
+                }))}
+                searchable
+                clearable
+                w={280}
+                value={utensilVendorValue}
+                onChange={(value) => setUtensilVendorValue(value)}
+              />
+              <Button
+                leftSection={<Plus size={18} />}
+                variant="default"
+                disabled={!utensilVendorValue}
+                onClick={() => setUtensilFormOpened(true)}
+              >
+                Add utensil
+              </Button>
+            </Group>
+            <Text size="xs" c="dimmed">
+              Select a vendor first, then add utensils with quantities and rental prices.
+            </Text>
+
+            {eventUtensils.length === 0 ? (
+              <Text c="dimmed">
+                No utensils assigned yet. Select a vendor and add utensils.
+              </Text>
+            ) : (
+              <Stack gap="md">
+                <EventUtensilTable
+                  lines={eventUtensils}
+                  onLineChange={handleUtensilLineChange}
+                  onToggleReturned={handleToggleReturned}
+                  onRemove={handleUtensilRemove}
+                />
+                <EventUtensilCards
+                  lines={eventUtensils}
+                  onLineChange={handleUtensilLineChange}
+                  onToggleReturned={handleToggleReturned}
+                  onRemove={handleUtensilRemove}
+                />
+                <Paper withBorder p="md">
+                  <Group justify="space-between" wrap="nowrap">
+                    <Text fw={600}>Total utensil cost</Text>
+                    <Text fw={700}>₹{totalUtensilCost.toFixed(2)}</Text>
+                  </Group>
+                </Paper>
+              </Stack>
+            )}
+
+            <EventUtensilFormModal
+              opened={utensilFormOpened}
+              onClose={() => setUtensilFormOpened(false)}
+              onAdd={handleAddUtensilLine}
+            />
+          </Stack>
         </Tabs.Panel>
       </Tabs>
     </Stack>

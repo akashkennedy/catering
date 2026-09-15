@@ -11,7 +11,7 @@ export type UtensilInput = Omit<Utensil, "id">;
 
 type UtensilsState = {
   utensils: Utensil[];
-  addUtensil: (input: UtensilInput) => void;
+  addUtensil: (input: UtensilInput) => string;
   updateUtensil: (id: string, input: UtensilInput) => void;
   deleteUtensil: (id: string) => void;
 };
@@ -20,10 +20,13 @@ export const useUtensilsStore = create<UtensilsState>()(
   persist(
     (set) => ({
       utensils: [],
-      addUtensil: (input) =>
+      addUtensil: (input) => {
+        const id = crypto.randomUUID();
         set((state) => ({
-          utensils: [...state.utensils, { id: crypto.randomUUID(), ...input }],
-        })),
+          utensils: [...state.utensils, { id, ...input }],
+        }));
+        return id;
+      },
       updateUtensil: (id, input) =>
         set((state) => ({
           utensils: state.utensils.map((utensil) =>

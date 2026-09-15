@@ -24,6 +24,20 @@ export type EventEmployeeLine = {
   paid: number;
 };
 
+export type EventUtensilLine = {
+  id: string;
+  vendorId: string | null;
+  vendorName: string;
+  vendorPhone: string;
+  utensilId: string | null;
+  utensilName: string;
+  qty: number;
+  rentalPrice: number;
+  dateFrom: string;
+  dateTo: string;
+  returned: boolean;
+};
+
 export type CateringEvent = {
   id: string;
   name: string;
@@ -36,6 +50,7 @@ export type CateringEvent = {
   clientPaymentStatus: ClientPaymentStatus;
   ingredients: EventIngredientLine[];
   employees: EventEmployeeLine[];
+  utensils: EventUtensilLine[];
 };
 
 export type CateringEventInput = Omit<CateringEvent, "id">;
@@ -107,6 +122,7 @@ export const useEventsStore = create<EventsState>()(
             ...event,
             ingredients: event.ingredients ?? [],
             employees: event.employees ?? [],
+            utensils: event.utensils ?? [],
           })),
         };
       },

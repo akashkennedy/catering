@@ -5,6 +5,7 @@ import { Pencil, Trash } from "lucide-react";
 
 import type { Ingredient } from "@/store/ingredients";
 import { formatINR } from "@/lib/format";
+import { normalizeUnit } from "@/lib/units";
 
 type IngredientCardsProps = {
   ingredients: Ingredient[];
@@ -25,7 +26,7 @@ export function IngredientCards({ ingredients, onEdit, onDelete }: IngredientCar
                   {ingredient.tamilName}
                 </Text>
               )}
-              <Text size="sm">Unit: {ingredient.unit}</Text>
+              <Text size="sm">Unit: {normalizeUnit(ingredient.unit)}</Text>
               <Text size="sm" fw={500}>
                 Price: {formatINR(ingredient.globalPrice)}
               </Text>

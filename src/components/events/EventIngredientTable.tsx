@@ -4,6 +4,7 @@ import { NumberInput, Table, Text } from "@mantine/core";
 
 import type { Ingredient } from "@/store/ingredients";
 import type { EventIngredientLine } from "@/store/events";
+import { normalizeUnit } from "@/lib/units";
 
 type EventIngredientTableProps = {
   lines: EventIngredientLine[];
@@ -54,7 +55,7 @@ export function EventIngredientTable({
                     }
                   />
                 </Table.Td>
-                <Table.Td>{ingredient?.unit ?? "—"}</Table.Td>
+                <Table.Td>{normalizeUnit(ingredient?.unit) || "—"}</Table.Td>
                 <Table.Td>
                   <NumberInput
                     value={line.price}

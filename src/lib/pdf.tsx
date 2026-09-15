@@ -5,6 +5,7 @@ import type { CateringEvent } from "@/store/events";
 import type { Ingredient } from "@/store/ingredients";
 import type { DefaultLanguage } from "@/store/settings";
 import { formatINR } from "@/lib/format";
+import { normalizeUnit } from "@/lib/units";
 
 const TAMIL_FAMILY = "NotoSansTamil";
 
@@ -132,7 +133,7 @@ function buildDocument(
             const name = lang === "ta"
               ? (master?.tamilName || master?.name || "\u2014")
               : (master?.name || "\u2014");
-            const unit = master?.unit || "";
+            const unit = normalizeUnit(master?.unit);
             return (
               <View
                 key={line.id}

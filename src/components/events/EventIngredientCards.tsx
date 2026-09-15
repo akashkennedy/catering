@@ -4,6 +4,7 @@ import { Card, NumberInput, Stack, Text } from "@mantine/core";
 
 import type { Ingredient } from "@/store/ingredients";
 import type { EventIngredientLine } from "@/store/events";
+import { normalizeUnit } from "@/lib/units";
 
 type EventIngredientCardsProps = {
   lines: EventIngredientLine[];
@@ -32,7 +33,7 @@ export function EventIngredientCards({
                 )}
                 {ingredient?.unit && (
                   <Text size="xs" c="dimmed">
-                    Unit: {ingredient.unit}
+                    Unit: {normalizeUnit(ingredient.unit)}
                   </Text>
                 )}
               </div>

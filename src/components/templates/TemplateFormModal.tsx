@@ -26,6 +26,7 @@ import { z } from "zod";
 import { useEffect } from "react";
 
 import { useIngredientsStore } from "@/store/ingredients";
+import { normalizeUnit } from "@/lib/units";
 import {
   useTemplatesStore,
   type FoodTemplate,
@@ -199,7 +200,9 @@ export function TemplateFormModal({ opened, template, onClose }: TemplateFormMod
 
   const ingredientOptions = ingredients.map((ingredient) => ({
     value: ingredient.id,
-    label: ingredient.unit ? `${ingredient.name} (${ingredient.unit})` : ingredient.name,
+    label: ingredient.unit
+      ? `${ingredient.name} (${normalizeUnit(ingredient.unit)})`
+      : ingredient.name,
   }));
 
   const onSubmit = (values: TemplateFormValues) => {

@@ -1,11 +1,12 @@
 "use client";
 
 import { zodResolver } from "@hookform/resolvers/zod";
-import { Button, Group, Modal, NumberInput, Stack, TextInput } from "@mantine/core";
+import { Button, Group, Modal, NumberInput, Select, Stack, TextInput } from "@mantine/core";
 import { Controller, useForm } from "react-hook-form";
 import { z } from "zod";
 import { useEffect } from "react";
 
+import { UNITS, normalizeUnit } from "@/lib/units";
 import {
   useIngredientsStore,
   type Ingredient,
@@ -52,13 +53,16 @@ export function IngredientFormModal({ opened, ingredient, onClose }: IngredientF
     reset({
       name: ingredient?.name ?? "",
       tamilName: ingredient?.tamilName ?? "",
-      unit: ingredient?.unit ?? "",
+      unit: normalizeUnit(ingredient?.unit) || UNITS[0],
       globalPrice: ingredient?.globalPrice ?? 0,
     });
   }, [opened, ingredient, reset]);
 
   const onSubmit = (values: IngredientFormValues) => {
-    const input: IngredientInput = values;
+    const input: IngredientInput = {
+      ...values,
+      unit: normalizeUnit(values.unit),
+    };
     if (ingredient) {
       updateIngredient(ingredient.id, input);
     } else {
@@ -89,12 +93,20 @@ export function IngredientFormModal({ opened, ingredient, onClose }: IngredientF
             {...register("tamilName")}
             error={errors.tamilName?.message}
           />
-          <TextInput
-            label="Unit"
-            placeholder="e.g. kg"
-            withAsterisk
-            {...register("unit")}
-            error={errors.unit?.message}
+          <Controller
+            name="unit"
+            control={control}
+            render={({ field }) => (
+              <Select
+                label="Unit"
+                placeholder="Select a unit"
+                data={UNITS}
+                allowDeselect={false}
+                withAsterisk
+                {...field}
+                error={errors.unit?.message}
+              />
+            )}
           />
           <Controller
             name="globalPrice"

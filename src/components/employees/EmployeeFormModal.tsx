@@ -11,10 +11,14 @@ import {
   type Employee,
   type EmployeeInput,
 } from "@/store/employees";
+import { validatePhone, formatPhone } from "@/lib/phone";
 
 const employeeSchema = z.object({
   name: z.string().trim().min(1, "Name is required"),
-  phone: z.string().trim(),
+  phone: z.string().trim().refine(
+    (val) => val === "" || validatePhone(val),
+    "Enter a valid 10-digit Indian mobile number"
+  ),
   defaultRate: z.coerce.number().min(0, "Rate must be 0 or more"),
 });
 
@@ -55,7 +59,7 @@ export function EmployeeFormModal({ opened, employee, onClose }: EmployeeFormMod
   }, [opened, employee, reset]);
 
   const onSubmit = (values: EmployeeFormValues) => {
-    const input: EmployeeInput = values;
+    const input: EmployeeInput = { ...values, phone: formatPhone(values.phone) };
     if (employee) {
       updateEmployee(employee.id, input);
     } else {

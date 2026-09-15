@@ -5,6 +5,7 @@ import { Pencil, Trash } from "lucide-react";
 
 import type { Employee } from "@/store/employees";
 import { formatINR } from "@/lib/format";
+import { formatPhone } from "@/lib/phone";
 
 type EmployeeTableProps = {
   employees: Employee[];
@@ -28,7 +29,7 @@ export function EmployeeTable({ employees, onEdit, onDelete }: EmployeeTableProp
           {employees.map((employee) => (
             <Table.Tr key={employee.id}>
               <Table.Td>{employee.name}</Table.Td>
-              <Table.Td>{employee.phone || "—"}</Table.Td>
+              <Table.Td>{employee.phone ? formatPhone(employee.phone) : "—"}</Table.Td>
               <Table.Td>{formatINR(employee.defaultRate)}</Table.Td>
               <Table.Td>
                 <Group gap="xs">

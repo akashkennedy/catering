@@ -5,6 +5,7 @@ import { X } from "lucide-react";
 
 import type { EventEmployeeLine } from "@/store/events";
 import { formatINR } from "@/lib/format";
+import { formatPhone } from "@/lib/phone";
 
 type EventEmployeeCardsProps = {
   lines: EventEmployeeLine[];
@@ -23,7 +24,7 @@ export function EventEmployeeCards({ lines, onLineChange, onRemove }: EventEmplo
                 <Text fw={600}>{line.name}</Text>
                 {line.phone && (
                   <Text size="sm" c="dimmed">
-                    {line.phone}
+                    {formatPhone(line.phone)}
                   </Text>
                 )}
               </Stack>

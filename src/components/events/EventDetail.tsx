@@ -34,6 +34,7 @@ import { useTemplatesStore } from "@/store/templates";
 import { useVendorsStore } from "@/store/vendors";
 import { generateEventPdf } from "@/lib/pdf";
 import { formatINR } from "@/lib/format";
+import { formatPhone } from "@/lib/phone";
 
 export function EventDetail() {
   const params = useParams<{ id: string }>();
@@ -358,7 +359,7 @@ export function EventDetail() {
                 data={assignableEmployees.map((employee) => ({
                   value: employee.id,
                   label: employee.phone
-                    ? `${employee.name} (${employee.phone})`
+                    ? `${employee.name} (${formatPhone(employee.phone)})`
                     : employee.name,
                 }))}
                 searchable
@@ -434,7 +435,7 @@ export function EventDetail() {
                 data={masterVendors.map((vendor) => ({
                   value: vendor.id,
                   label: vendor.phone
-                    ? `${vendor.name} (${vendor.phone})`
+                    ? `${vendor.name} (${formatPhone(vendor.phone)})`
                     : vendor.name,
                 }))}
                 searchable

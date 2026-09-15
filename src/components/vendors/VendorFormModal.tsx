@@ -11,10 +11,14 @@ import {
   type Vendor,
   type VendorInput,
 } from "@/store/vendors";
+import { validatePhone, formatPhone } from "@/lib/phone";
 
 const vendorSchema = z.object({
   name: z.string().trim().min(1, "Name is required"),
-  phone: z.string().trim(),
+  phone: z.string().trim().refine(
+    (val) => val === "" || validatePhone(val),
+    "Enter a valid 10-digit Indian mobile number"
+  ),
 });
 
 type VendorFormValues = z.infer<typeof vendorSchema>;
@@ -51,7 +55,7 @@ export function VendorFormModal({ opened, vendor, onClose }: VendorFormModalProp
   }, [opened, vendor, reset]);
 
   const onSubmit = (values: VendorFormValues) => {
-    const input: VendorInput = values;
+    const input: VendorInput = { ...values, phone: formatPhone(values.phone) };
     if (vendor) {
       updateVendor(vendor.id, input);
     } else {

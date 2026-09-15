@@ -5,6 +5,7 @@ import { X } from "lucide-react";
 
 import type { EventEmployeeLine } from "@/store/events";
 import { formatINR } from "@/lib/format";
+import { formatPhone } from "@/lib/phone";
 
 type EventEmployeeTableProps = {
   lines: EventEmployeeLine[];
@@ -32,7 +33,7 @@ export function EventEmployeeTable({ lines, onLineChange, onRemove }: EventEmplo
               <Table.Td>
                 <Text fw={500}>{line.name}</Text>
               </Table.Td>
-              <Table.Td>{line.phone || "—"}</Table.Td>
+              <Table.Td>{line.phone ? formatPhone(line.phone) : "—"}</Table.Td>
               <Table.Td>
                 <NumberInput
                   value={line.toPay}

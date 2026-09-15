@@ -15,10 +15,14 @@ import { z } from "zod";
 import { useEffect } from "react";
 
 import { useEmployeesStore } from "@/store/employees";
+import { validatePhone, formatPhone } from "@/lib/phone";
 
 const eventEmployeeSchema = z.object({
   name: z.string().trim().min(1, "Name is required"),
-  phone: z.string().trim(),
+  phone: z.string().trim().refine(
+    (val) => val === "" || validatePhone(val),
+    "Enter a valid 10-digit Indian mobile number"
+  ),
   toPay: z.coerce.number().min(0, "Amount must be 0 or more"),
   saveToMaster: z.boolean(),
 });
@@ -61,17 +65,18 @@ export function EventEmployeeFormModal({ opened, onClose, onAdd }: EventEmployee
   }, [opened, reset]);
 
   const onSubmit = (values: EventEmployeeFormValues) => {
+    const formatted = formatPhone(values.phone);
     const employeeId = values.saveToMaster
       ? addEmployee({
           name: values.name,
-          phone: values.phone,
+          phone: formatted,
           defaultRate: values.toPay,
         })
       : null;
     onAdd({
       employeeId,
       name: values.name,
-      phone: values.phone,
+      phone: formatted,
       toPay: values.toPay,
     });
     onClose();

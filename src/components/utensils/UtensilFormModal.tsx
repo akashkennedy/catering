@@ -89,6 +89,9 @@ export function UtensilFormModal({ opened, utensil, onClose }: UtensilFormModalP
                 decimalScale={2}
                 leftSection="₹"
                 {...field}
+                onKeyDown={(e) => {
+                  if (e.key === "ArrowUp" || e.key === "ArrowDown") e.preventDefault();
+                }}
                 error={errors.rentPrice?.message}
               />
             )}

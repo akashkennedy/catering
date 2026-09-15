@@ -98,6 +98,9 @@ export function EmployeeFormModal({ opened, employee, onClose }: EmployeeFormMod
                 decimalScale={2}
                 leftSection="₹"
                 {...field}
+                onKeyDown={(e) => {
+                  if (e.key === "ArrowUp" || e.key === "ArrowDown") e.preventDefault();
+                }}
                 error={errors.defaultRate?.message}
               />
             )}

@@ -43,6 +43,9 @@ export function EventEmployeeCards({ lines, onLineChange, onRemove }: EventEmplo
               allowNegative={false}
               decimalScale={2}
               leftSection="₹"
+              onKeyDown={(e) => {
+                if (e.key === "ArrowUp" || e.key === "ArrowDown") e.preventDefault();
+              }}
               onChange={(value) =>
                 onLineChange(line.id, { toPay: typeof value === "number" ? value : 0 })
               }
@@ -54,6 +57,9 @@ export function EventEmployeeCards({ lines, onLineChange, onRemove }: EventEmplo
               allowNegative={false}
               decimalScale={2}
               leftSection="₹"
+              onKeyDown={(e) => {
+                if (e.key === "ArrowUp" || e.key === "ArrowDown") e.preventDefault();
+              }}
               onChange={(value) =>
                 onLineChange(line.id, { paid: typeof value === "number" ? value : 0 })
               }

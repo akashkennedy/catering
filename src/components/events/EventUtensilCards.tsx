@@ -57,6 +57,9 @@ export function EventUtensilCards({
                 min={1}
                 allowNegative={false}
                 w={100}
+                onKeyDown={(e) => {
+                  if (e.key === "ArrowUp" || e.key === "ArrowDown") e.preventDefault();
+                }}
                 onChange={(value) =>
                   onLineChange(line.id, {
                     qty: typeof value === "number" ? value : 1,
@@ -71,6 +74,9 @@ export function EventUtensilCards({
                 decimalScale={2}
                 w={130}
                 leftSection="₹"
+                onKeyDown={(e) => {
+                  if (e.key === "ArrowUp" || e.key === "ArrowDown") e.preventDefault();
+                }}
                 onChange={(value) =>
                   onLineChange(line.id, {
                     rentalPrice: typeof value === "number" ? value : 0,

@@ -60,6 +60,9 @@ export function SettingsPanel() {
                   allowNegative={false}
                   decimalScale={2}
                   leftSection="₹"
+                  onKeyDown={(e) => {
+                    if (e.key === "ArrowUp" || e.key === "ArrowDown") e.preventDefault();
+                  }}
                   onChange={(value) =>
                     setIngredientPrice(ingredient.id, typeof value === "number" ? value : 0)
                   }

@@ -106,6 +106,9 @@ export function EventEmployeeFormModal({ opened, onClose, onAdd }: EventEmployee
                 decimalScale={2}
                 leftSection="₹"
                 {...field}
+                onKeyDown={(e) => {
+                  if (e.key === "ArrowUp" || e.key === "ArrowDown") e.preventDefault();
+                }}
                 error={errors.toPay?.message}
               />
             )}

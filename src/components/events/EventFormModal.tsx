@@ -173,6 +173,9 @@ export function EventFormModal({ opened, event, onClose }: EventFormModalProps) 
                 allowNegative={false}
                 withAsterisk
                 {...field}
+                onKeyDown={(e) => {
+                  if (e.key === "ArrowUp" || e.key === "ArrowDown") e.preventDefault();
+                }}
                 error={errors.headcount?.message}
               />
             )}

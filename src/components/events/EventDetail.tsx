@@ -286,6 +286,9 @@ export function EventDetail() {
               min={1}
               allowNegative={false}
               w={160}
+              onKeyDown={(e) => {
+                if (e.key === "ArrowUp" || e.key === "ArrowDown") e.preventDefault();
+              }}
               onChange={(value) => handleHeadcountChange(typeof value === "number" ? value : 1)}
             />
             <Select

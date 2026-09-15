@@ -159,6 +159,9 @@ export function EventUtensilFormModal({
                 min={1}
                 allowNegative={false}
                 {...field}
+                onKeyDown={(e) => {
+                  if (e.key === "ArrowUp" || e.key === "ArrowDown") e.preventDefault();
+                }}
                 error={errors.qty?.message}
               />
             )}
@@ -175,6 +178,9 @@ export function EventUtensilFormModal({
                 decimalScale={2}
                 leftSection="₹"
                 {...field}
+                onKeyDown={(e) => {
+                  if (e.key === "ArrowUp" || e.key === "ArrowDown") e.preventDefault();
+                }}
                 error={errors.rentalPrice?.message}
               />
             )}

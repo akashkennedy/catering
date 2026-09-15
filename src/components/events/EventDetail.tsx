@@ -9,13 +9,14 @@ import {
   Group,
   NumberInput,
   Paper,
+  SegmentedControl,
   Select,
   Stack,
   Tabs,
   Text,
   Title,
 } from "@mantine/core";
-import { Plus, Salad, Users, UtensilsCrossed } from "lucide-react";
+import { Download, Plus, Salad, Users, UtensilsCrossed } from "lucide-react";
 
 import { EventEmployeeCards } from "./EventEmployeeCards";
 import { EventEmployeeFormModal } from "./EventEmployeeFormModal";
@@ -28,8 +29,10 @@ import { EventUtensilTable } from "./EventUtensilTable";
 import { useEventsStore, buildScaledIngredients } from "@/store/events";
 import { useEmployeesStore } from "@/store/employees";
 import { useIngredientsStore } from "@/store/ingredients";
+import { useSettingsStore } from "@/store/settings";
 import { useTemplatesStore } from "@/store/templates";
 import { useVendorsStore } from "@/store/vendors";
+import { generateEventPdf } from "@/lib/pdf";
 
 export function EventDetail() {
   const params = useParams<{ id: string }>();
@@ -40,10 +43,13 @@ export function EventDetail() {
   const ingredients = useIngredientsStore((state) => state.ingredients);
   const masterEmployees = useEmployeesStore((state) => state.employees);
   const masterVendors = useVendorsStore((state) => state.vendors);
+  const defaultLanguage = useSettingsStore((state) => state.defaultLanguage);
   const [employeeFormOpened, setEmployeeFormOpened] = useState(false);
   const [utensilFormOpened, setUtensilFormOpened] = useState(false);
   const [assignValue, setAssignValue] = useState<string | null>(null);
   const [utensilVendorValue, setUtensilVendorValue] = useState<string | null>(null);
+  const [pdfLang, setPdfLang] = useState<"en" | "ta">(defaultLanguage);
+  const [generatingPdf, setGeneratingPdf] = useState(false);
 
   if (!event) {
     return (
@@ -217,6 +223,15 @@ export function EventDetail() {
     update({ utensils: eventUtensils.filter((line) => line.id !== lineId) });
   };
 
+  const handleGeneratePdf = async () => {
+    setGeneratingPdf(true);
+    try {
+      await generateEventPdf(event, ingredients, pdfLang);
+    } finally {
+      setGeneratingPdf(false);
+    }
+  };
+
   const runningTotal = eventIngredients.reduce((sum, line) => sum + line.price, 0);
   const totalToPay = eventEmployees.reduce((sum, line) => sum + line.toPay, 0);
   const totalPaid = eventEmployees.reduce((sum, line) => sum + line.paid, 0);
@@ -239,6 +254,26 @@ export function EventDetail() {
           Back to events
         </Anchor>
       </Group>
+
+      <Paper withBorder p="md">
+        <Group gap="md" align="flex-end" wrap="wrap">
+          <SegmentedControl
+            value={pdfLang}
+            onChange={(value) => setPdfLang(value as "en" | "ta")}
+            data={[
+              { label: "English", value: "en" },
+              { label: "தமிழ்", value: "ta" },
+            ]}
+          />
+          <Button
+            leftSection={<Download size={18} />}
+            onClick={handleGeneratePdf}
+            loading={generatingPdf}
+          >
+            Generate PDF
+          </Button>
+        </Group>
+      </Paper>
 
       <Paper withBorder p="md">
         <Stack gap="md">

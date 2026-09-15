@@ -5,7 +5,7 @@ import { Pencil, Trash } from "lucide-react";
 
 import type { Ingredient } from "@/store/ingredients";
 import { formatINR } from "@/lib/format";
-import { normalizeUnit } from "@/lib/units";
+import { formatMeasurement } from "@/lib/units";
 
 type IngredientTableProps = {
   ingredients: Ingredient[];
@@ -31,7 +31,7 @@ export function IngredientTable({ ingredients, onEdit, onDelete }: IngredientTab
             <Table.Tr key={ingredient.id}>
               <Table.Td>{ingredient.name}</Table.Td>
               <Table.Td>{ingredient.tamilName || "—"}</Table.Td>
-              <Table.Td>{normalizeUnit(ingredient.unit)}</Table.Td>
+              <Table.Td>{formatMeasurement(ingredient.qty, ingredient.unit)}</Table.Td>
               <Table.Td>{formatINR(ingredient.globalPrice)}</Table.Td>
               <Table.Td>
                 <Group gap="xs">

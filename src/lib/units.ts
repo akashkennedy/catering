@@ -41,3 +41,12 @@ export function normalizeUnit(raw: string | null | undefined): string {
   const trimmed = raw.trim().toLowerCase();
   return UNIT_ALIASES[trimmed] ?? trimmed;
 }
+
+export function formatMeasurement(
+  qty: number | null | undefined,
+  unit: string | null | undefined
+): string {
+  const u = normalizeUnit(unit);
+  const value = qty ?? 0;
+  return value > 0 ? `${value} ${u}`.trim() : u;
+}

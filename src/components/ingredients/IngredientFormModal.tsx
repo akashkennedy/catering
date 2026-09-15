@@ -17,6 +17,7 @@ const ingredientSchema = z.object({
   name: z.string().trim().min(1, "Name is required"),
   tamilName: z.string().trim(),
   unit: z.string().trim().min(1, "Unit is required"),
+  qty: z.coerce.number().min(0, "Qty must be 0 or more"),
   globalPrice: z.coerce.number().min(0, "Price must be 0 or more"),
 });
 
@@ -44,6 +45,7 @@ export function IngredientFormModal({ opened, ingredient, onClose }: IngredientF
       name: "",
       tamilName: "",
       unit: "",
+      qty: 0,
       globalPrice: 0,
     },
   });
@@ -54,6 +56,7 @@ export function IngredientFormModal({ opened, ingredient, onClose }: IngredientF
       name: ingredient?.name ?? "",
       tamilName: ingredient?.tamilName ?? "",
       unit: normalizeUnit(ingredient?.unit) || UNITS[0],
+      qty: ingredient?.qty ?? 0,
       globalPrice: ingredient?.globalPrice ?? 0,
     });
   }, [opened, ingredient, reset]);
@@ -93,21 +96,43 @@ export function IngredientFormModal({ opened, ingredient, onClose }: IngredientF
             {...register("tamilName")}
             error={errors.tamilName?.message}
           />
-          <Controller
-            name="unit"
-            control={control}
-            render={({ field }) => (
-              <Select
-                label="Unit"
-                placeholder="Select a unit"
-                data={UNITS}
-                allowDeselect={false}
-                withAsterisk
-                {...field}
-                error={errors.unit?.message}
-              />
-            )}
-          />
+          <Group gap="sm" align="flex-end" wrap="wrap">
+            <Controller
+              name="unit"
+              control={control}
+              render={({ field }) => (
+                <Select
+                  label="Unit"
+                  placeholder="Select a unit"
+                  data={UNITS}
+                  allowDeselect={false}
+                  withAsterisk
+                  style={{ flex: 1, minWidth: 140 }}
+                  {...field}
+                  error={errors.unit?.message}
+                />
+              )}
+            />
+            <Controller
+              name="qty"
+              control={control}
+              render={({ field }) => (
+                <NumberInput
+                  label="Qty"
+                  placeholder="e.g. 5"
+                  min={0}
+                  allowNegative={false}
+                  decimalScale={2}
+                  style={{ width: 140 }}
+                  {...field}
+                  onKeyDown={(e) => {
+                    if (e.key === "ArrowUp" || e.key === "ArrowDown") e.preventDefault();
+                  }}
+                  error={errors.qty?.message}
+                />
+              )}
+            />
+          </Group>
           <Controller
             name="globalPrice"
             control={control}

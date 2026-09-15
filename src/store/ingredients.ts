@@ -6,6 +6,7 @@ export type Ingredient = {
   name: string;
   tamilName: string;
   unit: string;
+  qty: number;
   globalPrice: number;
 };
 

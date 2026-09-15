@@ -95,6 +95,8 @@ export function EmployeeFormModal({ opened, employee, onClose }: EmployeeFormMod
                 placeholder="e.g. 1500"
                 min={0}
                 allowNegative={false}
+                decimalScale={2}
+                leftSection="₹"
                 {...field}
                 error={errors.defaultRate?.message}
               />

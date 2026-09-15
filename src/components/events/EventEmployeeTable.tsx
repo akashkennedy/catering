@@ -4,6 +4,7 @@ import { ActionIcon, NumberInput, Table, Text } from "@mantine/core";
 import { X } from "lucide-react";
 
 import type { EventEmployeeLine } from "@/store/events";
+import { formatINR } from "@/lib/format";
 
 type EventEmployeeTableProps = {
   lines: EventEmployeeLine[];
@@ -59,7 +60,7 @@ export function EventEmployeeTable({ lines, onLineChange, onRemove }: EventEmplo
                 />
               </Table.Td>
               <Table.Td>
-                <Text fw={600}>₹{(line.toPay - line.paid).toFixed(2)}</Text>
+                <Text fw={600}>{formatINR(line.toPay - line.paid)}</Text>
               </Table.Td>
               <Table.Td>
                 <ActionIcon

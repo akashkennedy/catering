@@ -16,6 +16,7 @@ import { z } from "zod";
 import { useEffect } from "react";
 
 import { useUtensilsStore } from "@/store/utensils";
+import { formatINR } from "@/lib/format";
 
 const eventUtensilSchema = z.object({
   utensilId: z.string().nullable(),
@@ -112,7 +113,7 @@ export function EventUtensilFormModal({
 
   const utensilOptions = masterUtensils.map((u) => ({
     value: u.id,
-    label: `${u.name} (₹${u.rentPrice})`,
+    label: `${u.name} (${formatINR(u.rentPrice)})`,
   }));
 
   return (

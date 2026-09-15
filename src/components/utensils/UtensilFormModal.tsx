@@ -86,6 +86,8 @@ export function UtensilFormModal({ opened, utensil, onClose }: UtensilFormModalP
                 placeholder="e.g. 20"
                 min={0}
                 allowNegative={false}
+                decimalScale={2}
+                leftSection="₹"
                 {...field}
                 error={errors.rentPrice?.message}
               />

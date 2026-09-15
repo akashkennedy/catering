@@ -105,6 +105,8 @@ export function IngredientFormModal({ opened, ingredient, onClose }: IngredientF
                 placeholder="e.g. 150"
                 min={0}
                 allowNegative={false}
+                decimalScale={2}
+                leftSection="₹"
                 {...field}
                 error={errors.globalPrice?.message}
               />

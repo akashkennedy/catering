@@ -33,6 +33,7 @@ import { useSettingsStore } from "@/store/settings";
 import { useTemplatesStore } from "@/store/templates";
 import { useVendorsStore } from "@/store/vendors";
 import { generateEventPdf } from "@/lib/pdf";
+import { formatINR } from "@/lib/format";
 
 export function EventDetail() {
   const params = useParams<{ id: string }>();
@@ -338,7 +339,7 @@ export function EventDetail() {
               <Paper withBorder p="md">
                 <Group justify="space-between" wrap="nowrap">
                   <Text fw={600}>Running total</Text>
-                  <Text fw={700}>₹{runningTotal.toFixed(2)}</Text>
+                  <Text fw={700}>{formatINR(runningTotal)}</Text>
                 </Group>
               </Paper>
             </Stack>
@@ -398,15 +399,15 @@ export function EventDetail() {
                   <Stack gap={6}>
                     <Group justify="space-between" wrap="nowrap">
                       <Text fw={500}>Total to pay</Text>
-                      <Text fw={600}>₹{totalToPay.toFixed(2)}</Text>
+                      <Text fw={600}>{formatINR(totalToPay)}</Text>
                     </Group>
                     <Group justify="space-between" wrap="nowrap">
                       <Text fw={500}>Total paid</Text>
-                      <Text fw={600}>₹{totalPaid.toFixed(2)}</Text>
+                      <Text fw={600}>{formatINR(totalPaid)}</Text>
                     </Group>
                     <Group justify="space-between" wrap="nowrap">
                       <Text fw={600}>Total pending</Text>
-                      <Text fw={700}>₹{totalPending.toFixed(2)}</Text>
+                      <Text fw={700}>{formatINR(totalPending)}</Text>
                     </Group>
                   </Stack>
                 </Paper>
@@ -473,7 +474,7 @@ export function EventDetail() {
                 <Paper withBorder p="md">
                   <Group justify="space-between" wrap="nowrap">
                     <Text fw={600}>Total utensil cost</Text>
-                    <Text fw={700}>₹{totalUtensilCost.toFixed(2)}</Text>
+                    <Text fw={700}>{formatINR(totalUtensilCost)}</Text>
                   </Group>
                 </Paper>
               </Stack>

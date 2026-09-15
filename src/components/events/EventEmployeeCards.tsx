@@ -4,6 +4,7 @@ import { ActionIcon, Card, Group, NumberInput, Stack, Text } from "@mantine/core
 import { X } from "lucide-react";
 
 import type { EventEmployeeLine } from "@/store/events";
+import { formatINR } from "@/lib/format";
 
 type EventEmployeeCardsProps = {
   lines: EventEmployeeLine[];
@@ -58,7 +59,7 @@ export function EventEmployeeCards({ lines, onLineChange, onRemove }: EventEmplo
               }
             />
             <Text size="sm" fw={600}>
-              Pending: ₹{(line.toPay - line.paid).toFixed(2)}
+              Pending: {formatINR(line.toPay - line.paid)}
             </Text>
           </Stack>
         </Card>

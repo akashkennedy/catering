@@ -58,6 +58,8 @@ export function SettingsPanel() {
                   value={ingredient.globalPrice}
                   min={0}
                   allowNegative={false}
+                  decimalScale={2}
+                  leftSection="₹"
                   onChange={(value) =>
                     setIngredientPrice(ingredient.id, typeof value === "number" ? value : 0)
                   }

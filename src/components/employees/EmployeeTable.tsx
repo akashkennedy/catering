@@ -4,6 +4,7 @@ import { ActionIcon, Group, Table } from "@mantine/core";
 import { Pencil, Trash } from "lucide-react";
 
 import type { Employee } from "@/store/employees";
+import { formatINR } from "@/lib/format";
 
 type EmployeeTableProps = {
   employees: Employee[];
@@ -28,7 +29,7 @@ export function EmployeeTable({ employees, onEdit, onDelete }: EmployeeTableProp
             <Table.Tr key={employee.id}>
               <Table.Td>{employee.name}</Table.Td>
               <Table.Td>{employee.phone || "—"}</Table.Td>
-              <Table.Td>{employee.defaultRate}</Table.Td>
+              <Table.Td>{formatINR(employee.defaultRate)}</Table.Td>
               <Table.Td>
                 <Group gap="xs">
                   <ActionIcon

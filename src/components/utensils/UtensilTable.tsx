@@ -4,6 +4,7 @@ import { ActionIcon, Group, Table } from "@mantine/core";
 import { Pencil, Trash } from "lucide-react";
 
 import type { Utensil } from "@/store/utensils";
+import { formatINR } from "@/lib/format";
 
 type UtensilTableProps = {
   utensils: Utensil[];
@@ -26,7 +27,7 @@ export function UtensilTable({ utensils, onEdit, onDelete }: UtensilTableProps) 
           {utensils.map((utensil) => (
             <Table.Tr key={utensil.id}>
               <Table.Td>{utensil.name}</Table.Td>
-              <Table.Td>{utensil.rentPrice}</Table.Td>
+              <Table.Td>{formatINR(utensil.rentPrice)}</Table.Td>
               <Table.Td>
                 <Group gap="xs">
                   <ActionIcon

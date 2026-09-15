@@ -103,6 +103,8 @@ export function EventEmployeeFormModal({ opened, onClose, onAdd }: EventEmployee
                 placeholder="e.g. 1200"
                 min={0}
                 allowNegative={false}
+                decimalScale={2}
+                leftSection="₹"
                 {...field}
                 error={errors.toPay?.message}
               />

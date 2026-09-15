@@ -4,6 +4,7 @@ import { ActionIcon, Group, Table } from "@mantine/core";
 import { Pencil, Trash } from "lucide-react";
 
 import type { Ingredient } from "@/store/ingredients";
+import { formatINR } from "@/lib/format";
 
 type IngredientTableProps = {
   ingredients: Ingredient[];
@@ -30,7 +31,7 @@ export function IngredientTable({ ingredients, onEdit, onDelete }: IngredientTab
               <Table.Td>{ingredient.name}</Table.Td>
               <Table.Td>{ingredient.tamilName || "—"}</Table.Td>
               <Table.Td>{ingredient.unit}</Table.Td>
-              <Table.Td>{ingredient.globalPrice}</Table.Td>
+              <Table.Td>{formatINR(ingredient.globalPrice)}</Table.Td>
               <Table.Td>
                 <Group gap="xs">
                   <ActionIcon

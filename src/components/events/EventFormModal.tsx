@@ -95,9 +95,10 @@ type EventFormModalProps = {
   opened: boolean;
   event: CateringEvent | null;
   onClose: () => void;
+  createPrefill?: Partial<EventFormValues>;
 };
 
-export function EventFormModal({ opened, event, onClose }: EventFormModalProps) {
+export function EventFormModal({ opened, event, onClose, createPrefill }: EventFormModalProps) {
   const addEvent = useEventsStore((state) => state.addEvent);
   const updateEvent = useEventsStore((state) => state.updateEvent);
   const templates = useTemplatesStore((state) => state.templates);
@@ -127,17 +128,18 @@ export function EventFormModal({ opened, event, onClose }: EventFormModalProps) 
   useEffect(() => {
     if (!opened) return;
     reset({
-      name: event?.name ?? "",
-      phone: event?.phone ?? "",
-      location: event?.location ?? "",
-      headcount: event?.headcount ?? 100,
-      date: event?.date ?? "",
-      status: event?.status ?? "planned",
-      templateId: event?.templateId ?? null,
-      clientPaymentStatus: event?.clientPaymentStatus ?? "pending",
-      totalQuoted: event?.totalQuoted ?? 0,
+      name: event?.name ?? createPrefill?.name ?? "",
+      phone: event?.phone ?? createPrefill?.phone ?? "",
+      location: event?.location ?? createPrefill?.location ?? "",
+      headcount: event?.headcount ?? createPrefill?.headcount ?? 100,
+      date: event?.date ?? createPrefill?.date ?? "",
+      status: event?.status ?? createPrefill?.status ?? "planned",
+      templateId: event?.templateId ?? createPrefill?.templateId ?? null,
+      clientPaymentStatus:
+        event?.clientPaymentStatus ?? createPrefill?.clientPaymentStatus ?? "pending",
+      totalQuoted: event?.totalQuoted ?? createPrefill?.totalQuoted ?? 0,
     });
-  }, [opened, event, reset]);
+  }, [opened, event, createPrefill, reset]);
 
   const templateOptions = templates.map((template) => ({
     value: template.id,

@@ -1,6 +1,6 @@
 "use client";
 
-import { Card, NumberInput, Stack, Switch, Text } from "@mantine/core";
+import { Badge, Button, Card, NumberInput, Stack, Text } from "@mantine/core";
 
 import { Bilingual } from "@/components/Bilingual";
 import { ui } from "@/lib/i18n";
@@ -11,15 +11,19 @@ import { normalizeUnit } from "@/lib/units";
 type EventIngredientCardsProps = {
   lines: EventIngredientLine[];
   ingredients: Ingredient[];
+  usedIngredientIds: Set<string>;
+  onMarkUsed: (lineId: string) => void;
   onLineChange: (
     lineId: string,
-    patch: { qty?: number; price?: number; purchased?: boolean }
+    patch: { qty?: number; price?: number }
   ) => void;
 };
 
 export function EventIngredientCards({
   lines,
   ingredients,
+  usedIngredientIds,
+  onMarkUsed,
   onLineChange,
 }: EventIngredientCardsProps) {
   return (
@@ -72,12 +76,20 @@ export function EventIngredientCards({
                   }
                 />
               </Stack>
-              <Switch
-                label={<Bilingual label={ui.events.purchased} />}
-                checked={line.purchased}
-                onChange={() => onLineChange(line.id, { purchased: !line.purchased })}
-                size="sm"
-              />
+              {usedIngredientIds.has(line.ingredientId) ? (
+                <Badge color="teal" variant="light" w="fit-content">
+                  <Bilingual label={ui.events.used} />
+                </Badge>
+              ) : (
+                <Button
+                  variant="subtle"
+                  size="xs"
+                  disabled={line.qty <= 0}
+                  onClick={() => onMarkUsed(line.id)}
+                >
+                  <Bilingual label={ui.events.markUsed} />
+                </Button>
+              )}
             </Stack>
           </Card>
         );

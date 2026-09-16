@@ -22,6 +22,8 @@ const ingredientSchema = z.object({
   unit: z.string().trim().min(1, "Unit is required"),
   qty: z.coerce.number().min(0, "Qty must be 0 or more"),
   globalPrice: z.coerce.number().min(0, "Price must be 0 or more"),
+  openingStock: z.coerce.number().min(0, "Qty must be 0 or more"),
+  lowStockThreshold: z.coerce.number().min(0, "Qty must be 0 or more"),
 });
 
 type IngredientFormValues = z.infer<typeof ingredientSchema>;
@@ -51,6 +53,8 @@ export function IngredientFormModal({ opened, ingredient, onClose }: IngredientF
       unit: "",
       qty: 0,
       globalPrice: 0,
+      openingStock: 0,
+      lowStockThreshold: 0,
     },
   });
 
@@ -64,6 +68,8 @@ export function IngredientFormModal({ opened, ingredient, onClose }: IngredientF
       unit: normalizeUnit(ingredient?.unit) || UNITS[0],
       qty: ingredient?.qty ?? 0,
       globalPrice: ingredient?.globalPrice ?? 0,
+      openingStock: ingredient?.openingStock ?? 0,
+      lowStockThreshold: ingredient?.lowStockThreshold ?? 0,
     });
   }, [opened, ingredient, reset]);
 
@@ -168,6 +174,46 @@ export function IngredientFormModal({ opened, ingredient, onClose }: IngredientF
               />
             )}
           />
+          <Group gap="sm" align="flex-end" wrap="wrap">
+            <Controller
+              name="openingStock"
+              control={control}
+              render={({ field }) => (
+                <NumberInput
+                  label={<Bilingual label={ui.ingredients.openingStock} />}
+                  placeholder={labelText(ui.ingredients.openingStockPlaceholder)}
+                  min={0}
+                  allowNegative={false}
+                  decimalScale={2}
+                  style={{ flex: 1, minWidth: 150 }}
+                  {...field}
+                  onKeyDown={(e) => {
+                    if (e.key === "ArrowUp" || e.key === "ArrowDown") e.preventDefault();
+                  }}
+                  error={errors.openingStock?.message}
+                />
+              )}
+            />
+            <Controller
+              name="lowStockThreshold"
+              control={control}
+              render={({ field }) => (
+                <NumberInput
+                  label={<Bilingual label={ui.ingredients.lowStockThreshold} />}
+                  placeholder={labelText(ui.ingredients.thresholdPlaceholder)}
+                  min={0}
+                  allowNegative={false}
+                  decimalScale={2}
+                  style={{ flex: 1, minWidth: 150 }}
+                  {...field}
+                  onKeyDown={(e) => {
+                    if (e.key === "ArrowUp" || e.key === "ArrowDown") e.preventDefault();
+                  }}
+                  error={errors.lowStockThreshold?.message}
+                />
+              )}
+            />
+          </Group>
           <Group justify="flex-end" mt="md">
             <Button variant="default" onClick={onClose}>
               <Bilingual label={ui.common.cancel} />

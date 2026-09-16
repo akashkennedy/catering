@@ -30,8 +30,8 @@ export const ui = {
     paymentEmpty: lab("No pending payments.", "நிலுவை கட்டணங்கள் இல்லை."),
     inventoryAlerts: lab("Inventory alerts", "பொருள் எச்சரிக்கைகள்"),
     inventoryEmpty: lab(
-      "All ingredients for upcoming events are purchased.",
-      "வரவிருக்கும் நிகழ்வுகளுக்கான அனைத்து பொருட்களும் வாங்கப்பட்டுள்ளன."
+      "All ingredients are above their low-stock threshold.",
+      "அனைத்து பொருட்களும் குறைந்த இருப்பு எல்லைக்கு மேல் உள்ளன."
     ),
     utensilsNotReturned: lab("Utensils not yet returned", "திரும்பப் பெறாத பாத்திரங்கள்"),
     utensilsEmpty: lab("No outstanding rentals.", "நிலுவையில் உள்ள வாடகை இல்லை."),
@@ -179,7 +179,8 @@ export const ui = {
     namePlaceholder: lab("e.g. Ravi's wedding", "எ.கா. ரவியின் திருமணம்"),
     phonePlaceholder: lab("e.g. 9876543210", "எ.கா. 9876543210"),
     headcountPlaceholder: lab("e.g. 300", "எ.கா. 300"),
-    purchased: lab("Purchased", "வாங்கப்பட்டது"),
+    used: lab("Used", "பயன்படுத்தப்பட்டது"),
+    markUsed: lab("Mark used", "பயன்படுத்தப்பட்டதாகக் குறி"),
     unknownIngredient: lab("Unknown ingredient", "அறியப்படாத பொருள்"),
     toPay: lab("To pay", "செலுத்த வேண்டியது"),
     paid: lab("Paid", "செலுத்தியது"),
@@ -247,6 +248,22 @@ export const ui = {
     priceMin: lab("Price must be 0 or more", "விலை 0 அல்லது அதற்கு மேல் இருக்க வேண்டும்"),
     unitPrefix: lab("Unit:", "அலகு:"),
     pricePrefix: lab("Price:", "விலை:"),
+    openingStock: lab("Opening stock", "ஆரம்ப இருப்பு"),
+    lowStockThreshold: lab("Low stock threshold", "குறைந்த இருப்பு எல்லை"),
+    openingStockPlaceholder: lab("e.g. 0", "எ.கா. 0"),
+    thresholdPlaceholder: lab("e.g. 5", "எ.கா. 5"),
+    inStock: lab("In stock:", "இருப்பில்:"),
+    remaining: lab("Remaining", "மீதமுள்ள"),
+    lowStock: lab("Low stock", "குறைந்த இருப்பு"),
+    logPurchase: lab("Log purchase", "வாங்குதலைப் பதிவுசெய்"),
+    purchaseTitle: lab("Log purchased quantity", "வாங்கிய அளவைப் பதிவுசெய்"),
+    purchaseQty: lab("Purchased qty", "வாங்கிய அளவு"),
+    note: lab("Note", "குறிப்பு"),
+    notePlaceholder: lab("e.g. Market, vendor", "எ.கா. சந்தை, விற்பனையாளர்"),
+    purchaseNote: lab(
+      "Adds to the ingredient's remaining stock.",
+      "பொருளின் மீதமுள்ள இருப்பை அதிகரிக்கிறது."
+    ),
   },
   templates: {
     addTemplate: lab("Add Template", "டெம்ப்ளேட் சேர்க்க"),

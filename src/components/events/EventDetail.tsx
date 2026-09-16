@@ -29,6 +29,7 @@ import { EventUtensilFormModal } from "./EventUtensilFormModal";
 import { EventUtensilTable } from "./EventUtensilTable";
 import { Bilingual } from "@/components/Bilingual";
 import { ui, labelText } from "@/lib/i18n";
+import { formatIndianDate } from "@/lib/date";
 import { useEventsStore, buildScaledIngredients } from "@/store/events";
 import { useEmployeesStore } from "@/store/employees";
 import { useIngredientsStore } from "@/store/ingredients";
@@ -261,7 +262,7 @@ export function EventDetail() {
         <div>
           <Title order={1}>{event.name}</Title>
           <Text size="sm" c="dimmed">
-            {event.date || <Bilingual label={ui.common.noDate} />} ·{" "}
+            {event.date ? formatIndianDate(event.date) : <Bilingual label={ui.common.noDate} />} ·{" "}
             <Bilingual label={ui.guests(event.headcount)} />
           </Text>
         </div>

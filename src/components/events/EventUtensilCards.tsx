@@ -13,6 +13,7 @@ import { X } from "lucide-react";
 
 import { Bilingual } from "@/components/Bilingual";
 import { ui } from "@/lib/i18n";
+import { formatIndianDate } from "@/lib/date";
 import type { EventUtensilLine } from "@/store/events";
 
 type EventUtensilCardsProps = {
@@ -40,7 +41,8 @@ export function EventUtensilCards({
               <Stack gap={2}>
                 <Text fw={600}>{line.utensilName}</Text>
                 <Text size="sm" c="dimmed">
-                  {line.dateFrom || "—"} – {line.dateTo || "—"}
+                  {line.dateFrom ? formatIndianDate(line.dateFrom) : "—"} –{" "}
+                  {line.dateTo ? formatIndianDate(line.dateTo) : "—"}
                 </Text>
               </Stack>
               <ActionIcon

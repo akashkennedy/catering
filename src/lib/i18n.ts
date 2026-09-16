@@ -59,6 +59,7 @@ export const ui = {
     employees: lab("Employees", "ஊழியர்கள்"),
     rental: lab("Rental", "வாடகை"),
     calculator: lab("Calculator", "கணக்கீட்டாளர்"),
+    finance: lab("Income & Expense", "வருமானம் & செலவு"),
     settings: lab("Settings", "அமைப்புகள்"),
   },
   common: {
@@ -341,6 +342,47 @@ export const ui = {
       "No ingredients yet. Add them from the Ingredients page.",
       "இன்னும் பொருட்கள் இல்லை. பொருட்கள் பக்கத்திலிருந்து சேர்க்கவும்."
     ),
+  },
+  finance: {
+    income: lab("Income", "வருமானம்"),
+    expenses: lab("Expenses", "செலவுகள்"),
+    profit: lab("Profit", "லாபம்"),
+    eventCollections: lab("Event collections", "நிகழ்வு வசூல்"),
+    otherIncome: lab("Other income", "மற்ற வருமானம்"),
+    addExpense: lab("Add Expense", "செலவு சேர்க்க"),
+    addOtherIncome: lab("Add Other Income", "மற்ற வருமானம் சேர்க்க"),
+    category: lab("Category", "வகை"),
+    selectCategory: lab("Select a category", "வகையைத் தேர்ந்தெடுக்கவும்"),
+    amount: lab("Amount", "தொகை"),
+    amountPlaceholder: lab("e.g. 5000", "எ.கா. 5000"),
+    note: lab("Note", "குறிப்பு"),
+    notePlaceholder: lab("e.g. Market purchase", "எ.கா. சந்தை கொள்முதல்"),
+    month: lab("Month", "மாதம்"),
+    salaryNote: lab(
+      "Staff salary is intentionally not an expense category here — it is already captured per event through the Employees tab. Recording it here too would count it twice against profit.",
+      "ஊழியர் சம்பளம் இங்கு வேண்டுமென்றே செலவு வகையாக இல்லை — ஒவ்வொரு நிகழ்விலும் ஊழியர்கள் தாவல் வழியாக ஏற்கனவே கணக்கிடப்படுகிறது. இங்கும் சேர்த்தால் லாபத்தில் இருமுறை கணக்கிடப்படும்."
+    ),
+    noExpenses: lab(
+      "No expenses in this period.",
+      "இந்தக் காலத்தில் செலவுகள் இல்லை."
+    ),
+    noOtherIncome: lab(
+      "No other income in this period.",
+      "இந்தக் காலத்தில் மற்ற வருமானம் இல்லை."
+    ),
+    deleteEntry: lab("Delete entry", "பதிவை நீக்கு"),
+    entries: (count: number): Label => ({
+      en: `${count} ${count === 1 ? "entry" : "entries"}`,
+      ta: `${count} பதிவுகள்`,
+    }),
+    categories: {
+      "food materials": lab("Food materials", "உணவு பொருட்கள்"),
+      "other expenses": lab("Other expenses", "பிற செலவுகள்"),
+      electricity: lab("Electricity", "மின்சாரம்"),
+      transport: lab("Transport", "போக்குவரத்து"),
+      gas: lab("Gas", "எரிவாயு"),
+      custom: lab("Custom", "தனிப்பயன்"),
+    },
   },
   offline: {
     title: lab("You are offline", "நீங்கள் ஆஃப்லைனில் உள்ளீர்கள்"),

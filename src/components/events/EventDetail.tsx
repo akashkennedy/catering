@@ -343,7 +343,7 @@ export function EventDetail() {
             onClick={handleGeneratePdf}
             loading={generatingPdf}
           >
-            <Bilingual label={ui.events.generatePdf} />
+            <Bilingual label={ui.events.invoice} />
           </Button>
         </Group>
       </Paper>

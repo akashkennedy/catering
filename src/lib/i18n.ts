@@ -170,7 +170,7 @@ export const ui = {
     tabIngredients: lab("Ingredients", "பொருட்கள்"),
     tabEmployees: lab("Employees", "ஊழியர்கள்"),
     tabRental: lab("Rental", "வாடகை"),
-    generatePdf: lab("Generate PDF", "PDF உருவாக்கு"),
+    invoice: lab("Invoice", "விலைப்பட்டியல்"),
     editEvent: lab("Edit Event", "நிகழ்வைத் திருத்து"),
     nameRequired: lab("Name is required", "பெயர் தேவை"),
     invalidPhone: lab("Enter a valid 10-digit Indian mobile number", "சரியான 10 இலக்க இந்திய மொபைல் எண்ணை உள்ளிடவும்"),

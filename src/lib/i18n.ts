@@ -30,8 +30,8 @@ export const ui = {
     paymentEmpty: lab("No pending payments.", "நிலுவை கட்டணங்கள் இல்லை."),
     inventoryAlerts: lab("Inventory alerts", "பொருள் எச்சரிக்கைகள்"),
     inventoryEmpty: lab(
-      "All ingredients are above their low-stock threshold.",
-      "அனைத்து பொருட்களும் குறைந்த இருப்பு எல்லைக்கு மேல் உள்ளன."
+      "All ingredients and vessels are above their low-stock thresholds.",
+      "அனைத்து பொருட்களும் பாத்திரங்களும் குறைந்த இருப்பு எல்லைக்கு மேல் உள்ளன."
     ),
     utensilsNotReturned: lab("Utensils not yet returned", "திரும்பப் பெறாத பாத்திரங்கள்"),
     utensilsEmpty: lab("No outstanding rentals.", "நிலுவையில் உள்ள வாடகை இல்லை."),
@@ -318,6 +318,37 @@ export const ui = {
     rentPricePlaceholder: lab("e.g. 20", "எ.கா. 20"),
     rentPriceMin: lab("Price must be 0 or more", "விலை 0 அல்லது அதற்கு மேல் இருக்க வேண்டும்"),
     refPricePrefix: lab("Reference rent price:", "குறிப்பு வாடகை விலை:"),
+    openingStock: lab("Opening stock (owned)", "ஆரம்ப இருப்பு (சொந்தம்)"),
+    lowStockThreshold: lab("Low stock threshold", "குறைந்த இருப்பு எல்லை"),
+    openingStockPlaceholder: lab("e.g. 100", "எ.கா. 100"),
+    thresholdPlaceholder: lab("e.g. 10", "எ.கா. 10"),
+    available: lab("Available:", "கிடைக்கும்:"),
+    availableColumn: lab("Available", "கிடைக்கும்"),
+    lowStock: lab("Low stock", "குறைந்த இருப்பு"),
+    logRentIn: lab("Log rented in", "வாடகைக்கு வாங்கியதைப் பதிவுசெய்"),
+    rentInTitle: lab("Log rented-in quantity", "வாடகைக்கு வாங்கிய அளவைப் பதிவுசெய்"),
+    rentInQty: lab("Rented-in qty", "வாடகைக்கு வாங்கிய அளவு"),
+    rentInNote: lab(
+      "Adds to the utensil's available count. Records vessels taken on rent from outside.",
+      "பாத்திரத்தின் கிடைக்கும் எண்ணிக்கையை அதிகரிக்கிறது. வெளியில் இருந்து வாடகைக்கு எடுக்கப்பட்ட பாத்திரங்களைப் பதிவுசெய்கிறது."
+    ),
+    rentInEvent: lab("Event (optional)", "நிகழ்வு (விருப்பம்)"),
+    assignToEvent: lab("Assign to event", "நிகழ்வுக்கு ஒதுக்கு"),
+    assignTitle: lab("Assign vessels to an event", "நிகழ்வுக்கு பாத்திரங்களை ஒதுக்கு"),
+    assignEvent: lab("Event", "நிகழ்வு"),
+    assignEventPlaceholder: lab("Pick an event", "நிகழ்வைத் தேர்ந்தெடுக்கவும்"),
+    assignQty: lab("Quantity", "அளவு"),
+    assignNote: lab(
+      "Reduces available stock — these vessels will be used for this event.",
+      "கிடைக்கும் இருப்பைக் குறைக்கிறது — இந்த பாத்திரங்கள் இந்த நிகழ்வுக்குப் பயன்படும்."
+    ),
+    stockBreakdownPrefix: lab("Owned", "சொந்தம்"),
+    stockRentedInPrefix: lab("Rented in", "வாடகைக்கு"),
+    stockAssignedPrefix: lab("Assigned", "ஒதுக்கப்பட்டது"),
+    neededForEvents: (count: number): Label => ({
+      en: `needs ${count}`,
+      ta: `${count} தேவை`,
+    }),
   },
   settings: {
     uiLanguage: lab("UI language", "இடைமுக மொழி"),

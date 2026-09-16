@@ -10,6 +10,7 @@ import { formatIndianDate } from "@/lib/date";
 import { useEventsStore } from "@/store/events";
 
 const UPCOMING_COUNT = 3;
+const CLOSED_STATUSES = ["completed", "paid"];
 
 function todayAtMidnight(): string {
   const now = new Date();
@@ -22,7 +23,10 @@ export function UpcomingEventsWidget() {
   const today = todayAtMidnight();
 
   const upcoming = events
-    .filter((event) => event.status !== "cancelled" && event.date && event.date >= today)
+    .filter(
+      (event) =>
+        !CLOSED_STATUSES.includes(event.status) && event.date && event.date >= today
+    )
     .sort((a, b) => a.date.localeCompare(b.date))
     .slice(0, UPCOMING_COUNT);
 
@@ -62,11 +66,11 @@ export function UpcomingEventsWidget() {
                     {event.headcount}
                   </Text>
                 </Group>
-                {event.location ? (
+                {event.venue ? (
                   <Group gap={4} wrap="nowrap">
                     <MapPin size={12} />
                     <Text size="xs" c="dimmed" component="span" lineClamp={1}>
-                      {event.location}
+                      {event.venue}
                     </Text>
                   </Group>
                 ) : null}

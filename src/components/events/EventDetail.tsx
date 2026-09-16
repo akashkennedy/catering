@@ -30,16 +30,18 @@ import { EventUtensilTable } from "./EventUtensilTable";
 import { Bilingual } from "@/components/Bilingual";
 import { ui, labelText } from "@/lib/i18n";
 import { formatIndianDate } from "@/lib/date";
-import { useEventsStore, buildScaledIngredients } from "@/store/events";
+import { formatINR } from "@/lib/format";
+import { formatPhone } from "@/lib/phone";
+import { useEventsStore, buildScaledIngredients, type CateringEventInput } from "@/store/events";
 import { useEmployeesStore } from "@/store/employees";
 import { useIngredientsStore } from "@/store/ingredients";
 import { useSettingsStore } from "@/store/settings";
 import { useTemplatesStore } from "@/store/templates";
 import { useVendorSuggestionsStore } from "@/store/vendorSuggestions";
 import { generateEventPdf } from "@/lib/pdf";
-import { formatINR } from "@/lib/format";
-import { formatPhone } from "@/lib/phone";
+import { EVENT_STATUS_OPTIONS } from "./EventFormModal";
 import {
+  eventBalance,
   eventEmployeePaid,
   eventEmployeePending,
   eventEmployeeToPay,
@@ -86,23 +88,21 @@ export function EventDetail() {
   const eventEmployees = event.employees ?? [];
   const eventUtensils = event.utensils ?? [];
 
-  const update = (patch: {
-    headcount?: number;
-    templateId?: string | null;
-    ingredients?: typeof event.ingredients;
-    employees?: typeof event.employees;
-    utensils?: typeof event.utensils;
-  }) => {
+  const update = (patch: Partial<CateringEventInput>) => {
     updateEvent(event.id, {
       name: event.name,
       phone: event.phone,
-      location: event.location,
+      venue: event.venue,
+      address: event.address,
+      functionType: event.functionType,
       headcount: event.headcount,
       date: event.date,
       status: event.status,
       templateId: event.templateId,
-      clientPaymentStatus: event.clientPaymentStatus,
-      totalQuoted: event.totalQuoted ?? 0,
+      ratePerPerson: event.ratePerPerson,
+      totalAmount: event.totalAmount,
+      totalAmountOverridden: event.totalAmountOverridden,
+      advancePaid: event.advancePaid,
       ingredients: eventIngredients,
       employees: eventEmployees,
       utensils: eventUtensils,
@@ -110,9 +110,18 @@ export function EventDetail() {
     });
   };
 
+  const roundMoney = (value: number) => Math.round(value * 100) / 100;
+
   const handleHeadcountChange = (headcount: number) => {
     const template = templates.find((item) => item.id === event.templateId) ?? null;
-    update({ headcount, ingredients: buildScaledIngredients(template, ingredients, headcount) });
+    const patch: Partial<CateringEventInput> = {
+      headcount,
+      ingredients: buildScaledIngredients(template, ingredients, headcount),
+    };
+    if (!event.totalAmountOverridden) {
+      patch.totalAmount = roundMoney(event.ratePerPerson * headcount);
+    }
+    update(patch);
   };
 
   const handleTemplateChange = (templateId: string | null) => {
@@ -121,6 +130,29 @@ export function EventDetail() {
       templateId,
       ingredients: buildScaledIngredients(template, ingredients, event.headcount),
     });
+  };
+
+  const handleStatusChange = (status: CateringEventInput["status"]) => {
+    update({ status });
+  };
+
+  const handleRateChange = (value: number | string) => {
+    const rate = typeof value === "number" && Number.isFinite(value) ? value : 0;
+    const patch: Partial<CateringEventInput> = { ratePerPerson: rate };
+    if (!event.totalAmountOverridden) {
+      patch.totalAmount = roundMoney(rate * event.headcount);
+    }
+    update(patch);
+  };
+
+  const handleTotalAmountChange = (value: number | string) => {
+    const amount = typeof value === "number" && Number.isFinite(value) ? value : 0;
+    update({ totalAmount: roundMoney(amount), totalAmountOverridden: true });
+  };
+
+  const handleAdvanceChange = (value: number | string) => {
+    const amount = typeof value === "number" && Number.isFinite(value) ? value : 0;
+    update({ advancePaid: roundMoney(amount) });
   };
 
   const handleLineChange = (
@@ -320,10 +352,72 @@ export function EventDetail() {
               value={event.templateId ?? null}
               onChange={(value) => handleTemplateChange(value ?? null)}
             />
+            <Select
+              label={<Bilingual label={ui.common.status} />}
+              data={EVENT_STATUS_OPTIONS.map((option) => ({
+                value: option.value,
+                label: labelText(option.label),
+              }))}
+              w={180}
+              value={event.status}
+              onChange={(value) => handleStatusChange((value ?? "enquiry") as CateringEventInput["status"])}
+            />
           </Group>
           <Text size="sm" c="dimmed">
             <Bilingual label={ui.events.headcountNote} />
           </Text>
+          <Group gap="md" wrap="wrap">
+            <NumberInput
+              label={<Bilingual label={ui.events.ratePerPerson} />}
+              value={event.ratePerPerson}
+              min={0}
+              allowNegative={false}
+              decimalScale={2}
+              leftSection="₹"
+              w={160}
+              onKeyDown={(e) => {
+                if (e.key === "ArrowUp" || e.key === "ArrowDown") e.preventDefault();
+              }}
+              onChange={handleRateChange}
+            />
+            <NumberInput
+              label={<Bilingual label={ui.events.totalAmount} />}
+              value={event.totalAmount}
+              min={0}
+              allowNegative={false}
+              decimalScale={2}
+              leftSection="₹"
+              w={180}
+              onKeyDown={(e) => {
+                if (e.key === "ArrowUp" || e.key === "ArrowDown") e.preventDefault();
+              }}
+              onChange={handleTotalAmountChange}
+            />
+            <NumberInput
+              label={<Bilingual label={ui.events.advancePaid} />}
+              value={event.advancePaid}
+              min={0}
+              allowNegative={false}
+              decimalScale={2}
+              leftSection="₹"
+              w={180}
+              onKeyDown={(e) => {
+                if (e.key === "ArrowUp" || e.key === "ArrowDown") e.preventDefault();
+              }}
+              onChange={handleAdvanceChange}
+            />
+            <Group gap={6}>
+              <Text fw={600}>
+                <Bilingual label={ui.events.balance} />
+              </Text>
+              <Text fw={700}>{formatINR(eventBalance(event))}</Text>
+            </Group>
+          </Group>
+          {event.venue || event.address ? (
+            <Text size="sm" c="dimmed">
+              {[event.venue, event.address].filter(Boolean).join(" · ")}
+            </Text>
+          ) : null}
         </Stack>
       </Paper>
 

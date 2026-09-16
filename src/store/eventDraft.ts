@@ -3,7 +3,7 @@ import { create } from "zustand";
 export type EventDraftPrefill = {
   headcount: number;
   templateId: string | null;
-  totalQuoted: number;
+  totalAmount: number;
 };
 
 type EventDraftState = {

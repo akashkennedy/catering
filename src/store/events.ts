@@ -4,9 +4,15 @@ import { createJSONStorage, persist } from "zustand/middleware";
 import type { Ingredient } from "./ingredients";
 import type { FoodTemplate } from "./templates";
 
-export type EventStatus = "planned" | "confirmed" | "completed" | "cancelled";
+export const EVENT_STATUS_PIPELINE = [
+  "enquiry",
+  "confirmed",
+  "preparing",
+  "completed",
+  "paid",
+] as const;
 
-export type ClientPaymentStatus = "pending" | "partial" | "paid";
+export type EventStatus = (typeof EVENT_STATUS_PIPELINE)[number];
 
 export type EventIngredientLine = {
   id: string;
@@ -42,13 +48,17 @@ export type CateringEvent = {
   id: string;
   name: string;
   phone: string;
-  location: string;
+  venue: string;
+  address: string;
+  functionType: string;
   headcount: number;
   date: string;
   status: EventStatus;
   templateId: string | null;
-  clientPaymentStatus: ClientPaymentStatus;
-  totalQuoted: number;
+  ratePerPerson: number;
+  totalAmount: number;
+  totalAmountOverridden: boolean;
+  advancePaid: number;
   ingredients: EventIngredientLine[];
   employees: EventEmployeeLine[];
   utensils: EventUtensilLine[];
@@ -114,42 +124,100 @@ export const useEventsStore = create<EventsState>()(
     {
       name: "catering-events",
       storage: createJSONStorage(() => localStorage),
-      version: 3,
+      version: 4,
       migrate: (persistedState) => {
         const state = persistedState as {
-          events?: Array<{
-            ingredients?: unknown;
-            employees?: unknown;
-            utensils?: unknown;
-            totalQuoted?: unknown;
-          }> | null;
+          events?: Array<Record<string, unknown>> | null;
         };
         return {
           ...state,
-          events: (state.events ?? []).map((event) => ({
-            ...event,
-            totalQuoted: typeof event.totalQuoted === "number" ? event.totalQuoted : 0,
-            ingredients: ((event.ingredients ?? []) as Array<Record<string, unknown>>).map(
-              (rawLine) => ({
-                ...rawLine,
-                purchased:
-                  typeof rawLine.purchased === "boolean" ? rawLine.purchased : false,
-              })
-            ),
-            employees: event.employees ?? [],
-            utensils: ((event.utensils ?? []) as Array<Record<string, unknown>>).map((rawLine) => {
-              const line = { ...rawLine };
-              delete line.vendorId;
-              return {
-                ...line,
-                vendorName:
-                  typeof line.vendorName === "string" && line.vendorName.trim()
-                    ? line.vendorName
-                    : "Unknown vendor",
-                vendorPhone: typeof line.vendorPhone === "string" ? line.vendorPhone : "",
-              };
-            }),
-          })),
+          events: (state.events ?? []).map((raw) => {
+            const event = { ...raw };
+
+            const rawStatus = String(event.status ?? "");
+            let status: EventStatus = "enquiry";
+            if (EVENT_STATUS_PIPELINE.includes(rawStatus as EventStatus)) {
+              status = rawStatus as EventStatus;
+            } else if (rawStatus === "planned") {
+              status = "enquiry";
+            } else if (rawStatus === "completed") {
+              status = "completed";
+            } else if (rawStatus === "cancelled") {
+              status = "completed";
+            }
+            if (event.clientPaymentStatus === "paid") status = "paid";
+
+            const headcount =
+              typeof event.headcount === "number" ? event.headcount : 0;
+            const ratePerPerson =
+              typeof event.ratePerPerson === "number" ? event.ratePerPerson : 0;
+            const rawTotalAmount = event.totalAmount;
+            const rawTotalQuoted = event.totalQuoted;
+            let totalAmount: number;
+            let totalAmountOverridden: boolean;
+            if (typeof rawTotalAmount === "number") {
+              totalAmount = rawTotalAmount;
+              totalAmountOverridden =
+                typeof event.totalAmountOverridden === "boolean"
+                  ? event.totalAmountOverridden
+                  : false;
+            } else if (typeof rawTotalQuoted === "number") {
+              totalAmount = rawTotalQuoted;
+              totalAmountOverridden = true;
+            } else {
+              totalAmount = Math.round(ratePerPerson * headcount * 100) / 100;
+              totalAmountOverridden = false;
+            }
+
+            const legacyLocation =
+              typeof event.location === "string" ? event.location : "";
+            const venue =
+              typeof event.venue === "string" && event.venue.trim()
+                ? event.venue
+                : legacyLocation;
+
+            delete event.status;
+            delete event.clientPaymentStatus;
+            delete event.totalQuoted;
+            delete event.location;
+            delete event.totalAmount;
+            delete event.totalAmountOverridden;
+
+            return {
+              ...event,
+              status,
+              venue,
+              address: typeof event.address === "string" ? event.address : "",
+              functionType:
+                typeof event.functionType === "string" ? event.functionType : "",
+              ratePerPerson,
+              totalAmount,
+              totalAmountOverridden,
+              advancePaid: typeof event.advancePaid === "number" ? event.advancePaid : 0,
+              ingredients: ((event.ingredients ?? []) as Array<Record<string, unknown>>).map(
+                (rawLine) => ({
+                  ...rawLine,
+                  purchased:
+                    typeof rawLine.purchased === "boolean" ? rawLine.purchased : false,
+                })
+              ),
+              employees: event.employees ?? [],
+              utensils: ((event.utensils ?? []) as Array<Record<string, unknown>>).map(
+                (rawLine) => {
+                  const line = { ...rawLine };
+                  delete line.vendorId;
+                  return {
+                    ...line,
+                    vendorName:
+                      typeof line.vendorName === "string" && line.vendorName.trim()
+                        ? line.vendorName
+                        : "Unknown vendor",
+                    vendorPhone: typeof line.vendorPhone === "string" ? line.vendorPhone : "",
+                  };
+                }
+              ),
+            };
+          }),
         };
       },
     }

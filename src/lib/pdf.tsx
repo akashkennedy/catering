@@ -1,12 +1,13 @@
 import React from "react";
 import { pdf, Font, Document, Page, Text, View, StyleSheet } from "@react-pdf/renderer";
 import type { DocumentProps } from "@react-pdf/renderer";
-import type { CateringEvent } from "@/store/events";
+import type { CateringEvent, EventStatus } from "@/store/events";
 import type { Ingredient } from "@/store/ingredients";
 import type { DefaultLanguage } from "@/store/settings";
 import { formatINR } from "@/lib/format";
 import { normalizeUnit } from "@/lib/units";
 import { formatIndianDate } from "@/lib/date";
+import { eventBalance } from "@/lib/eventFinances";
 
 const TAMIL_FAMILY = "NotoSansTamil";
 
@@ -31,10 +32,15 @@ type PdfLabels = {
   unit: string;
   price: string;
   total: string;
-  clientPaymentStatus: string;
-  pending: string;
-  partial: string;
-  paid: string;
+  status: string;
+  totalAmount: string;
+  advancePaid: string;
+  balance: string;
+  statusEnquiry: string;
+  statusConfirmed: string;
+  statusPreparing: string;
+  statusCompleted: string;
+  statusPaid: string;
 };
 
 const labels: Record<DefaultLanguage, PdfLabels> = {
@@ -48,10 +54,15 @@ const labels: Record<DefaultLanguage, PdfLabels> = {
     unit: "Unit",
     price: "Price (INR)",
     total: "Total",
-    clientPaymentStatus: "Client Payment Status",
-    pending: "Pending",
-    partial: "Partial",
-    paid: "Paid",
+    status: "Status",
+    totalAmount: "Total amount",
+    advancePaid: "Advance paid",
+    balance: "Balance",
+    statusEnquiry: "Enquiry",
+    statusConfirmed: "Confirmed",
+    statusPreparing: "Preparing",
+    statusCompleted: "Completed",
+    statusPaid: "Paid",
   },
   ta: {
     title: "விருந்து நிகழ்வு",
@@ -63,10 +74,15 @@ const labels: Record<DefaultLanguage, PdfLabels> = {
     unit: "அலகு",
     price: "விலை (ரூ)",
     total: "மொத்தம்",
-    clientPaymentStatus: "வாடிக்கையாளர் கட்டண நிலை",
-    pending: "நிலுவை",
-    partial: "பகுதி",
-    paid: "செலுத்தப்பட்டது",
+    status: "நிலை",
+    totalAmount: "மொத்த தொகை",
+    advancePaid: "முன்பணம்",
+    balance: "மீதம்",
+    statusEnquiry: "விசாரணை",
+    statusConfirmed: "உறுதிசெய்யப்பட்டது",
+    statusPreparing: "தயாராகிறது",
+    statusCompleted: "முடிந்தது",
+    statusPaid: "செலுத்தப்பட்டது",
   },
 };
 
@@ -74,11 +90,20 @@ function fontFamilyForLang(lang: DefaultLanguage): string {
   return lang === "ta" ? TAMIL_FAMILY : "Helvetica";
 }
 
-function paymentStatusLabel(status: string, lang: DefaultLanguage): string {
+function statusLabel(status: EventStatus, lang: DefaultLanguage): string {
   const l = labels[lang];
-  if (status === "paid") return l.paid;
-  if (status === "partial") return l.partial;
-  return l.pending;
+  switch (status) {
+    case "confirmed":
+      return l.statusConfirmed;
+    case "preparing":
+      return l.statusPreparing;
+    case "completed":
+      return l.statusCompleted;
+    case "paid":
+      return l.statusPaid;
+    default:
+      return l.statusEnquiry;
+  }
 }
 
 const styles = StyleSheet.create({
@@ -117,7 +142,16 @@ function buildDocument(
           {l.headcount}: {event.headcount}
         </Text>
         <Text style={[styles.detail, { fontFamily: ff }]}>
-          {l.clientPaymentStatus}: {paymentStatusLabel(event.clientPaymentStatus, lang)}
+          {l.status}: {statusLabel(event.status, lang)}
+        </Text>
+        <Text style={[styles.detail, { fontFamily: ff }]}>
+          {l.totalAmount}: {formatINR(event.totalAmount ?? 0)}
+        </Text>
+        <Text style={[styles.detail, { fontFamily: ff }]}>
+          {l.advancePaid}: {formatINR(event.advancePaid ?? 0)}
+        </Text>
+        <Text style={[styles.detail, { fontFamily: ff }]}>
+          {l.balance}: {formatINR(eventBalance(event))}
         </Text>
 
         <Text style={[styles.sectionTitle, { fontFamily: ff }]}>{l.ingredientList}</Text>

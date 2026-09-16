@@ -22,9 +22,10 @@ export function EarningsWidget() {
   const [filter, setFilter] = useState<EarningsFilter>("month");
 
   const monthKey = currentMonthKey();
-  const eligible = events.filter((event) => event.status !== "cancelled");
   const filtered =
-    filter === "month" ? eligible.filter((event) => (event.date ?? "").startsWith(monthKey)) : eligible;
+    filter === "month"
+      ? events.filter((event) => (event.date ?? "").startsWith(monthKey))
+      : events;
   const total = filtered.reduce((sum, event) => sum + eventEarnings(event), 0);
 
   return (

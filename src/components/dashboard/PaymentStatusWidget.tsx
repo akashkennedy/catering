@@ -13,7 +13,7 @@ import { useEventsStore } from "@/store/events";
 export function PaymentStatusWidget() {
   const events = useEventsStore((state) => state.events);
 
-  const eligible = events.filter((event) => event.status !== "cancelled");
+  const eligible = events;
   const withPending = eligible
     .map((event) => ({
       event,
@@ -96,9 +96,6 @@ export function PaymentStatusWidget() {
               </Stack>
             ))}
           </Stack>
-          <Text size="xs" c="dimmed">
-            <Bilingual label={ui.dashboard.paymentPartialHint} />
-          </Text>
         </Stack>
       )}
     </Card>

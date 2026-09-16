@@ -7,20 +7,17 @@ import { Pencil, Trash } from "lucide-react";
 import { Bilingual } from "@/components/Bilingual";
 import { ui } from "@/lib/i18n";
 import { formatIndianDate } from "@/lib/date";
-import type { CateringEvent, ClientPaymentStatus, EventStatus } from "@/store/events";
-import { CLIENT_PAYMENT_OPTIONS, EVENT_STATUS_OPTIONS } from "./EventFormModal";
-
-const PAYMENT_COLORS: Record<ClientPaymentStatus, string> = {
-  pending: "yellow",
-  partial: "orange",
-  paid: "green",
-};
+import { formatINR } from "@/lib/format";
+import { eventBalance } from "@/lib/eventFinances";
+import type { CateringEvent, EventStatus } from "@/store/events";
+import { EVENT_STATUS_OPTIONS } from "./EventFormModal";
 
 const STATUS_COLORS: Record<EventStatus, string> = {
-  planned: "blue",
+  enquiry: "blue",
   confirmed: "cyan",
-  completed: "green",
-  cancelled: "gray",
+  preparing: "violet",
+  completed: "teal",
+  paid: "green",
 };
 
 type EventTableProps = {
@@ -32,8 +29,6 @@ type EventTableProps = {
 export function EventTable({ events, onEdit, onDelete }: EventTableProps) {
   const statusLabel = (status: EventStatus) =>
     EVENT_STATUS_OPTIONS.find((option) => option.value === status)?.label ?? { en: status, ta: "" };
-  const paymentLabel = (status: ClientPaymentStatus) =>
-    CLIENT_PAYMENT_OPTIONS.find((option) => option.value === status)?.label ?? { en: status, ta: "" };
 
   return (
     <div className="hidden sm:block">
@@ -44,7 +39,7 @@ export function EventTable({ events, onEdit, onDelete }: EventTableProps) {
             <Table.Th><Bilingual label={ui.common.date} /></Table.Th>
             <Table.Th><Bilingual label={ui.common.headcount} /></Table.Th>
             <Table.Th><Bilingual label={ui.common.status} /></Table.Th>
-            <Table.Th><Bilingual label={ui.common.payment} /></Table.Th>
+            <Table.Th><Bilingual label={ui.events.balance} /></Table.Th>
             <Table.Th><Bilingual label={ui.common.actions} /></Table.Th>
           </Table.Tr>
         </Table.Thead>
@@ -65,11 +60,7 @@ export function EventTable({ events, onEdit, onDelete }: EventTableProps) {
                   <Bilingual label={statusLabel(event.status)} />
                 </Badge>
               </Table.Td>
-              <Table.Td>
-                <Badge color={PAYMENT_COLORS[event.clientPaymentStatus]} variant="light">
-                  <Bilingual label={paymentLabel(event.clientPaymentStatus)} />
-                </Badge>
-              </Table.Td>
+              <Table.Td>{formatINR(eventBalance(event))}</Table.Td>
               <Table.Td>
                 <Group gap="xs">
                   <ActionIcon

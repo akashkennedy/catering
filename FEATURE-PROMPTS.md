@@ -1,16 +1,18 @@
 You are implementing ONE feature for the Catering CRM app. Refer to SPEC.md
 in this repo for full context on the data model, tech stack, and overall app.
 
-FEATURE: Global Settings + Ingredient Master List
+FEATURE: Ingredient Full UI-Wide Tamil Support (Tamil beside English)
 
-Scope: SPEC.md §3.3, §3.7, §4.7. Ingredient CRUD (name, Tamil name, unit, global price) stored in Zustand+localStorage. Global Settings screen to edit prices and default language. Acceptance criteria:
-Can add/edit/delete an ingredient with all fields
-Data survives a page refresh (localStorage persistence working)
-Global settings screen lets you edit default language and see/edit ingredient prices
-Mobile: list becomes stacked cards below ~640px
+Scope: SPEC.md §10.4. Largest item — do this incrementally, not as one giant commit. Suggested breakdown:
 
-DO NOT:
-
+Acceptance criteria
+8a. Set up the i18n approach (a simple label-pairs structure — e.g. { en: "Events", ta: "நிகழ்வுகள்" } — rendered together, not a toggle) and apply to shared layout/nav first
+8b. Apply to Events screens (list, create/edit, detail tabs)
+8c. Apply to Templates, Ingredients, Employees, Rental screens
+8d. Apply to Global Settings and any remaining screens Acceptance criteria (per sub-step):
+ Every label/button/heading in that screen shows English and Tamil together
+ Layout doesn't break with the added text (test on mobile widths especially — bilingual labels are longer)
+ Consistent visual treatment of the Tamil text (size/weight relative to English) across screens
 - Touch code for other features not listed above
 - Change the data model beyond what this feature needs
 - Add UI, routes, or store slices for future features

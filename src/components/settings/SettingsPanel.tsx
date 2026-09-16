@@ -5,9 +5,15 @@ import { Group, NumberInput, Paper, SegmentedControl, Stack, Text, Title } from 
 import { Bilingual } from "@/components/Bilingual";
 import { ui } from "@/lib/i18n";
 import { useIngredientsStore } from "@/store/ingredients";
-import { useSettingsStore, type DefaultLanguage } from "@/store/settings";
+import {
+  useSettingsStore,
+  type DefaultLanguage,
+  type UiLanguage,
+} from "@/store/settings";
 
 export function SettingsPanel() {
+  const uiLanguage = useSettingsStore((state) => state.uiLanguage);
+  const setUiLanguage = useSettingsStore((state) => state.setUiLanguage);
   const defaultLanguage = useSettingsStore((state) => state.defaultLanguage);
   const setDefaultLanguage = useSettingsStore((state) => state.setDefaultLanguage);
   const ingredients = useIngredientsStore((state) => state.ingredients);
@@ -18,6 +24,26 @@ export function SettingsPanel() {
       <Title order={1}>
         <Bilingual label={ui.nav.settings} />
       </Title>
+
+      <Paper withBorder p="md">
+        <Stack gap="sm">
+          <Title order={3}>
+            <Bilingual label={ui.settings.uiLanguage} />
+          </Title>
+          <Text size="sm" c="dimmed">
+            <Bilingual label={ui.settings.uiLanguageNote} />
+          </Text>
+          <SegmentedControl
+            value={uiLanguage}
+            onChange={(value) => setUiLanguage(value as UiLanguage)}
+            data={[
+              { label: <Bilingual label={ui.settings.tamil} />, value: "ta" },
+              { label: <Bilingual label={ui.settings.english} />, value: "en" },
+              { label: <Bilingual label={ui.settings.both} />, value: "both" },
+            ]}
+          />
+        </Stack>
+      </Paper>
 
       <Paper withBorder p="md">
         <Stack gap="sm">

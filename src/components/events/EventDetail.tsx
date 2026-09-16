@@ -38,6 +38,13 @@ import { useVendorSuggestionsStore } from "@/store/vendorSuggestions";
 import { generateEventPdf } from "@/lib/pdf";
 import { formatINR } from "@/lib/format";
 import { formatPhone } from "@/lib/phone";
+import {
+  eventEmployeePaid,
+  eventEmployeePending,
+  eventEmployeeToPay,
+  eventIngredientCost,
+  eventRentalCost,
+} from "@/lib/eventFinances";
 
 export function EventDetail() {
   const params = useParams<{ id: string }>();
@@ -94,6 +101,7 @@ export function EventDetail() {
       status: event.status,
       templateId: event.templateId,
       clientPaymentStatus: event.clientPaymentStatus,
+      totalQuoted: event.totalQuoted ?? 0,
       ingredients: eventIngredients,
       employees: eventEmployees,
       utensils: eventUtensils,
@@ -114,7 +122,10 @@ export function EventDetail() {
     });
   };
 
-  const handleLineChange = (lineId: string, patch: { qty?: number; price?: number }) => {
+  const handleLineChange = (
+    lineId: string,
+    patch: { qty?: number; price?: number; purchased?: boolean }
+  ) => {
     update({
       ingredients: eventIngredients.map((line) =>
         line.id === lineId ? { ...line, ...patch } : line
@@ -238,14 +249,11 @@ export function EventDetail() {
     }
   };
 
-  const runningTotal = eventIngredients.reduce((sum, line) => sum + line.price, 0);
-  const totalToPay = eventEmployees.reduce((sum, line) => sum + line.toPay, 0);
-  const totalPaid = eventEmployees.reduce((sum, line) => sum + line.paid, 0);
-  const totalPending = totalToPay - totalPaid;
-  const totalUtensilCost = eventUtensils.reduce(
-    (sum, line) => sum + line.qty * line.rentalPrice,
-    0
-  );
+  const runningTotal = eventIngredientCost(event);
+  const totalToPay = eventEmployeeToPay(event);
+  const totalPaid = eventEmployeePaid(event);
+  const totalPending = eventEmployeePending(event);
+  const totalUtensilCost = eventRentalCost(event);
 
   return (
     <Stack gap="md">

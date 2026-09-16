@@ -1,6 +1,6 @@
 "use client";
 
-import { Card, NumberInput, Stack, Text } from "@mantine/core";
+import { Card, NumberInput, Stack, Switch, Text } from "@mantine/core";
 
 import { Bilingual } from "@/components/Bilingual";
 import { ui } from "@/lib/i18n";
@@ -11,7 +11,10 @@ import { normalizeUnit } from "@/lib/units";
 type EventIngredientCardsProps = {
   lines: EventIngredientLine[];
   ingredients: Ingredient[];
-  onLineChange: (lineId: string, patch: { qty?: number; price?: number }) => void;
+  onLineChange: (
+    lineId: string,
+    patch: { qty?: number; price?: number; purchased?: boolean }
+  ) => void;
 };
 
 export function EventIngredientCards({
@@ -69,6 +72,12 @@ export function EventIngredientCards({
                   }
                 />
               </Stack>
+              <Switch
+                label={<Bilingual label={ui.events.purchased} />}
+                checked={line.purchased}
+                onChange={() => onLineChange(line.id, { purchased: !line.purchased })}
+                size="sm"
+              />
             </Stack>
           </Card>
         );

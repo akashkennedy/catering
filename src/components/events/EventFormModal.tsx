@@ -17,6 +17,8 @@ import { useEffect } from "react";
 import { useTemplatesStore } from "@/store/templates";
 import { useIngredientsStore } from "@/store/ingredients";
 import { validatePhone, formatPhone } from "@/lib/phone";
+import { ui, labelText, type Label } from "@/lib/i18n";
+import { Bilingual } from "@/components/Bilingual";
 import {
   buildScaledIngredients,
   useEventsStore,
@@ -26,34 +28,66 @@ import {
   type EventStatus,
 } from "@/store/events";
 
-export const EVENT_STATUS_OPTIONS: { value: EventStatus; label: string }[] = [
-  { value: "planned", label: "Planned" },
-  { value: "confirmed", label: "Confirmed" },
-  { value: "completed", label: "Completed" },
-  { value: "cancelled", label: "Cancelled" },
+export const EVENT_STATUS_OPTIONS: { value: EventStatus; label: Label }[] = [
+  { value: "planned", label: ui.events.statusPlanned },
+  { value: "confirmed", label: ui.events.statusConfirmed },
+  { value: "completed", label: ui.events.statusCompleted },
+  { value: "cancelled", label: ui.events.statusCancelled },
 ];
 
-export const CLIENT_PAYMENT_OPTIONS: { value: ClientPaymentStatus; label: string }[] = [
-  { value: "pending", label: "Pending" },
-  { value: "partial", label: "Partial" },
-  { value: "paid", label: "Paid" },
+export const CLIENT_PAYMENT_OPTIONS: { value: ClientPaymentStatus; label: Label }[] = [
+  { value: "pending", label: ui.events.paymentPending },
+  { value: "partial", label: ui.events.paymentPartial },
+  { value: "paid", label: ui.events.paymentPaid },
 ];
 
-const eventSchema = z.object({
-  name: z.string().trim().min(1, "Name is required"),
-  phone: z.string().trim().refine(
-    (val) => val === "" || validatePhone(val),
-    "Enter a valid 10-digit Indian mobile number"
-  ),
-  location: z.string().trim(),
-  headcount: z.coerce.number().min(1, "Headcount must be 1 or more"),
-  date: z.string().min(1, "Date is required"),
-  status: z.enum(["planned", "confirmed", "completed", "cancelled"]),
-  templateId: z.string().nullable(),
-  clientPaymentStatus: z.enum(["pending", "partial", "paid"]),
-});
+const todayISO = () => new Date().toISOString().slice(0, 10);
 
-type EventFormValues = z.infer<typeof eventSchema>;
+function buildEventSchema(isNew: boolean, currentDate?: string) {
+  return z.object({
+    name: z.string().trim().min(1, "Name is required"),
+    phone: z.string().trim().refine(
+      (val) => val === "" || validatePhone(val),
+      "Enter a valid 10-digit Indian mobile number"
+    ),
+    location: z.string().trim(),
+    headcount: z.coerce.number().min(1, "Headcount must be 1 or more"),
+    date: z
+      .string()
+      .min(1, "Date is required")
+      .refine(
+        (val) =>
+          !isNew
+            ? val >= todayISO() || val === currentDate
+            : val >= todayISO(),
+        "Cannot select a date in the past"
+      ),
+    status: z.enum(["planned", "confirmed", "completed", "cancelled"]),
+    templateId: z.string().nullable(),
+    clientPaymentStatus: z.enum(["pending", "partial", "paid"]),
+  });
+}
+
+const STATUS_DATA = EVENT_STATUS_OPTIONS.map((o) => ({
+  value: o.value,
+  label: labelText(o.label),
+}));
+
+const PAYMENT_DATA = CLIENT_PAYMENT_OPTIONS.map((o) => ({
+  value: o.value,
+  label: labelText(o.label),
+}));
+
+type EventFormValues = {
+  name: string;
+  phone: string;
+  location: string;
+  headcount: number;
+  date: string;
+  status: EventStatus;
+  templateId: string | null;
+  clientPaymentStatus: ClientPaymentStatus;
+};
 
 type EventFormModalProps = {
   opened: boolean;
@@ -74,7 +108,7 @@ export function EventFormModal({ opened, event, onClose }: EventFormModalProps) 
     control,
     formState: { errors },
   } = useForm<EventFormValues>({
-    resolver: zodResolver(eventSchema),
+    resolver: zodResolver(buildEventSchema(!event, event?.date)),
     defaultValues: {
       name: "",
       phone: "",
@@ -142,28 +176,34 @@ export function EventFormModal({ opened, event, onClose }: EventFormModalProps) 
     <Modal
       opened={opened}
       onClose={onClose}
-      title={event ? "Edit Event" : "Add Event"}
+      title={
+        event ? (
+          <Bilingual label={ui.events.editEvent} />
+        ) : (
+          <Bilingual label={ui.events.addEvent} />
+        )
+      }
       centered
       size="lg"
     >
       <form onSubmit={handleSubmit(onSubmit)}>
         <Stack gap="md">
           <TextInput
-            label="Name"
-            placeholder="e.g. Ravi's wedding"
+            label={<Bilingual label={ui.common.name} />}
+            placeholder={labelText(ui.events.namePlaceholder)}
             withAsterisk
             {...register("name")}
             error={errors.name?.message}
           />
           <TextInput
-            label="Phone"
-            placeholder="e.g. 9876543210"
+            label={<Bilingual label={ui.common.phone} />}
+            placeholder={labelText(ui.events.phonePlaceholder)}
             {...register("phone")}
             error={errors.phone?.message}
           />
           <TextInput
-            label="Location"
-            placeholder="e.g. Madurai function hall"
+            label={<Bilingual label={ui.common.location} />}
+            placeholder={labelText(ui.events.locationPlaceholder)}
             {...register("location")}
             error={errors.location?.message}
           />
@@ -172,8 +212,8 @@ export function EventFormModal({ opened, event, onClose }: EventFormModalProps) 
             control={control}
             render={({ field }) => (
               <NumberInput
-                label="Headcount"
-                placeholder="e.g. 300"
+                label={<Bilingual label={ui.common.headcount} />}
+                placeholder={labelText(ui.events.headcountPlaceholder)}
                 min={1}
                 allowNegative={false}
                 withAsterisk
@@ -186,10 +226,11 @@ export function EventFormModal({ opened, event, onClose }: EventFormModalProps) 
             )}
           />
           <TextInput
-            label="Date"
+            label={<Bilingual label={ui.common.date} />}
             type="date"
             withAsterisk
             {...register("date")}
+            min={!event ? todayISO() : undefined}
             error={errors.date?.message}
           />
           <Controller
@@ -197,8 +238,8 @@ export function EventFormModal({ opened, event, onClose }: EventFormModalProps) 
             control={control}
             render={({ field }) => (
               <Select
-                label="Status"
-                data={EVENT_STATUS_OPTIONS}
+                label={<Bilingual label={ui.common.status} />}
+                data={STATUS_DATA}
                 withAsterisk
                 {...field}
               />
@@ -209,8 +250,8 @@ export function EventFormModal({ opened, event, onClose }: EventFormModalProps) 
             control={control}
             render={({ field }) => (
               <Select
-                label="Template"
-                placeholder="Select a template"
+                label={<Bilingual label={ui.common.template} />}
+                placeholder={labelText(ui.events.selectTemplate)}
                 data={templateOptions}
                 searchable
                 clearable
@@ -225,8 +266,8 @@ export function EventFormModal({ opened, event, onClose }: EventFormModalProps) 
             control={control}
             render={({ field }) => (
               <Select
-                label="Client payment status"
-                data={CLIENT_PAYMENT_OPTIONS}
+                label={<Bilingual label={ui.events.clientPaymentStatus} />}
+                data={PAYMENT_DATA}
                 withAsterisk
                 {...field}
               />
@@ -234,9 +275,15 @@ export function EventFormModal({ opened, event, onClose }: EventFormModalProps) 
           />
           <Group justify="flex-end" mt="md">
             <Button variant="default" onClick={onClose}>
-              Cancel
+              <Bilingual label={ui.common.cancel} />
             </Button>
-            <Button type="submit">{event ? "Save" : "Add"}</Button>
+            <Button type="submit">
+              {event ? (
+                <Bilingual label={ui.common.save} />
+              ) : (
+                <Bilingual label={ui.common.add} />
+              )}
+            </Button>
           </Group>
         </Stack>
       </form>

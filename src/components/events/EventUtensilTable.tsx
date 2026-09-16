@@ -3,6 +3,8 @@
 import { ActionIcon, NumberInput, Switch, Table, Text } from "@mantine/core";
 import { X } from "lucide-react";
 
+import { Bilingual } from "@/components/Bilingual";
+import { ui } from "@/lib/i18n";
 import type { EventUtensilLine } from "@/store/events";
 
 type EventUtensilTableProps = {
@@ -26,11 +28,11 @@ export function EventUtensilTable({
       <Table striped highlightOnHover withTableBorder>
         <Table.Thead>
           <Table.Tr>
-            <Table.Th>Utensil</Table.Th>
-            <Table.Th>Qty</Table.Th>
-            <Table.Th>Price</Table.Th>
-            <Table.Th>Duration</Table.Th>
-            <Table.Th>Returned</Table.Th>
+            <Table.Th><Bilingual label={ui.events.utensil} /></Table.Th>
+            <Table.Th><Bilingual label={ui.common.qty} /></Table.Th>
+            <Table.Th><Bilingual label={ui.common.price} /></Table.Th>
+            <Table.Th><Bilingual label={ui.events.duration} /></Table.Th>
+            <Table.Th><Bilingual label={ui.events.returned} /></Table.Th>
             <Table.Th />
           </Table.Tr>
         </Table.Thead>

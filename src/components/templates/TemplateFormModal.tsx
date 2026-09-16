@@ -25,7 +25,10 @@ import {
 import { z } from "zod";
 import { useEffect } from "react";
 
+import { Bilingual } from "@/components/Bilingual";
+import { ui, labelText } from "@/lib/i18n";
 import { useIngredientsStore } from "@/store/ingredients";
+import { normalizeUnit } from "@/lib/units";
 import {
   useTemplatesStore,
   type FoodTemplate,
@@ -95,7 +98,7 @@ function DishIngredientFields({
     <Stack gap="xs">
       {fields.length === 0 && (
         <Text size="sm" c="dimmed">
-          No ingredients on this dish yet.
+          <Bilingual label={ui.templates.noIngredientsOnDish} />
         </Text>
       )}
       {fields.map((field, fieldIndex) => {
@@ -115,8 +118,8 @@ function DishIngredientFields({
               control={control}
               render={({ field: selectField }) => (
                 <Select
-                  label={fieldIndex === 0 ? "Ingredient" : undefined}
-                  placeholder="Select ingredient"
+                  label={fieldIndex === 0 ? <Bilingual label={ui.templates.ingredient} /> : undefined}
+                  placeholder={labelText(ui.templates.selectIngredient)}
                   data={ingredients}
                   searchable
                   clearable
@@ -131,8 +134,8 @@ function DishIngredientFields({
               control={control}
               render={({ field: qtyField }) => (
                 <NumberInput
-                  label={fieldIndex === 0 ? "Qty / 100" : undefined}
-                  placeholder="Qty"
+                  label={fieldIndex === 0 ? <Bilingual label={ui.templates.qtyPer100} /> : undefined}
+                  placeholder={labelText(ui.templates.qtyPlaceholder)}
                   min={0}
                   allowNegative={false}
                   style={{ width: 110 }}
@@ -161,7 +164,7 @@ function DishIngredientFields({
         leftSection={<Plus size={14} />}
         onClick={() => append({ id: crypto.randomUUID(), ingredientId: "", qtyPer100: 0 })}
       >
-        Add ingredient
+        <Bilingual label={ui.templates.addIngredient} />
       </Button>
     </Stack>
   );
@@ -199,7 +202,9 @@ export function TemplateFormModal({ opened, template, onClose }: TemplateFormMod
 
   const ingredientOptions = ingredients.map((ingredient) => ({
     value: ingredient.id,
-    label: ingredient.unit ? `${ingredient.name} (${ingredient.unit})` : ingredient.name,
+    label: ingredient.unit
+      ? `${ingredient.name} (${normalizeUnit(ingredient.unit)})`
+      : ingredient.name,
   }));
 
   const onSubmit = (values: TemplateFormValues) => {
@@ -229,15 +234,15 @@ export function TemplateFormModal({ opened, template, onClose }: TemplateFormMod
     <Modal
       opened={opened}
       onClose={onClose}
-      title={template ? "Edit Template" : "Add Template"}
+      title={<Bilingual label={template ? ui.templates.editTitle : ui.templates.addTemplate} />}
       centered
       size="xl"
     >
       <form onSubmit={handleSubmit(onSubmit)}>
         <Stack gap="md">
           <TextInput
-            label="Name"
-            placeholder="e.g. Wedding lunch"
+            label={<Bilingual label={ui.common.name} />}
+            placeholder={labelText(ui.templates.namePlaceholder)}
             withAsterisk
             {...register("name")}
             error={errors.name?.message}
@@ -245,7 +250,7 @@ export function TemplateFormModal({ opened, template, onClose }: TemplateFormMod
 
           {dishFields.length === 0 && (
             <Text size="sm" c="dimmed">
-              No dishes yet. Add one to start attaching ingredients.
+              <Bilingual label={ui.templates.noDishes} />
             </Text>
           )}
 
@@ -253,7 +258,9 @@ export function TemplateFormModal({ opened, template, onClose }: TemplateFormMod
             <Card key={field.id} withBorder padding="sm">
               <Stack gap="sm">
                 <Group justify="space-between">
-                  <Text fw={600}>Dish {dishIndex + 1}</Text>
+                  <Text fw={600}>
+                    <Bilingual label={ui.dishNumber(dishIndex + 1)} />
+                  </Text>
                   <ActionIcon
                     variant="subtle"
                     color="red"
@@ -264,8 +271,8 @@ export function TemplateFormModal({ opened, template, onClose }: TemplateFormMod
                   </ActionIcon>
                 </Group>
                 <TextInput
-                  label="Dish name"
-                  placeholder="e.g. Chicken biryani"
+                  label={<Bilingual label={ui.templates.dishName} />}
+                  placeholder={labelText(ui.templates.dishNamePlaceholder)}
                   withAsterisk
                   {...register(`dishes.${dishIndex}.name`)}
                   error={dishNameError(dishIndex)}
@@ -287,14 +294,16 @@ export function TemplateFormModal({ opened, template, onClose }: TemplateFormMod
               appendDish({ id: crypto.randomUUID(), name: "", ingredients: [] })
             }
           >
-            Add dish
+            <Bilingual label={ui.templates.addDish} />
           </Button>
 
           <Group justify="flex-end" mt="md">
             <Button variant="default" onClick={onClose}>
-              Cancel
+              <Bilingual label={ui.common.cancel} />
             </Button>
-            <Button type="submit">{template ? "Save" : "Add"}</Button>
+            <Button type="submit">
+              <Bilingual label={template ? ui.common.save : ui.common.add} />
+            </Button>
           </Group>
         </Stack>
       </form>

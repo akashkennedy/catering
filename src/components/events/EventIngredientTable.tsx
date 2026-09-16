@@ -2,8 +2,11 @@
 
 import { NumberInput, Table, Text } from "@mantine/core";
 
+import { Bilingual } from "@/components/Bilingual";
+import { ui } from "@/lib/i18n";
 import type { Ingredient } from "@/store/ingredients";
 import type { EventIngredientLine } from "@/store/events";
+import { normalizeUnit } from "@/lib/units";
 
 type EventIngredientTableProps = {
   lines: EventIngredientLine[];
@@ -21,10 +24,10 @@ export function EventIngredientTable({
       <Table striped highlightOnHover withTableBorder>
         <Table.Thead>
           <Table.Tr>
-            <Table.Th>Ingredient</Table.Th>
-            <Table.Th>Qty</Table.Th>
-            <Table.Th>Unit</Table.Th>
-            <Table.Th>Price</Table.Th>
+            <Table.Th><Bilingual label={{ en: "Ingredient", ta: "பொருள்" }} /></Table.Th>
+            <Table.Th><Bilingual label={ui.common.qty} /></Table.Th>
+            <Table.Th><Bilingual label={ui.common.unit} /></Table.Th>
+            <Table.Th><Bilingual label={ui.common.price} /></Table.Th>
           </Table.Tr>
         </Table.Thead>
         <Table.Tbody>
@@ -33,7 +36,9 @@ export function EventIngredientTable({
             return (
               <Table.Tr key={line.id}>
                 <Table.Td>
-                  <Text fw={500}>{ingredient?.name ?? "Unknown ingredient"}</Text>
+                  <Text fw={500}>
+                    {ingredient?.name ?? <Bilingual label={ui.events.unknownIngredient} />}
+                  </Text>
                   {ingredient?.tamilName && (
                     <Text size="xs" c="dimmed">
                       {ingredient.tamilName}
@@ -54,7 +59,7 @@ export function EventIngredientTable({
                     }
                   />
                 </Table.Td>
-                <Table.Td>{ingredient?.unit ?? "—"}</Table.Td>
+                <Table.Td>{normalizeUnit(ingredient?.unit) || "—"}</Table.Td>
                 <Table.Td>
                   <NumberInput
                     value={line.price}

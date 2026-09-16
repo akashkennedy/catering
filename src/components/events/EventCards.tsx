@@ -4,6 +4,8 @@ import { ActionIcon, Anchor, Badge, Card, Group, Stack, Text } from "@mantine/co
 import Link from "next/link";
 import { Pencil, Trash } from "lucide-react";
 
+import { Bilingual } from "@/components/Bilingual";
+import { ui } from "@/lib/i18n";
 import type { CateringEvent, ClientPaymentStatus, EventStatus } from "@/store/events";
 import { CLIENT_PAYMENT_OPTIONS, EVENT_STATUS_OPTIONS } from "./EventFormModal";
 
@@ -28,9 +30,9 @@ type EventCardsProps = {
 
 export function EventCards({ events, onEdit, onDelete }: EventCardsProps) {
   const statusLabel = (status: EventStatus) =>
-    EVENT_STATUS_OPTIONS.find((option) => option.value === status)?.label ?? status;
+    EVENT_STATUS_OPTIONS.find((option) => option.value === status)?.label ?? { en: status, ta: "" };
   const paymentLabel = (status: ClientPaymentStatus) =>
-    CLIENT_PAYMENT_OPTIONS.find((option) => option.value === status)?.label ?? status;
+    CLIENT_PAYMENT_OPTIONS.find((option) => option.value === status)?.label ?? { en: status, ta: "" };
 
   return (
     <Stack gap="sm" className="sm:hidden">
@@ -43,18 +45,19 @@ export function EventCards({ events, onEdit, onDelete }: EventCardsProps) {
               </Anchor>
               <Group gap="xs">
                 <Badge color={STATUS_COLORS[event.status]} variant="light" size="sm">
-                  {statusLabel(event.status)}
+                  <Bilingual label={statusLabel(event.status)} />
                 </Badge>
                 <Badge
                   color={PAYMENT_COLORS[event.clientPaymentStatus]}
                   variant="light"
                   size="sm"
                 >
-                  {paymentLabel(event.clientPaymentStatus)}
+                  <Bilingual label={paymentLabel(event.clientPaymentStatus)} />
                 </Badge>
               </Group>
               <Text size="sm" c="dimmed">
-                {event.date || "No date"} · {event.headcount} guests
+                {event.date || <Bilingual label={ui.common.noDate} />} ·{" "}
+                <Bilingual label={ui.guests(event.headcount)} />
               </Text>
               {event.location && (
                 <Text size="sm" c="dimmed">

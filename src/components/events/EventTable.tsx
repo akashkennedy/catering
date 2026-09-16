@@ -4,6 +4,8 @@ import { ActionIcon, Anchor, Badge, Group, Table } from "@mantine/core";
 import Link from "next/link";
 import { Pencil, Trash } from "lucide-react";
 
+import { Bilingual } from "@/components/Bilingual";
+import { ui } from "@/lib/i18n";
 import type { CateringEvent, ClientPaymentStatus, EventStatus } from "@/store/events";
 import { CLIENT_PAYMENT_OPTIONS, EVENT_STATUS_OPTIONS } from "./EventFormModal";
 
@@ -28,21 +30,21 @@ type EventTableProps = {
 
 export function EventTable({ events, onEdit, onDelete }: EventTableProps) {
   const statusLabel = (status: EventStatus) =>
-    EVENT_STATUS_OPTIONS.find((option) => option.value === status)?.label ?? status;
+    EVENT_STATUS_OPTIONS.find((option) => option.value === status)?.label ?? { en: status, ta: "" };
   const paymentLabel = (status: ClientPaymentStatus) =>
-    CLIENT_PAYMENT_OPTIONS.find((option) => option.value === status)?.label ?? status;
+    CLIENT_PAYMENT_OPTIONS.find((option) => option.value === status)?.label ?? { en: status, ta: "" };
 
   return (
     <div className="hidden sm:block">
       <Table striped highlightOnHover withTableBorder>
         <Table.Thead>
           <Table.Tr>
-            <Table.Th>Name</Table.Th>
-            <Table.Th>Date</Table.Th>
-            <Table.Th>Headcount</Table.Th>
-            <Table.Th>Status</Table.Th>
-            <Table.Th>Payment</Table.Th>
-            <Table.Th>Actions</Table.Th>
+            <Table.Th><Bilingual label={ui.common.name} /></Table.Th>
+            <Table.Th><Bilingual label={ui.common.date} /></Table.Th>
+            <Table.Th><Bilingual label={ui.common.headcount} /></Table.Th>
+            <Table.Th><Bilingual label={ui.common.status} /></Table.Th>
+            <Table.Th><Bilingual label={ui.common.payment} /></Table.Th>
+            <Table.Th><Bilingual label={ui.common.actions} /></Table.Th>
           </Table.Tr>
         </Table.Thead>
         <Table.Tbody>
@@ -53,16 +55,18 @@ export function EventTable({ events, onEdit, onDelete }: EventTableProps) {
                   {event.name}
                 </Anchor>
               </Table.Td>
-              <Table.Td>{event.date || "—"}</Table.Td>
+              <Table.Td>
+                {event.date || <Bilingual label={ui.common.noDate} />}
+              </Table.Td>
               <Table.Td>{event.headcount}</Table.Td>
               <Table.Td>
                 <Badge color={STATUS_COLORS[event.status]} variant="light">
-                  {statusLabel(event.status)}
+                  <Bilingual label={statusLabel(event.status)} />
                 </Badge>
               </Table.Td>
               <Table.Td>
                 <Badge color={PAYMENT_COLORS[event.clientPaymentStatus]} variant="light">
-                  {paymentLabel(event.clientPaymentStatus)}
+                  <Bilingual label={paymentLabel(event.clientPaymentStatus)} />
                 </Badge>
               </Table.Td>
               <Table.Td>

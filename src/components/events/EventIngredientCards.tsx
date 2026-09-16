@@ -2,8 +2,11 @@
 
 import { Card, NumberInput, Stack, Text } from "@mantine/core";
 
+import { Bilingual } from "@/components/Bilingual";
+import { ui } from "@/lib/i18n";
 import type { Ingredient } from "@/store/ingredients";
 import type { EventIngredientLine } from "@/store/events";
+import { normalizeUnit } from "@/lib/units";
 
 type EventIngredientCardsProps = {
   lines: EventIngredientLine[];
@@ -24,7 +27,9 @@ export function EventIngredientCards({
           <Card key={line.id} withBorder padding="sm">
             <Stack gap="xs">
               <div>
-                <Text fw={600}>{ingredient?.name ?? "Unknown ingredient"}</Text>
+                <Text fw={600}>
+                  {ingredient?.name ?? <Bilingual label={ui.events.unknownIngredient} />}
+                </Text>
                 {ingredient?.tamilName && (
                   <Text size="xs" c="dimmed">
                     {ingredient.tamilName}
@@ -32,13 +37,13 @@ export function EventIngredientCards({
                 )}
                 {ingredient?.unit && (
                   <Text size="xs" c="dimmed">
-                    Unit: {ingredient.unit}
+                    <Bilingual label={ui.ingredients.unitPrefix} /> {normalizeUnit(ingredient.unit)}
                   </Text>
                 )}
               </div>
               <Stack gap="xs">
                 <NumberInput
-                  label="Qty"
+                  label={<Bilingual label={ui.common.qty} />}
                   value={line.qty}
                   min={0}
                   allowNegative={false}
@@ -50,7 +55,7 @@ export function EventIngredientCards({
                   }
                 />
                 <NumberInput
-                  label="Price"
+                  label={<Bilingual label={ui.common.price} />}
                   value={line.price}
                   min={0}
                   allowNegative={false}

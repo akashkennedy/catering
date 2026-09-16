@@ -3,6 +3,8 @@
 import { ActionIcon, Group, Table } from "@mantine/core";
 import { Pencil, Trash } from "lucide-react";
 
+import { Bilingual } from "@/components/Bilingual";
+import { ui } from "@/lib/i18n";
 import type { FoodTemplate } from "@/store/templates";
 
 type TemplateTableProps = {
@@ -17,10 +19,10 @@ export function TemplateTable({ templates, onEdit, onDelete }: TemplateTableProp
       <Table striped highlightOnHover withTableBorder>
         <Table.Thead>
           <Table.Tr>
-            <Table.Th>Name</Table.Th>
-            <Table.Th>Dishes</Table.Th>
-            <Table.Th>Ingredients</Table.Th>
-            <Table.Th>Actions</Table.Th>
+            <Table.Th><Bilingual label={ui.common.name} /></Table.Th>
+            <Table.Th><Bilingual label={ui.templates.dishes} /></Table.Th>
+            <Table.Th><Bilingual label={ui.templates.ingredients} /></Table.Th>
+            <Table.Th><Bilingual label={ui.common.actions} /></Table.Th>
           </Table.Tr>
         </Table.Thead>
         <Table.Tbody>
@@ -33,8 +35,8 @@ export function TemplateTable({ templates, onEdit, onDelete }: TemplateTableProp
             return (
               <Table.Tr key={template.id}>
                 <Table.Td>{template.name}</Table.Td>
-                <Table.Td>{dishCount}</Table.Td>
-                <Table.Td>{ingredientCount}</Table.Td>
+                <Table.Td><Bilingual label={ui.dishesTitle(dishCount)} /></Table.Td>
+                <Table.Td><Bilingual label={ui.ingredientsCount(ingredientCount)} /></Table.Td>
                 <Table.Td>
                   <Group gap="xs">
                     <ActionIcon

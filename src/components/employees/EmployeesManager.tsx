@@ -7,6 +7,8 @@ import { Plus } from "lucide-react";
 import { EmployeeCards } from "./EmployeeCards";
 import { EmployeeFormModal } from "./EmployeeFormModal";
 import { EmployeeTable } from "./EmployeeTable";
+import { Bilingual } from "@/components/Bilingual";
+import { ui } from "@/lib/i18n";
 import { useEmployeesStore, type Employee } from "@/store/employees";
 
 export function EmployeesManager() {
@@ -19,7 +21,9 @@ export function EmployeesManager() {
   return (
     <>
       <Group justify="space-between" mb="md">
-        <Title order={1}>Employees</Title>
+        <Title order={1}>
+          <Bilingual label={ui.nav.employees} />
+        </Title>
         <Button
           leftSection={<Plus size={18} />}
           onClick={() => {
@@ -27,12 +31,14 @@ export function EmployeesManager() {
             setFormOpened(true);
           }}
         >
-          Add Employee
+          <Bilingual label={ui.employees.addEmployee} />
         </Button>
       </Group>
 
       {employees.length === 0 ? (
-        <Text c="dimmed">No employees yet. Add one to get started.</Text>
+        <Text c="dimmed">
+          <Bilingual label={ui.employees.empty} />
+        </Text>
       ) : (
         <>
           <EmployeeTable
@@ -59,14 +65,22 @@ export function EmployeesManager() {
       <Modal
         opened={deletingEmployee !== null}
         onClose={() => setDeletingEmployee(null)}
-        title="Delete employee"
+        title={<Bilingual label={ui.employees.deleteTitle} />}
         centered
       >
         <Stack gap="md">
-          <Text>Are you sure you want to delete &quot;{deletingEmployee?.name}&quot;?</Text>
+          <Text>
+            <Bilingual
+              label={
+                deletingEmployee
+                  ? ui.deleteConfirm(deletingEmployee.name)
+                  : { en: "", ta: "" }
+              }
+            />
+          </Text>
           <Group justify="flex-end">
             <Button variant="default" onClick={() => setDeletingEmployee(null)}>
-              Cancel
+              <Bilingual label={ui.common.cancel} />
             </Button>
             <Button
               color="red"
@@ -75,7 +89,7 @@ export function EmployeesManager() {
                 setDeletingEmployee(null);
               }}
             >
-              Delete
+              <Bilingual label={ui.common.delete} />
             </Button>
           </Group>
         </Stack>

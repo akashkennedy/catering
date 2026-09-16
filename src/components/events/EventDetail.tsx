@@ -5,6 +5,7 @@ import { useParams } from "next/navigation";
 import Link from "next/link";
 import {
   Anchor,
+  Autocomplete,
   Button,
   Group,
   NumberInput,
@@ -26,12 +27,14 @@ import { EventIngredientTable } from "./EventIngredientTable";
 import { EventUtensilCards } from "./EventUtensilCards";
 import { EventUtensilFormModal } from "./EventUtensilFormModal";
 import { EventUtensilTable } from "./EventUtensilTable";
+import { Bilingual } from "@/components/Bilingual";
+import { ui, labelText } from "@/lib/i18n";
 import { useEventsStore, buildScaledIngredients } from "@/store/events";
 import { useEmployeesStore } from "@/store/employees";
 import { useIngredientsStore } from "@/store/ingredients";
 import { useSettingsStore } from "@/store/settings";
 import { useTemplatesStore } from "@/store/templates";
-import { useVendorsStore } from "@/store/vendors";
+import { useVendorSuggestionsStore } from "@/store/vendorSuggestions";
 import { generateEventPdf } from "@/lib/pdf";
 import { formatINR } from "@/lib/format";
 import { formatPhone } from "@/lib/phone";
@@ -44,12 +47,13 @@ export function EventDetail() {
   const templates = useTemplatesStore((state) => state.templates);
   const ingredients = useIngredientsStore((state) => state.ingredients);
   const masterEmployees = useEmployeesStore((state) => state.employees);
-  const masterVendors = useVendorsStore((state) => state.vendors);
+  const vendorSuggestions = useVendorSuggestionsStore((state) => state.vendorSuggestions);
+  const addVendorSuggestion = useVendorSuggestionsStore((state) => state.addVendorSuggestion);
   const defaultLanguage = useSettingsStore((state) => state.defaultLanguage);
   const [employeeFormOpened, setEmployeeFormOpened] = useState(false);
   const [utensilFormOpened, setUtensilFormOpened] = useState(false);
   const [assignValue, setAssignValue] = useState<string | null>(null);
-  const [utensilVendorValue, setUtensilVendorValue] = useState<string | null>(null);
+  const [utensilVendorName, setUtensilVendorName] = useState("");
   const [pdfLang, setPdfLang] = useState<"en" | "ta">(defaultLanguage);
   const [generatingPdf, setGeneratingPdf] = useState(false);
 
@@ -59,7 +63,7 @@ export function EventDetail() {
         <Title order={1}>Event Detail</Title>
         <Text c="dimmed">Event not found.</Text>
         <Anchor component={Link} href="/events">
-          Back to events
+          <Bilingual label={{ en: "Back to events", ta: "நிகழ்வுகளுக்குத் திரும்பு" }} />
         </Anchor>
       </Stack>
     );
@@ -181,15 +185,15 @@ export function EventDetail() {
     dateFrom: string;
     dateTo: string;
   }) => {
-    const vendor = masterVendors.find((v) => v.id === utensilVendorValue) ?? null;
+    const vendorName = utensilVendorName.trim() || "Unknown vendor";
+    addVendorSuggestion(vendorName);
     update({
       utensils: [
         ...eventUtensils,
         {
           id: crypto.randomUUID(),
-          vendorId: vendor?.id ?? null,
-          vendorName: vendor?.name ?? "Unknown vendor",
-          vendorPhone: vendor?.phone ?? "",
+          vendorName,
+          vendorPhone: "",
           utensilId: input.utensilId,
           utensilName: input.utensilName,
           qty: input.qty,
@@ -249,11 +253,14 @@ export function EventDetail() {
         <div>
           <Title order={1}>{event.name}</Title>
           <Text size="sm" c="dimmed">
-            {event.date || "No date"} · {event.headcount} guests
+            {event.date || <Bilingual label={ui.common.noDate} />} ·{" "}
+            <Bilingual label={ui.guests(event.headcount)} />
           </Text>
         </div>
         <Anchor component={Link} href="/events" size="sm">
-          Back to events
+          <Bilingual
+            label={{ en: "Back to events", ta: "நிகழ்வுகளுக்குத் திரும்பு" }}
+          />
         </Anchor>
       </Group>
 
@@ -263,8 +270,8 @@ export function EventDetail() {
             value={pdfLang}
             onChange={(value) => setPdfLang(value as "en" | "ta")}
             data={[
-              { label: "English", value: "en" },
-              { label: "தமிழ்", value: "ta" },
+              { label: <Bilingual label={ui.settings.english} />, value: "en" },
+              { label: <Bilingual label={ui.settings.tamil} />, value: "ta" },
             ]}
           />
           <Button
@@ -272,17 +279,19 @@ export function EventDetail() {
             onClick={handleGeneratePdf}
             loading={generatingPdf}
           >
-            Generate PDF
+            <Bilingual label={ui.events.generatePdf} />
           </Button>
         </Group>
       </Paper>
 
       <Paper withBorder p="md">
         <Stack gap="md">
-          <Text fw={600}>Event details</Text>
+          <Text fw={600}>
+            <Bilingual label={ui.events.eventDetails} />
+          </Text>
           <Group gap="md" wrap="wrap">
             <NumberInput
-              label="Headcount"
+              label={<Bilingual label={ui.common.headcount} />}
               value={event.headcount}
               min={1}
               allowNegative={false}
@@ -293,8 +302,8 @@ export function EventDetail() {
               onChange={(value) => handleHeadcountChange(typeof value === "number" ? value : 1)}
             />
             <Select
-              label="Template"
-              placeholder="Select a template"
+              label={<Bilingual label={ui.common.template} />}
+              placeholder={labelText(ui.events.selectTemplate)}
               data={templateOptions}
               searchable
               clearable
@@ -304,7 +313,7 @@ export function EventDetail() {
             />
           </Group>
           <Text size="sm" c="dimmed">
-            Changing the headcount or template recalculates the ingredient list below.
+            <Bilingual label={ui.events.headcountNote} />
           </Text>
         </Stack>
       </Paper>
@@ -312,21 +321,20 @@ export function EventDetail() {
       <Tabs defaultValue="ingredients">
         <Tabs.List>
           <Tabs.Tab value="ingredients" leftSection={<Salad size={16} />}>
-            Ingredients
+            <Bilingual label={ui.events.tabIngredients} />
           </Tabs.Tab>
           <Tabs.Tab value="employees" leftSection={<Users size={16} />}>
-            Employees
+            <Bilingual label={ui.events.tabEmployees} />
           </Tabs.Tab>
           <Tabs.Tab value="utensils" leftSection={<UtensilsCrossed size={16} />}>
-            Utensils
+            <Bilingual label={ui.events.tabRental} />
           </Tabs.Tab>
         </Tabs.List>
 
         <Tabs.Panel value="ingredients" pt="md">
           {eventIngredients.length === 0 ? (
             <Text c="dimmed">
-              No ingredients yet. Select a template and set a headcount to generate the scaled
-              ingredient list.
+              <Bilingual label={ui.events.noIngredients} />
             </Text>
           ) : (
             <Stack gap="md">
@@ -342,7 +350,9 @@ export function EventDetail() {
               />
               <Paper withBorder p="md">
                 <Group justify="space-between" wrap="nowrap">
-                  <Text fw={600}>Running total</Text>
+                  <Text fw={600}>
+                    <Bilingual label={ui.events.runningTotal} />
+                  </Text>
                   <Text fw={700}>{formatINR(runningTotal)}</Text>
                 </Group>
               </Paper>
@@ -354,8 +364,8 @@ export function EventDetail() {
           <Stack gap="md">
             <Group gap="md" align="flex-end" wrap="wrap">
               <Select
-                label="Assign existing employee"
-                placeholder="Pick an employee"
+                label={<Bilingual label={ui.events.assignExistingEmployee} />}
+                placeholder={labelText(ui.events.pickEmployee)}
                 data={assignableEmployees.map((employee) => ({
                   value: employee.id,
                   label: employee.phone
@@ -376,16 +386,16 @@ export function EventDetail() {
                 variant="default"
                 onClick={() => setEmployeeFormOpened(true)}
               >
-                Add one-off employee
+                <Bilingual label={ui.events.addOneOffEmployee} />
               </Button>
             </Group>
             <Text size="xs" c="dimmed">
-              Default rate is pre-filled from the master list and can be edited per event.
+              <Bilingual label={ui.events.defaultRateNote} />
             </Text>
 
             {eventEmployees.length === 0 ? (
               <Text c="dimmed">
-                No employees assigned yet. Assign an existing employee or add a one-off.
+                <Bilingual label={ui.events.noEmployees} />
               </Text>
             ) : (
               <Stack gap="md">
@@ -402,15 +412,21 @@ export function EventDetail() {
                 <Paper withBorder p="md">
                   <Stack gap={6}>
                     <Group justify="space-between" wrap="nowrap">
-                      <Text fw={500}>Total to pay</Text>
+                      <Text fw={500}>
+                        <Bilingual label={ui.events.totalToPay} />
+                      </Text>
                       <Text fw={600}>{formatINR(totalToPay)}</Text>
                     </Group>
                     <Group justify="space-between" wrap="nowrap">
-                      <Text fw={500}>Total paid</Text>
+                      <Text fw={500}>
+                        <Bilingual label={ui.events.totalPaid} />
+                      </Text>
                       <Text fw={600}>{formatINR(totalPaid)}</Text>
                     </Group>
                     <Group justify="space-between" wrap="nowrap">
-                      <Text fw={600}>Total pending</Text>
+                      <Text fw={600}>
+                        <Bilingual label={ui.events.totalPending} />
+                      </Text>
                       <Text fw={700}>{formatINR(totalPending)}</Text>
                     </Group>
                   </Stack>
@@ -429,37 +445,30 @@ export function EventDetail() {
         <Tabs.Panel value="utensils" pt="md">
           <Stack gap="md">
             <Group gap="md" align="flex-end" wrap="wrap">
-              <Select
-                label="Assign vendor"
-                placeholder="Pick a vendor"
-                data={masterVendors.map((vendor) => ({
-                  value: vendor.id,
-                  label: vendor.phone
-                    ? `${vendor.name} (${formatPhone(vendor.phone)})`
-                    : vendor.name,
-                }))}
-                searchable
-                clearable
+              <Autocomplete
+                label={<Bilingual label={ui.events.vendor} />}
+                placeholder={labelText(ui.events.vendorPlaceholder)}
+                data={vendorSuggestions}
                 w={280}
-                value={utensilVendorValue}
-                onChange={(value) => setUtensilVendorValue(value)}
+                value={utensilVendorName}
+                onChange={(value) => setUtensilVendorName(value)}
               />
               <Button
                 leftSection={<Plus size={18} />}
                 variant="default"
-                disabled={!utensilVendorValue}
+                disabled={!utensilVendorName.trim()}
                 onClick={() => setUtensilFormOpened(true)}
               >
-                Add utensil
+                <Bilingual label={ui.events.addUtensil} />
               </Button>
             </Group>
             <Text size="xs" c="dimmed">
-              Select a vendor first, then add utensils with quantities and rental prices.
+              <Bilingual label={ui.events.vendorNote} />
             </Text>
 
             {eventUtensils.length === 0 ? (
               <Text c="dimmed">
-                No utensils assigned yet. Select a vendor and add utensils.
+                <Bilingual label={ui.events.noUtensils} />
               </Text>
             ) : (
               <Stack gap="md">
@@ -477,7 +486,9 @@ export function EventDetail() {
                 />
                 <Paper withBorder p="md">
                   <Group justify="space-between" wrap="nowrap">
-                    <Text fw={600}>Total utensil cost</Text>
+                    <Text fw={600}>
+                      <Bilingual label={ui.events.totalRentalCost} />
+                    </Text>
                     <Text fw={700}>{formatINR(totalUtensilCost)}</Text>
                   </Group>
                 </Paper>

@@ -15,28 +15,29 @@ import {
   CalendarDays,
   ClipboardList,
   CookingPot,
-  Handshake,
   LayoutDashboard,
   Settings,
   ShoppingBasket,
   UserRound,
 } from "lucide-react";
 
+import { Bilingual } from "@/components/Bilingual";
+import { ui, type Label } from "@/lib/i18n";
+
 type NavItem = {
-  label: string;
+  label: Label;
   href: string;
   icon: ComponentType<{ size?: number | string }>;
 };
 
 const NAV_ITEMS: NavItem[] = [
-  { label: "Dashboard", href: "/", icon: LayoutDashboard },
-  { label: "Events", href: "/events", icon: CalendarDays },
-  { label: "Templates", href: "/templates", icon: ClipboardList },
-  { label: "Ingredients", href: "/ingredients", icon: ShoppingBasket },
-  { label: "Employees", href: "/employees", icon: UserRound },
-  { label: "Vendors", href: "/vendors", icon: Handshake },
-  { label: "Utensils", href: "/utensils", icon: CookingPot },
-  { label: "Settings", href: "/settings", icon: Settings },
+  { label: ui.nav.dashboard, href: "/", icon: LayoutDashboard },
+  { label: ui.nav.events, href: "/events", icon: CalendarDays },
+  { label: ui.nav.templates, href: "/templates", icon: ClipboardList },
+  { label: ui.nav.ingredients, href: "/ingredients", icon: ShoppingBasket },
+  { label: ui.nav.employees, href: "/employees", icon: UserRound },
+  { label: ui.nav.rental, href: "/utensils", icon: CookingPot },
+  { label: ui.nav.settings, href: "/settings", icon: Settings },
 ];
 
 export default function AppLayout({ children }: { children: React.ReactNode }) {
@@ -57,7 +58,9 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
             hiddenFrom="sm"
             size="sm"
           />
-          <Title order={3}>Catering CRM</Title>
+          <Title order={3}>
+            <Bilingual label={ui.appName} />
+          </Title>
         </Group>
       </AppShell.Header>
       <AppShell.Navbar p="md">
@@ -68,7 +71,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
               key={item.href}
               component={Link}
               href={item.href}
-              label={item.label}
+              label={<Bilingual label={item.label} />}
               leftSection={<Icon size={18} />}
               active={pathname === item.href}
               onClick={() => setOpened(false)}

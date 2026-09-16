@@ -3,8 +3,11 @@
 import { ActionIcon, Group, Table } from "@mantine/core";
 import { Pencil, Trash } from "lucide-react";
 
+import { Bilingual } from "@/components/Bilingual";
+import { ui } from "@/lib/i18n";
 import type { Ingredient } from "@/store/ingredients";
 import { formatINR } from "@/lib/format";
+import { formatMeasurement } from "@/lib/units";
 
 type IngredientTableProps = {
   ingredients: Ingredient[];
@@ -18,11 +21,11 @@ export function IngredientTable({ ingredients, onEdit, onDelete }: IngredientTab
       <Table striped highlightOnHover withTableBorder>
         <Table.Thead>
           <Table.Tr>
-            <Table.Th>Name</Table.Th>
-            <Table.Th>Tamil name</Table.Th>
-            <Table.Th>Unit</Table.Th>
-            <Table.Th>Price</Table.Th>
-            <Table.Th>Actions</Table.Th>
+            <Table.Th><Bilingual label={ui.common.name} /></Table.Th>
+            <Table.Th><Bilingual label={ui.ingredients.tamilName} /></Table.Th>
+            <Table.Th><Bilingual label={ui.common.unit} /></Table.Th>
+            <Table.Th><Bilingual label={ui.common.price} /></Table.Th>
+            <Table.Th><Bilingual label={ui.common.actions} /></Table.Th>
           </Table.Tr>
         </Table.Thead>
         <Table.Tbody>
@@ -30,7 +33,7 @@ export function IngredientTable({ ingredients, onEdit, onDelete }: IngredientTab
             <Table.Tr key={ingredient.id}>
               <Table.Td>{ingredient.name}</Table.Td>
               <Table.Td>{ingredient.tamilName || "—"}</Table.Td>
-              <Table.Td>{ingredient.unit}</Table.Td>
+              <Table.Td>{formatMeasurement(ingredient.qty, ingredient.unit)}</Table.Td>
               <Table.Td>{formatINR(ingredient.globalPrice)}</Table.Td>
               <Table.Td>
                 <Group gap="xs">

@@ -2,10 +2,11 @@
 
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Button, Group, Modal, NumberInput, Select, Stack, TextInput } from "@mantine/core";
-import { Controller, useForm } from "react-hook-form";
+import { Controller, useForm, useWatch } from "react-hook-form";
 import { z } from "zod";
 import { useEffect } from "react";
 
+import { lookupTamilName } from "@/lib/ingredientTranslations";
 import { UNITS, normalizeUnit } from "@/lib/units";
 import {
   useIngredientsStore,
@@ -38,7 +39,8 @@ export function IngredientFormModal({ opened, ingredient, onClose }: IngredientF
     handleSubmit,
     reset,
     control,
-    formState: { errors },
+    setValue,
+    formState: { errors, dirtyFields },
   } = useForm<IngredientFormValues>({
     resolver: zodResolver(ingredientSchema),
     defaultValues: {
@@ -50,6 +52,8 @@ export function IngredientFormModal({ opened, ingredient, onClose }: IngredientF
     },
   });
 
+  const watchedName = useWatch({ control, name: "name" });
+
   useEffect(() => {
     if (!opened) return;
     reset({
@@ -60,6 +64,16 @@ export function IngredientFormModal({ opened, ingredient, onClose }: IngredientF
       globalPrice: ingredient?.globalPrice ?? 0,
     });
   }, [opened, ingredient, reset]);
+
+  useEffect(() => {
+    if (ingredient) return;
+    const name = watchedName?.trim();
+    if (!name) return;
+    const translation = lookupTamilName(name);
+    if (!translation) return;
+    if (dirtyFields.tamilName) return;
+    setValue("tamilName", translation);
+  }, [watchedName, ingredient, dirtyFields.tamilName, setValue]);
 
   const onSubmit = (values: IngredientFormValues) => {
     const input: IngredientInput = {

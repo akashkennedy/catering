@@ -5,6 +5,7 @@ import { X } from "lucide-react";
 
 import { Bilingual } from "@/components/Bilingual";
 import { ui } from "@/lib/i18n";
+import { formatIndianDate } from "@/lib/date";
 import type { EventUtensilLine } from "@/store/events";
 
 type EventUtensilTableProps = {
@@ -78,7 +79,8 @@ export function EventUtensilTable({
               </Table.Td>
               <Table.Td>
                 <Text size="sm">
-                  {line.dateFrom || "—"} – {line.dateTo || "—"}
+                  {line.dateFrom ? formatIndianDate(line.dateFrom) : "—"} –{" "}
+                  {line.dateTo ? formatIndianDate(line.dateTo) : "—"}
                 </Text>
               </Table.Td>
               <Table.Td>

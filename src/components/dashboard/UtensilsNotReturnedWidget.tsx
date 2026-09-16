@@ -6,6 +6,7 @@ import { Truck } from "lucide-react";
 
 import { Bilingual } from "@/components/Bilingual";
 import { ui } from "@/lib/i18n";
+import { formatIndianDate } from "@/lib/date";
 import { useEventsStore } from "@/store/events";
 
 const MAX_ITEMS = 8;
@@ -73,7 +74,8 @@ export function UtensilsNotReturnedWidget() {
                 </Text>
               </Group>
               <Text size="xs" c="dimmed">
-                {row.eventName} · {row.eventDate || <Bilingual label={ui.common.noDate} />}
+                {row.eventName} ·{" "}
+                {row.eventDate ? formatIndianDate(row.eventDate) : <Bilingual label={ui.common.noDate} />}
               </Text>
             </Stack>
           ))}

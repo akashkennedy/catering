@@ -6,6 +6,7 @@ import { CalendarDays, MapPin, Users } from "lucide-react";
 
 import { Bilingual } from "@/components/Bilingual";
 import { ui } from "@/lib/i18n";
+import { formatIndianDate } from "@/lib/date";
 import { useEventsStore } from "@/store/events";
 
 const UPCOMING_COUNT = 3;
@@ -53,7 +54,7 @@ export function UpcomingEventsWidget() {
               </Anchor>
               <Group gap="sm" wrap="wrap">
                 <Text size="xs" c="dimmed" component="span">
-                  {event.date}
+                  {formatIndianDate(event.date)}
                 </Text>
                 <Group gap={4} wrap="nowrap">
                   <Users size={12} />

@@ -6,6 +6,7 @@ import type { Ingredient } from "@/store/ingredients";
 import type { DefaultLanguage } from "@/store/settings";
 import { formatINR } from "@/lib/format";
 import { normalizeUnit } from "@/lib/units";
+import { formatIndianDate } from "@/lib/date";
 
 const TAMIL_FAMILY = "NotoSansTamil";
 
@@ -110,7 +111,7 @@ function buildDocument(
       <Page size="A4" style={styles.page}>
         <Text style={[styles.title, { fontFamily: ff }]}>{l.title}: {event.name}</Text>
         <Text style={[styles.detail, { fontFamily: ff }]}>
-          {l.date}: {event.date || "\u2014"}
+          {l.date}: {event.date ? formatIndianDate(event.date) : "\u2014"}
         </Text>
         <Text style={[styles.detail, { fontFamily: ff }]}>
           {l.headcount}: {event.headcount}

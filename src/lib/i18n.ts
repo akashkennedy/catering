@@ -45,6 +45,11 @@ export const ui = {
       "Reminders fire only while this app is open in a browser tab. If the browser is closed they stay queued and fire the next time the app is opened.",
       "இந்தப் பயன்பாடு திறந்த உலாவித் தாளில் இருக்கும் போது மட்டுமே நினைவூட்டல்கள் செயல்படும். உலாவி மூடப்பட்டால், அடுத்த முறை பயன்பாடு திறக்கும் போது செயல்படும்."
     ),
+    quickAdd: lab("Quick add", "விரைவு சேர்"),
+    quickAddHint: lab(
+      "Add a new event with just the essentials — fill in the rest later.",
+      "அடிப்படை விவரங்களுடன் புதிய நிகழ்வைச் சேர்க்கவும் — மீதியை பின்னர் நிரப்பவும்."
+    ),
   },
   moreItems: (count: number): Label => ({
     en: `${count} more`,
@@ -57,6 +62,7 @@ export const ui = {
     ingredients: lab("Ingredients", "பொருட்கள்"),
     employees: lab("Employees", "ஊழியர்கள்"),
     rental: lab("Rental", "வாடகை"),
+    calculator: lab("Calculator", "கணக்கீட்டாளர்"),
     settings: lab("Settings", "அமைப்புகள்"),
   },
   common: {
@@ -78,6 +84,29 @@ export const ui = {
     actions: lab("Actions", "செயல்கள்"),
     template: lab("Template", "டெம்ப்ளேட்"),
     noDate: lab("No date", "தேதி இல்லை"),
+  },
+  calculator: {
+    title: lab("Pricing calculator", "விலை கணக்கீடு"),
+    subtitle: lab(
+      "Estimate raw ingredient cost and a suggested quote price from a template. Nothing is saved until you convert.",
+      "டெம்ப்ளேட்டிலிருந்து மூலப் பொருள் செலவு மற்றும் பரிந்துரைக்கப்பட்ட மேற்கோள் விலையை மதிப்பிடவும்."
+    ),
+    markup: lab("Markup %", "லாப சதவீதம் %"),
+    rawCost: lab("Raw ingredient cost", "மூலப் பொருள் செலவு"),
+    suggestedQuote: lab("Suggested quote price", "பரிந்துரைக்கப்பட்ட மேற்கோள் விலை"),
+    convertToEvent: lab("Convert to event", "நிகழ்வாக மாற்று"),
+    convertNote: lab(
+      "Picks these values into a new event form — add the remaining details there.",
+      "இந்த மதிப்புகளை புதிய நிகழ்வு படிவத்தில் நிரப்பும் — மீதமுள்ள விவரங்களை அங்கு சேர்க்கவும்."
+    ),
+    noTemplate: lab(
+      "Select a template and enter a headcount to see the estimate.",
+      "மதிப்பீட்டைக் காண டெம்ப்ளேட்டைத் தேர்ந்தெடுத்து நபர்களை உள்ளிடவும்."
+    ),
+    markupNote: lab(
+      "Quoted price = raw cost × (1 + markup %).",
+      "மேற்கோள் விலை = மூல செலவு × (1 + லாபம் %)."
+    ),
   },
   events: {
     addEvent: lab("Add Event", "நிகழ்வு சேர்க்க"),

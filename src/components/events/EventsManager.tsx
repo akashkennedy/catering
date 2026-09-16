@@ -20,6 +20,7 @@ import { EventTable } from "./EventTable";
 import { Bilingual } from "@/components/Bilingual";
 import { ui, labelText } from "@/lib/i18n";
 import { useEventsStore, type CateringEvent, type EventStatus } from "@/store/events";
+import { useEventDraftStore } from "@/store/eventDraft";
 
 type StatusFilter = "all" | EventStatus;
 
@@ -34,12 +35,16 @@ const STATUS_FILTER_DATA: { label: React.ReactNode; value: StatusFilter }[] = [
 export function EventsManager() {
   const events = useEventsStore((state) => state.events);
   const deleteEvent = useEventsStore((state) => state.deleteEvent);
-  const [formOpened, setFormOpened] = useState(false);
+  const [manualOpen, setManualOpen] = useState(false);
   const [editingEvent, setEditingEvent] = useState<CateringEvent | null>(null);
   const [deletingEvent, setDeletingEvent] = useState<CateringEvent | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
   const [dateFilter, setDateFilter] = useState("");
   const [statusFilter, setStatusFilter] = useState<StatusFilter>("all");
+
+  const draftPrefill = useEventDraftStore((state) => state.prefill);
+  const clearDraftPrefill = useEventDraftStore((state) => state.clearPrefill);
+  const formOpened = manualOpen || draftPrefill !== null;
 
   const filteredEvents = events.filter((event) => {
     const matchesName = event.name.toLowerCase().includes(searchQuery.trim().toLowerCase());
@@ -58,7 +63,8 @@ export function EventsManager() {
           leftSection={<Plus size={18} />}
           onClick={() => {
             setEditingEvent(null);
-            setFormOpened(true);
+            setManualOpen(true);
+            clearDraftPrefill();
           }}
         >
           <Bilingual label={ui.events.addEvent} />
@@ -102,7 +108,8 @@ export function EventsManager() {
             events={filteredEvents}
             onEdit={(event) => {
               setEditingEvent(event);
-              setFormOpened(true);
+              setManualOpen(true);
+              clearDraftPrefill();
             }}
             onDelete={setDeletingEvent}
           />
@@ -110,14 +117,23 @@ export function EventsManager() {
             events={filteredEvents}
             onEdit={(event) => {
               setEditingEvent(event);
-              setFormOpened(true);
+              setManualOpen(true);
+              clearDraftPrefill();
             }}
             onDelete={setDeletingEvent}
           />
         </>
       )}
 
-      <EventFormModal opened={formOpened} event={editingEvent} onClose={() => setFormOpened(false)} />
+      <EventFormModal
+        opened={formOpened}
+        event={editingEvent}
+        createPrefill={draftPrefill ?? undefined}
+        onClose={() => {
+          setManualOpen(false);
+          clearDraftPrefill();
+        }}
+      />
 
       <Modal
         opened={deletingEvent !== null}

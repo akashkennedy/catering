@@ -6,6 +6,7 @@ import { Pencil, Trash } from "lucide-react";
 
 import { Bilingual } from "@/components/Bilingual";
 import { ui } from "@/lib/i18n";
+import { formatIndianDate } from "@/lib/date";
 import type { CateringEvent, ClientPaymentStatus, EventStatus } from "@/store/events";
 import { CLIENT_PAYMENT_OPTIONS, EVENT_STATUS_OPTIONS } from "./EventFormModal";
 
@@ -56,7 +57,7 @@ export function EventCards({ events, onEdit, onDelete }: EventCardsProps) {
                 </Badge>
               </Group>
               <Text size="sm" c="dimmed">
-                {event.date || <Bilingual label={ui.common.noDate} />} ·{" "}
+                {event.date ? formatIndianDate(event.date) : <Bilingual label={ui.common.noDate} />} ·{" "}
                 <Bilingual label={ui.guests(event.headcount)} />
               </Text>
               {event.location && (

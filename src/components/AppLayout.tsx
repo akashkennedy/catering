@@ -13,6 +13,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import {
   CalendarDays,
+  Calculator,
   ClipboardList,
   CookingPot,
   LayoutDashboard,
@@ -37,6 +38,7 @@ const NAV_ITEMS: NavItem[] = [
   { label: ui.nav.ingredients, href: "/ingredients", icon: ShoppingBasket },
   { label: ui.nav.employees, href: "/employees", icon: UserRound },
   { label: ui.nav.rental, href: "/utensils", icon: CookingPot },
+  { label: ui.nav.calculator, href: "/calculator", icon: Calculator },
   { label: ui.nav.settings, href: "/settings", icon: Settings },
 ];
 

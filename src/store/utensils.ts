@@ -5,6 +5,8 @@ export type Utensil = {
   id: string;
   name: string;
   rentPrice: number;
+  openingStock: number;
+  lowStockThreshold: number;
 };
 
 export type UtensilInput = Omit<Utensil, "id">;
@@ -41,6 +43,24 @@ export const useUtensilsStore = create<UtensilsState>()(
     {
       name: "catering-utensils",
       storage: createJSONStorage(() => localStorage),
+      version: 1,
+      migrate: (persistedState) => {
+        const state = persistedState as {
+          utensils?: Array<Record<string, unknown>> | null;
+        };
+        return {
+          ...state,
+          utensils: (state.utensils ?? []).map((raw) => ({
+            ...raw,
+            openingStock:
+              typeof raw.openingStock === "number" ? raw.openingStock : 0,
+            lowStockThreshold:
+              typeof raw.lowStockThreshold === "number"
+                ? raw.lowStockThreshold
+                : 0,
+          })),
+        };
+      },
     }
   )
 );

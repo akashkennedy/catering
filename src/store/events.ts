@@ -19,7 +19,6 @@ export type EventIngredientLine = {
   ingredientId: string;
   qty: number;
   price: number;
-  purchased: boolean;
 };
 
 export type EventEmployeeLine = {
@@ -90,7 +89,7 @@ export function buildScaledIngredients(
   for (const [ingredientId, qtyPer100] of qtyPer100ByIngredient) {
     const qty = Math.round(qtyPer100 * factor * 100) / 100;
     const price = Math.round(qty * (globalPrices.get(ingredientId) ?? 0) * 100) / 100;
-    lines.push({ id: crypto.randomUUID(), ingredientId, qty, price, purchased: false });
+    lines.push({ id: crypto.randomUUID(), ingredientId, qty, price });
   }
   return lines;
 }
@@ -124,7 +123,7 @@ export const useEventsStore = create<EventsState>()(
     {
       name: "catering-events",
       storage: createJSONStorage(() => localStorage),
-      version: 4,
+      version: 5,
       migrate: (persistedState) => {
         const state = persistedState as {
           events?: Array<Record<string, unknown>> | null;
@@ -195,11 +194,11 @@ export const useEventsStore = create<EventsState>()(
               totalAmountOverridden,
               advancePaid: typeof event.advancePaid === "number" ? event.advancePaid : 0,
               ingredients: ((event.ingredients ?? []) as Array<Record<string, unknown>>).map(
-                (rawLine) => ({
-                  ...rawLine,
-                  purchased:
-                    typeof rawLine.purchased === "boolean" ? rawLine.purchased : false,
-                })
+                (rawLine) => {
+                  const line = { ...rawLine };
+                  delete line.purchased;
+                  return line;
+                }
               ),
               employees: event.employees ?? [],
               utensils: ((event.utensils ?? []) as Array<Record<string, unknown>>).map(

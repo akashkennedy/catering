@@ -20,6 +20,7 @@ import {
   Settings,
   ShoppingBasket,
   UserRound,
+  Wallet,
 } from "lucide-react";
 
 import { Bilingual } from "@/components/Bilingual";
@@ -39,6 +40,7 @@ const NAV_ITEMS: NavItem[] = [
   { label: ui.nav.employees, href: "/employees", icon: UserRound },
   { label: ui.nav.rental, href: "/utensils", icon: CookingPot },
   { label: ui.nav.calculator, href: "/calculator", icon: Calculator },
+  { label: ui.nav.finance, href: "/finance", icon: Wallet },
   { label: ui.nav.settings, href: "/settings", icon: Settings },
 ];
 

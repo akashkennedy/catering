@@ -8,6 +8,8 @@ export type Ingredient = {
   unit: string;
   qty: number;
   globalPrice: number;
+  openingStock: number;
+  lowStockThreshold: number;
 };
 
 export type IngredientInput = Omit<Ingredient, "id">;
@@ -48,6 +50,22 @@ export const useIngredientsStore = create<IngredientsState>()(
     {
       name: "catering-ingredients",
       storage: createJSONStorage(() => localStorage),
+      version: 1,
+      migrate: (persistedState) => {
+        const state = persistedState as {
+          ingredients?: Array<Record<string, unknown>> | null;
+        };
+        return {
+          ...state,
+          ingredients: (state.ingredients ?? []).map((raw) => ({
+            ...raw,
+            openingStock:
+              typeof raw.openingStock === "number" ? raw.openingStock : 0,
+            lowStockThreshold:
+              typeof raw.lowStockThreshold === "number" ? raw.lowStockThreshold : 0,
+          })),
+        };
+      },
     }
   )
 );

@@ -7,16 +7,24 @@ import { Plus } from "lucide-react";
 import { UtensilCards } from "./UtensilCards";
 import { UtensilFormModal } from "./UtensilFormModal";
 import { UtensilTable } from "./UtensilTable";
+import { RentInModal } from "./RentInModal";
+import { AssignToEventModal } from "./AssignToEventModal";
 import { Bilingual } from "@/components/Bilingual";
 import { ui } from "@/lib/i18n";
 import { useUtensilsStore, type Utensil } from "@/store/utensils";
+import { useVesselStockLedgerStore } from "@/store/vesselStockLedger";
 
 export function UtensilsManager() {
   const utensils = useUtensilsStore((state) => state.utensils);
   const deleteUtensil = useUtensilsStore((state) => state.deleteUtensil);
+  const removeEntriesForUtensil = useVesselStockLedgerStore(
+    (state) => state.removeEntriesForUtensil
+  );
   const [formOpened, setFormOpened] = useState(false);
   const [editingUtensil, setEditingUtensil] = useState<Utensil | null>(null);
   const [deletingUtensil, setDeletingUtensil] = useState<Utensil | null>(null);
+  const [rentInUtensil, setRentInUtensil] = useState<Utensil | null>(null);
+  const [assignUtensil, setAssignUtensil] = useState<Utensil | null>(null);
 
   return (
     <>
@@ -48,6 +56,8 @@ export function UtensilsManager() {
               setFormOpened(true);
             }}
             onDelete={setDeletingUtensil}
+            onLogRentIn={setRentInUtensil}
+            onAssign={setAssignUtensil}
           />
           <UtensilCards
             utensils={utensils}
@@ -56,11 +66,25 @@ export function UtensilsManager() {
               setFormOpened(true);
             }}
             onDelete={setDeletingUtensil}
+            onLogRentIn={setRentInUtensil}
+            onAssign={setAssignUtensil}
           />
         </>
       )}
 
       <UtensilFormModal opened={formOpened} utensil={editingUtensil} onClose={() => setFormOpened(false)} />
+
+      <RentInModal
+        opened={rentInUtensil !== null}
+        utensil={rentInUtensil}
+        onClose={() => setRentInUtensil(null)}
+      />
+
+      <AssignToEventModal
+        opened={assignUtensil !== null}
+        utensil={assignUtensil}
+        onClose={() => setAssignUtensil(null)}
+      />
 
       <Modal
         opened={deletingUtensil !== null}
@@ -85,7 +109,10 @@ export function UtensilsManager() {
             <Button
               color="red"
               onClick={() => {
-                if (deletingUtensil) deleteUtensil(deletingUtensil.id);
+                if (deletingUtensil) {
+                  removeEntriesForUtensil(deletingUtensil.id);
+                  deleteUtensil(deletingUtensil.id);
+                }
                 setDeletingUtensil(null);
               }}
             >

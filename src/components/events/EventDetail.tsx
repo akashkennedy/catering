@@ -36,9 +36,11 @@ import { useEventsStore, buildScaledIngredients, type CateringEventInput } from 
 import { useEmployeesStore } from "@/store/employees";
 import { useIngredientsStore } from "@/store/ingredients";
 import { useSettingsStore } from "@/store/settings";
+import { useStockLedgerStore } from "@/store/stockLedger";
 import { useTemplatesStore } from "@/store/templates";
 import { useVendorSuggestionsStore } from "@/store/vendorSuggestions";
 import { generateEventPdf } from "@/lib/pdf";
+import { todayLocalISO } from "@/lib/date";
 import { EVENT_STATUS_OPTIONS } from "./EventFormModal";
 import {
   eventBalance,
@@ -60,6 +62,8 @@ export function EventDetail() {
   const vendorSuggestions = useVendorSuggestionsStore((state) => state.vendorSuggestions);
   const addVendorSuggestion = useVendorSuggestionsStore((state) => state.addVendorSuggestion);
   const defaultLanguage = useSettingsStore((state) => state.defaultLanguage);
+  const addUsedEntry = useStockLedgerStore((state) => state.addUsedEntry);
+  const ledgerEntries = useStockLedgerStore((state) => state.entries);
   const [employeeFormOpened, setEmployeeFormOpened] = useState(false);
   const [utensilFormOpened, setUtensilFormOpened] = useState(false);
   const [assignValue, setAssignValue] = useState<string | null>(null);
@@ -157,7 +161,7 @@ export function EventDetail() {
 
   const handleLineChange = (
     lineId: string,
-    patch: { qty?: number; price?: number; purchased?: boolean }
+    patch: { qty?: number; price?: number }
   ) => {
     update({
       ingredients: eventIngredients.map((line) =>
@@ -165,6 +169,25 @@ export function EventDetail() {
       ),
     });
   };
+
+  const handleMarkUsed = (lineId: string) => {
+    const line = eventIngredients.find((item) => item.id === lineId);
+    if (!line || line.qty <= 0) return;
+    addUsedEntry({
+      ingredientId: line.ingredientId,
+      qty: line.qty,
+      date: event.date || todayLocalISO(),
+      eventId: event.id,
+      note: event.name,
+    });
+  };
+
+  const usedIngredientIds = new Set<string>();
+  for (const entry of ledgerEntries) {
+    if (entry.type === "used" && entry.eventId === event.id) {
+      usedIngredientIds.add(entry.ingredientId);
+    }
+  }
 
   const assignableEmployees = masterEmployees.filter(
     (employee) => !eventEmployees.some((line) => line.employeeId === employee.id)
@@ -320,7 +343,7 @@ export function EventDetail() {
             onClick={handleGeneratePdf}
             loading={generatingPdf}
           >
-            <Bilingual label={ui.events.generatePdf} />
+            <Bilingual label={ui.events.invoice} />
           </Button>
         </Group>
       </Paper>
@@ -444,11 +467,15 @@ export function EventDetail() {
               <EventIngredientTable
                 lines={eventIngredients}
                 ingredients={ingredients}
+                usedIngredientIds={usedIngredientIds}
+                onMarkUsed={handleMarkUsed}
                 onLineChange={handleLineChange}
               />
               <EventIngredientCards
                 lines={eventIngredients}
                 ingredients={ingredients}
+                usedIngredientIds={usedIngredientIds}
+                onMarkUsed={handleMarkUsed}
                 onLineChange={handleLineChange}
               />
               <Paper withBorder p="md">

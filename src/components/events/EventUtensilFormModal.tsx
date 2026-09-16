@@ -100,7 +100,12 @@ export function EventUtensilFormModal({
 
   const onSubmit = (values: EventUtensilFormValues) => {
     const utensilId = values.saveToMaster
-      ? addUtensil({ name: values.utensilName, rentPrice: values.rentalPrice })
+      ? addUtensil({
+          name: values.utensilName,
+          rentPrice: values.rentalPrice,
+          openingStock: 0,
+          lowStockThreshold: 0,
+        })
       : values.utensilId;
     onAdd({
       utensilId: utensilId ?? null,

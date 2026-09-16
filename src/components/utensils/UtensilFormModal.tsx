@@ -17,6 +17,8 @@ import {
 const utensilSchema = z.object({
   name: z.string().trim().min(1, "Name is required"),
   rentPrice: z.coerce.number().min(0, "Price must be 0 or more"),
+  openingStock: z.coerce.number().min(0, "Qty must be 0 or more"),
+  lowStockThreshold: z.coerce.number().min(0, "Qty must be 0 or more"),
 });
 
 type UtensilFormValues = z.infer<typeof utensilSchema>;
@@ -42,6 +44,8 @@ export function UtensilFormModal({ opened, utensil, onClose }: UtensilFormModalP
     defaultValues: {
       name: "",
       rentPrice: 0,
+      openingStock: 0,
+      lowStockThreshold: 0,
     },
   });
 
@@ -50,6 +54,8 @@ export function UtensilFormModal({ opened, utensil, onClose }: UtensilFormModalP
     reset({
       name: utensil?.name ?? "",
       rentPrice: utensil?.rentPrice ?? 0,
+      openingStock: utensil?.openingStock ?? 0,
+      lowStockThreshold: utensil?.lowStockThreshold ?? 0,
     });
   }, [opened, utensil, reset]);
 
@@ -98,6 +104,46 @@ export function UtensilFormModal({ opened, utensil, onClose }: UtensilFormModalP
               />
             )}
           />
+          <Group gap="sm" align="flex-end" wrap="wrap">
+            <Controller
+              name="openingStock"
+              control={control}
+              render={({ field }) => (
+                <NumberInput
+                  label={<Bilingual label={ui.utensils.openingStock} />}
+                  placeholder={labelText(ui.utensils.openingStockPlaceholder)}
+                  min={0}
+                  allowNegative={false}
+                  decimalScale={2}
+                  style={{ flex: 1, minWidth: 150 }}
+                  {...field}
+                  onKeyDown={(e) => {
+                    if (e.key === "ArrowUp" || e.key === "ArrowDown") e.preventDefault();
+                  }}
+                  error={errors.openingStock?.message}
+                />
+              )}
+            />
+            <Controller
+              name="lowStockThreshold"
+              control={control}
+              render={({ field }) => (
+                <NumberInput
+                  label={<Bilingual label={ui.utensils.lowStockThreshold} />}
+                  placeholder={labelText(ui.utensils.thresholdPlaceholder)}
+                  min={0}
+                  allowNegative={false}
+                  decimalScale={2}
+                  style={{ flex: 1, minWidth: 150 }}
+                  {...field}
+                  onKeyDown={(e) => {
+                    if (e.key === "ArrowUp" || e.key === "ArrowDown") e.preventDefault();
+                  }}
+                  error={errors.lowStockThreshold?.message}
+                />
+              )}
+            />
+          </Group>
           <Group justify="flex-end" mt="md">
             <Button variant="default" onClick={onClose}>
               <Bilingual label={ui.common.cancel} />

@@ -7,16 +7,22 @@ import { Plus } from "lucide-react";
 import { IngredientCards } from "./IngredientCards";
 import { IngredientFormModal } from "./IngredientFormModal";
 import { IngredientTable } from "./IngredientTable";
+import { PurchaseModal } from "./PurchaseModal";
 import { Bilingual } from "@/components/Bilingual";
 import { ui } from "@/lib/i18n";
 import { useIngredientsStore, type Ingredient } from "@/store/ingredients";
+import { useStockLedgerStore } from "@/store/stockLedger";
 
 export function IngredientsManager() {
   const ingredients = useIngredientsStore((state) => state.ingredients);
   const deleteIngredient = useIngredientsStore((state) => state.deleteIngredient);
+  const removeEntriesForIngredient = useStockLedgerStore(
+    (state) => state.removeEntriesForIngredient
+  );
   const [formOpened, setFormOpened] = useState(false);
   const [editingIngredient, setEditingIngredient] = useState<Ingredient | null>(null);
   const [deletingIngredient, setDeletingIngredient] = useState<Ingredient | null>(null);
+  const [purchaseIngredient, setPurchaseIngredient] = useState<Ingredient | null>(null);
 
   return (
     <>
@@ -48,6 +54,7 @@ export function IngredientsManager() {
               setFormOpened(true);
             }}
             onDelete={setDeletingIngredient}
+            onLogPurchase={setPurchaseIngredient}
           />
           <IngredientCards
             ingredients={ingredients}
@@ -56,11 +63,18 @@ export function IngredientsManager() {
               setFormOpened(true);
             }}
             onDelete={setDeletingIngredient}
+            onLogPurchase={setPurchaseIngredient}
           />
         </>
       )}
 
       <IngredientFormModal opened={formOpened} ingredient={editingIngredient} onClose={() => setFormOpened(false)} />
+
+      <PurchaseModal
+        opened={purchaseIngredient !== null}
+        ingredient={purchaseIngredient}
+        onClose={() => setPurchaseIngredient(null)}
+      />
 
       <Modal
         opened={deletingIngredient !== null}
@@ -85,7 +99,10 @@ export function IngredientsManager() {
             <Button
               color="red"
               onClick={() => {
-                if (deletingIngredient) deleteIngredient(deletingIngredient.id);
+                if (deletingIngredient) {
+                  removeEntriesForIngredient(deletingIngredient.id);
+                  deleteIngredient(deletingIngredient.id);
+                }
                 setDeletingIngredient(null);
               }}
             >

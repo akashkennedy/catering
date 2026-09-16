@@ -26,10 +26,11 @@ type StatusFilter = "all" | EventStatus;
 
 const STATUS_FILTER_DATA: { label: React.ReactNode; value: StatusFilter }[] = [
   { label: <Bilingual label={ui.events.statusAll} />, value: "all" },
-  { label: <Bilingual label={ui.events.statusPlanned} />, value: "planned" },
+  { label: <Bilingual label={ui.events.statusEnquiry} />, value: "enquiry" },
   { label: <Bilingual label={ui.events.statusConfirmed} />, value: "confirmed" },
+  { label: <Bilingual label={ui.events.statusPreparing} />, value: "preparing" },
   { label: <Bilingual label={ui.events.statusCompleted} />, value: "completed" },
-  { label: <Bilingual label={ui.events.statusCancelled} />, value: "cancelled" },
+  { label: <Bilingual label={ui.events.statusPaid} />, value: "paid" },
 ];
 
 export function EventsManager() {

@@ -10,6 +10,7 @@ import { useEventsStore } from "@/store/events";
 import { useIngredientsStore } from "@/store/ingredients";
 
 const MAX_ITEMS = 8;
+const CLOSED_STATUSES = ["completed", "paid"];
 
 function todayAtMidnight(): string {
   const now = new Date();
@@ -23,7 +24,8 @@ export function InventoryAlertsWidget() {
   const today = todayAtMidnight();
 
   const upcoming = events.filter(
-    (event) => event.status !== "cancelled" && event.date && event.date >= today
+    (event) =>
+      !CLOSED_STATUSES.includes(event.status) && event.date && event.date >= today
   );
 
   const qtyByIngredient = new Map<string, number>();

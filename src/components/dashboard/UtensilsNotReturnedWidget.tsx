@@ -10,6 +10,7 @@ import { formatIndianDate } from "@/lib/date";
 import { useEventsStore } from "@/store/events";
 
 const MAX_ITEMS = 8;
+const CLOSED_STATUSES = ["completed", "paid"];
 
 export function UtensilsNotReturnedWidget() {
   const events = useEventsStore((state) => state.events);
@@ -23,7 +24,7 @@ export function UtensilsNotReturnedWidget() {
   }[] = [];
 
   for (const event of events) {
-    if (event.status === "cancelled") continue;
+    if (CLOSED_STATUSES.includes(event.status)) continue;
     for (const line of event.utensils ?? []) {
       if (!line.returned) {
         rows.push({

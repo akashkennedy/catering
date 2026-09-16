@@ -31,12 +31,18 @@ export function eventTotalCost(event: CateringEvent): number {
   );
 }
 
+export function eventTotalAmount(event: CateringEvent): number {
+  return event.totalAmount ?? 0;
+}
+
+export function eventBalance(event: CateringEvent): number {
+  return eventTotalAmount(event) - (event.advancePaid ?? 0);
+}
+
 export function eventEarnings(event: CateringEvent): number {
-  return (event.totalQuoted ?? 0) - eventTotalCost(event);
+  return eventTotalAmount(event) - eventTotalCost(event);
 }
 
 export function clientPendingAmount(event: CateringEvent): number {
-  return event.clientPaymentStatus === "pending" || event.clientPaymentStatus === "partial"
-    ? event.totalQuoted ?? 0
-    : 0;
+  return event.status === "paid" ? 0 : eventBalance(event);
 }

@@ -63,7 +63,7 @@ export function PricingCalculator() {
     const scaled = buildScaledIngredients(template, ingredients, values.headcount);
     const cost = scaled.reduce((sum, line) => sum + line.price, 0);
     const quote = Math.round(cost * (1 + (values.markup || 0) / 100) * 100) / 100;
-    setPrefill({ headcount: values.headcount, templateId: template.id, totalQuoted: quote });
+    setPrefill({ headcount: values.headcount, templateId: template.id, totalAmount: quote });
     router.push("/events");
   });
 

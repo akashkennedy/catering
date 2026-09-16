@@ -2,45 +2,63 @@
 
 import { zodResolver } from "@hookform/resolvers/zod";
 import {
+  Autocomplete,
   Button,
   Group,
   Modal,
   NumberInput,
   Select,
   Stack,
+  Text,
   TextInput,
 } from "@mantine/core";
 import { Controller, useForm } from "react-hook-form";
 import { z } from "zod";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 
 import { useTemplatesStore } from "@/store/templates";
 import { useIngredientsStore } from "@/store/ingredients";
 import { validatePhone, formatPhone } from "@/lib/phone";
 import { ui, labelText, type Label } from "@/lib/i18n";
 import { todayLocalISO as todayISO } from "@/lib/date";
+import { formatINR } from "@/lib/format";
 import { Bilingual } from "@/components/Bilingual";
 import {
   buildScaledIngredients,
+  EVENT_STATUS_PIPELINE,
   useEventsStore,
   type CateringEvent,
   type CateringEventInput,
-  type ClientPaymentStatus,
   type EventStatus,
 } from "@/store/events";
 
 export const EVENT_STATUS_OPTIONS: { value: EventStatus; label: Label }[] = [
-  { value: "planned", label: ui.events.statusPlanned },
+  { value: "enquiry", label: ui.events.statusEnquiry },
   { value: "confirmed", label: ui.events.statusConfirmed },
+  { value: "preparing", label: ui.events.statusPreparing },
   { value: "completed", label: ui.events.statusCompleted },
-  { value: "cancelled", label: ui.events.statusCancelled },
+  { value: "paid", label: ui.events.statusPaid },
 ];
 
-export const CLIENT_PAYMENT_OPTIONS: { value: ClientPaymentStatus; label: Label }[] = [
-  { value: "pending", label: ui.events.paymentPending },
-  { value: "partial", label: ui.events.paymentPartial },
-  { value: "paid", label: ui.events.paymentPaid },
+const FUNCTION_TYPE_OPTIONS = [
+  "Wedding",
+  "Reception",
+  "Birthday",
+  "Naming ceremony",
+  "Housewarming",
+  "Corporate",
+  "Festival",
+  "Other",
 ];
+
+function roundMoney(value: number): number {
+  return Math.round(value * 100) / 100;
+}
+
+function asNumber(value: number | string | undefined): number {
+  if (typeof value === "number") return value;
+  return Number(value) || 0;
+}
 
 function buildEventSchema(isNew: boolean, currentDate?: string) {
   return z.object({
@@ -49,7 +67,9 @@ function buildEventSchema(isNew: boolean, currentDate?: string) {
       (val) => val === "" || validatePhone(val),
       "Enter a valid 10-digit Indian mobile number"
     ),
-    location: z.string().trim(),
+    venue: z.string().trim(),
+    address: z.string().trim(),
+    functionType: z.string().trim(),
     headcount: z.coerce.number().min(1, "Headcount must be 1 or more"),
     date: z
       .string()
@@ -61,10 +81,11 @@ function buildEventSchema(isNew: boolean, currentDate?: string) {
             : val >= todayISO(),
         "Cannot select a date in the past"
       ),
-    status: z.enum(["planned", "confirmed", "completed", "cancelled"]),
+    status: z.enum(EVENT_STATUS_PIPELINE),
     templateId: z.string().nullable(),
-    clientPaymentStatus: z.enum(["pending", "partial", "paid"]),
-    totalQuoted: z.coerce.number().min(0, "Total quoted must be 0 or more"),
+    ratePerPerson: z.coerce.number().min(0, "Rate per person must be 0 or more"),
+    totalAmount: z.coerce.number().min(0, "Total amount must be 0 or more"),
+    advancePaid: z.coerce.number().min(0, "Advance must be 0 or more"),
   });
 }
 
@@ -73,21 +94,19 @@ const STATUS_DATA = EVENT_STATUS_OPTIONS.map((o) => ({
   label: labelText(o.label),
 }));
 
-const PAYMENT_DATA = CLIENT_PAYMENT_OPTIONS.map((o) => ({
-  value: o.value,
-  label: labelText(o.label),
-}));
-
 type EventFormValues = {
   name: string;
   phone: string;
-  location: string;
+  venue: string;
+  address: string;
+  functionType: string;
   headcount: number;
   date: string;
   status: EventStatus;
   templateId: string | null;
-  clientPaymentStatus: ClientPaymentStatus;
-  totalQuoted: number;
+  ratePerPerson: number;
+  totalAmount: number;
+  advancePaid: number;
 };
 
 type EventFormModalProps = {
@@ -107,36 +126,61 @@ export function EventFormModal({ opened, event, onClose, createPrefill }: EventF
     register,
     handleSubmit,
     reset,
+    setValue,
     control,
+    watch,
     formState: { errors },
   } = useForm<EventFormValues>({
     resolver: zodResolver(buildEventSchema(!event, event?.date)),
     defaultValues: {
       name: "",
       phone: "",
-      location: "",
+      venue: "",
+      address: "",
+      functionType: "",
       headcount: 100,
       date: "",
-      status: "planned",
+      status: "enquiry",
       templateId: null,
-      clientPaymentStatus: "pending",
-      totalQuoted: 0,
+      ratePerPerson: 0,
+      totalAmount: 0,
+      advancePaid: 0,
     },
   });
 
+  const headcount = watch("headcount");
+  const ratePerPerson = watch("ratePerPerson");
+  const totalAmount = watch("totalAmount");
+  const advancePaid = watch("advancePaid");
+  const [amountOverridden, setAmountOverridden] = useState(false);
+  const balance = roundMoney(asNumber(totalAmount) - asNumber(advancePaid));
+
+  useEffect(() => {
+    if (amountOverridden) return;
+    const computed = roundMoney(asNumber(ratePerPerson) * asNumber(headcount));
+    if (asNumber(totalAmount) !== computed) {
+      setValue("totalAmount", computed, { shouldValidate: false });
+    }
+  }, [headcount, ratePerPerson, amountOverridden, totalAmount, setValue]);
+
   useEffect(() => {
     if (!opened) return;
+    setAmountOverridden(
+      event?.totalAmountOverridden ?? (createPrefill?.totalAmount ? true : false)
+    );
     reset({
       name: event?.name ?? createPrefill?.name ?? "",
       phone: event?.phone ?? createPrefill?.phone ?? "",
-      location: event?.location ?? createPrefill?.location ?? "",
+      venue: event?.venue ?? createPrefill?.venue ?? "",
+      address: event?.address ?? createPrefill?.address ?? "",
+      functionType: event?.functionType ?? createPrefill?.functionType ?? "",
       headcount: event?.headcount ?? createPrefill?.headcount ?? 100,
       date: event?.date ?? createPrefill?.date ?? "",
-      status: event?.status ?? createPrefill?.status ?? "planned",
+      status: event?.status ?? createPrefill?.status ?? "enquiry",
       templateId: event?.templateId ?? createPrefill?.templateId ?? null,
-      clientPaymentStatus:
-        event?.clientPaymentStatus ?? createPrefill?.clientPaymentStatus ?? "pending",
-      totalQuoted: event?.totalQuoted ?? createPrefill?.totalQuoted ?? 0,
+      ratePerPerson: event?.ratePerPerson ?? createPrefill?.ratePerPerson ?? 0,
+      totalAmount: event?.totalAmount ?? createPrefill?.totalAmount ?? 0,
+      advancePaid: event?.advancePaid ?? createPrefill?.advancePaid ?? 0,
     });
   }, [opened, event, createPrefill, reset]);
 
@@ -155,6 +199,8 @@ export function EventFormModal({ opened, event, onClose, createPrefill }: EventF
     const input: CateringEventInput = {
       ...values,
       phone: formatPhone(values.phone),
+      totalAmount: roundMoney(values.totalAmount),
+      totalAmountOverridden: amountOverridden,
       ingredients: scaledIngredients,
       employees: [],
       utensils: [],
@@ -207,10 +253,33 @@ export function EventFormModal({ opened, event, onClose, createPrefill }: EventF
             error={errors.phone?.message}
           />
           <TextInput
-            label={<Bilingual label={ui.common.location} />}
-            placeholder={labelText(ui.events.locationPlaceholder)}
-            {...register("location")}
-            error={errors.location?.message}
+            label={<Bilingual label={ui.events.venue} />}
+            placeholder={labelText(ui.events.venuePlaceholder)}
+            {...register("venue")}
+            error={errors.venue?.message}
+          />
+          <TextInput
+            label={<Bilingual label={ui.events.address} />}
+            placeholder={labelText(ui.events.addressPlaceholder)}
+            {...register("address")}
+            error={errors.address?.message}
+          />
+          <Controller
+            name="functionType"
+            control={control}
+            render={({ field }) => (
+              <Autocomplete
+                label={<Bilingual label={ui.events.functionType} />}
+                placeholder={labelText({
+                  en: "e.g. Wedding",
+                  ta: "எ.கா. திருமணம்",
+                })}
+                data={FUNCTION_TYPE_OPTIONS}
+                {...field}
+                value={field.value ?? ""}
+                error={errors.functionType?.message}
+              />
+            )}
           />
           <Controller
             name="headcount"
@@ -267,11 +336,11 @@ export function EventFormModal({ opened, event, onClose, createPrefill }: EventF
             )}
           />
           <Controller
-            name="totalQuoted"
+            name="ratePerPerson"
             control={control}
             render={({ field }) => (
               <NumberInput
-                label={<Bilingual label={ui.events.totalQuoted} />}
+                label={<Bilingual label={ui.events.ratePerPerson} />}
                 placeholder="0"
                 min={0}
                 allowNegative={false}
@@ -281,22 +350,59 @@ export function EventFormModal({ opened, event, onClose, createPrefill }: EventF
                 onKeyDown={(e) => {
                   if (e.key === "ArrowUp" || e.key === "ArrowDown") e.preventDefault();
                 }}
-                error={errors.totalQuoted?.message}
+                error={errors.ratePerPerson?.message}
               />
             )}
           />
           <Controller
-            name="clientPaymentStatus"
+            name="totalAmount"
             control={control}
             render={({ field }) => (
-              <Select
-                label={<Bilingual label={ui.events.clientPaymentStatus} />}
-                data={PAYMENT_DATA}
-                withAsterisk
+              <NumberInput
+                label={<Bilingual label={ui.events.totalAmount} />}
+                description={<Bilingual label={ui.events.totalAmountHint} />}
+                placeholder="0"
+                min={0}
+                allowNegative={false}
+                decimalScale={2}
+                leftSection="₹"
                 {...field}
+                onChange={(value) => {
+                  field.onChange(value);
+                  setAmountOverridden(true);
+                }}
+                onKeyDown={(e) => {
+                  if (e.key === "ArrowUp" || e.key === "ArrowDown") e.preventDefault();
+                }}
+                error={errors.totalAmount?.message}
               />
             )}
           />
+          <Controller
+            name="advancePaid"
+            control={control}
+            render={({ field }) => (
+              <NumberInput
+                label={<Bilingual label={ui.events.advancePaid} />}
+                placeholder="0"
+                min={0}
+                allowNegative={false}
+                decimalScale={2}
+                leftSection="₹"
+                {...field}
+                onKeyDown={(e) => {
+                  if (e.key === "ArrowUp" || e.key === "ArrowDown") e.preventDefault();
+                }}
+                error={errors.advancePaid?.message}
+              />
+            )}
+          />
+          <Group justify="space-between" wrap="nowrap" px={2}>
+            <Text fw={600}>
+              <Bilingual label={ui.events.balance} />
+            </Text>
+            <Text fw={700}>{formatINR(balance)}</Text>
+          </Group>
           <Group justify="flex-end" mt="md">
             <Button variant="default" onClick={onClose}>
               <Bilingual label={ui.common.cancel} />

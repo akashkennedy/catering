@@ -7,20 +7,17 @@ import { Pencil, Trash } from "lucide-react";
 import { Bilingual } from "@/components/Bilingual";
 import { ui } from "@/lib/i18n";
 import { formatIndianDate } from "@/lib/date";
-import type { CateringEvent, ClientPaymentStatus, EventStatus } from "@/store/events";
-import { CLIENT_PAYMENT_OPTIONS, EVENT_STATUS_OPTIONS } from "./EventFormModal";
-
-const PAYMENT_COLORS: Record<ClientPaymentStatus, string> = {
-  pending: "yellow",
-  partial: "orange",
-  paid: "green",
-};
+import { formatINR } from "@/lib/format";
+import { eventBalance } from "@/lib/eventFinances";
+import type { CateringEvent, EventStatus } from "@/store/events";
+import { EVENT_STATUS_OPTIONS } from "./EventFormModal";
 
 const STATUS_COLORS: Record<EventStatus, string> = {
-  planned: "blue",
+  enquiry: "blue",
   confirmed: "cyan",
-  completed: "green",
-  cancelled: "gray",
+  preparing: "violet",
+  completed: "teal",
+  paid: "green",
 };
 
 type EventCardsProps = {
@@ -32,8 +29,6 @@ type EventCardsProps = {
 export function EventCards({ events, onEdit, onDelete }: EventCardsProps) {
   const statusLabel = (status: EventStatus) =>
     EVENT_STATUS_OPTIONS.find((option) => option.value === status)?.label ?? { en: status, ta: "" };
-  const paymentLabel = (status: ClientPaymentStatus) =>
-    CLIENT_PAYMENT_OPTIONS.find((option) => option.value === status)?.label ?? { en: status, ta: "" };
 
   return (
     <Stack gap="sm" className="sm:hidden">
@@ -48,23 +43,19 @@ export function EventCards({ events, onEdit, onDelete }: EventCardsProps) {
                 <Badge color={STATUS_COLORS[event.status]} variant="light" size="sm">
                   <Bilingual label={statusLabel(event.status)} />
                 </Badge>
-                <Badge
-                  color={PAYMENT_COLORS[event.clientPaymentStatus]}
-                  variant="light"
-                  size="sm"
-                >
-                  <Bilingual label={paymentLabel(event.clientPaymentStatus)} />
-                </Badge>
               </Group>
               <Text size="sm" c="dimmed">
                 {event.date ? formatIndianDate(event.date) : <Bilingual label={ui.common.noDate} />} ·{" "}
                 <Bilingual label={ui.guests(event.headcount)} />
               </Text>
-              {event.location && (
+              {event.venue && (
                 <Text size="sm" c="dimmed">
-                  {event.location}
+                  {event.venue}
                 </Text>
               )}
+              <Text size="sm" fw={600}>
+                <Bilingual label={ui.events.balance} />: {formatINR(eventBalance(event))}
+              </Text>
             </Stack>
             <Group gap="xs">
               <ActionIcon

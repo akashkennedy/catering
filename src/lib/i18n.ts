@@ -17,7 +17,39 @@ export const ui = {
     ),
     mantineButton: lab("Mantine styled button", "Mantine பொத்தான்"),
     tailwindButton: lab("Tailwind styled button", "Tailwind பொத்தான்"),
+    upcomingEvents: lab("Upcoming events", "வரவிருக்கும் நிகழ்வுகள்"),
+    upcomingEmpty: lab("No upcoming events.", "வரவிருக்கும் நிகழ்வுகள் இல்லை."),
+    widgetPlaceholder: lab("Coming soon", "விரைவில்"),
+    totalEarnings: lab("Total earnings", "மொத்த வருவாய்"),
+    earningsThisMonth: lab("This month", "இந்த மாதம்"),
+    earningsAllTime: lab("All time", "அனைத்து நேரம்"),
+    earningsEmpty: lab("No earnings to show yet.", "இன்னும் காட்ட வருவாய் இல்லை."),
+    paymentOverview: lab("Payment status", "கட்டண நிலை"),
+    clientPending: lab("Client pending", "வாடிக்கையாளர் நிலுவை"),
+    employeePending: lab("Employee pending", "ஊழியர் நிலுவை"),
+    paymentEmpty: lab("No pending payments.", "நிலுவை கட்டணங்கள் இல்லை."),
+    paymentPartialHint: lab(
+      "Partial payments are shown at the full quoted amount until a paid-amount field is added.",
+      "செலுத்திய தொகை புலம் சேர்க்கப்படும் வரை பகுதி கட்டணங்கள் முழு மேற்கோள் தொகையில் காட்டப்படும்."
+    ),
+    inventoryAlerts: lab("Inventory alerts", "பொருள் எச்சரிக்கைகள்"),
+    inventoryEmpty: lab(
+      "All ingredients for upcoming events are purchased.",
+      "வரவிருக்கும் நிகழ்வுகளுக்கான அனைத்து பொருட்களும் வாங்கப்பட்டுள்ளன."
+    ),
+    utensilsNotReturned: lab("Utensils not yet returned", "திரும்பப் பெறாத பாத்திரங்கள்"),
+    utensilsEmpty: lab("No outstanding rentals.", "நிலுவையில் உள்ள வாடகை இல்லை."),
+    customerFollowUp: lab("Customer follow-up", "வாடிக்கையாளர் தொடர்பு"),
+    remindersEmpty: lab("No reminders.", "நினைவூட்டல்கள் இல்லை."),
+    notificationNote: lab(
+      "Reminders fire only while this app is open in a browser tab. If the browser is closed they stay queued and fire the next time the app is opened.",
+      "இந்தப் பயன்பாடு திறந்த உலாவித் தாளில் இருக்கும் போது மட்டுமே நினைவூட்டல்கள் செயல்படும். உலாவி மூடப்பட்டால், அடுத்த முறை பயன்பாடு திறக்கும் போது செயல்படும்."
+    ),
   },
+  moreItems: (count: number): Label => ({
+    en: `${count} more`,
+    ta: `${count} மேலும்`,
+  }),
   nav: {
     dashboard: lab("Dashboard", "டாஷ்போர்டு"),
     events: lab("Events", "நிகழ்வுகள்"),
@@ -114,6 +146,8 @@ export const ui = {
     locationPlaceholder: lab("e.g. Madurai function hall", "எ.கா. மதுரை மண்டபம்"),
     headcountPlaceholder: lab("e.g. 300", "எ.கா. 300"),
     clientPaymentStatus: lab("Client payment status", "வாடிக்கையாளர் கட்டண நிலை"),
+    totalQuoted: lab("Total quoted", "மொத்த மேற்கோள்"),
+    purchased: lab("Purchased", "வாங்கப்பட்டது"),
     unknownIngredient: lab("Unknown ingredient", "அறியப்படாத பொருள்"),
     toPay: lab("To pay", "செலுத்த வேண்டியது"),
     paid: lab("Paid", "செலுத்தியது"),
@@ -147,6 +181,21 @@ export const ui = {
     qtyMin: lab("Quantity must be 1 or more", "அளவு 1 அல்லது அதற்கு மேல் இருக்க வேண்டும்"),
     startDateRequired: lab("Start date is required", "தொடக்க தேதி தேவை"),
     endDateRequired: lab("End date is required", "இறுதி தேதி தேவை"),
+  },
+  reminders: {
+    title: lab("Reminders", "நினைவூட்டல்கள்"),
+    phone: lab("Phone", "தொலைபேசி"),
+    note: lab("Note", "குறிப்பு"),
+    phonePlaceholder: lab("e.g. 9876543210", "எ.கா. 9876543210"),
+    notePlaceholder: lab("e.g. Follow up on quote", "எ.கா. மேற்கோள் பற்றி தொடர்பு"),
+    remindIn: lab("Remind in", "மீண்டும் நினைவூட்டு"),
+    in30min: lab("In 30 minutes", "30 நிமிடத்தில்"),
+    in1hr: lab("In 1 hour", "1 மணி நேரத்தில்"),
+    customTime: lab("Custom time", "தனிப்பயன் நேரம்"),
+    time: lab("Time", "நேரம்"),
+    add: lab("Add reminder", "நினைவூட்டல் சேர்க்க"),
+    dismiss: lab("Dismiss reminder", "நினைவூட்டலை நிராகரி"),
+    invalidPhone: lab("Enter a valid 10-digit Indian mobile number", "சரியான 10 இலக்க இந்திய மொபைல் எண்ணை உள்ளிடவும்"),
   },
   ingredients: {
     addIngredient: lab("Add Ingredient", "பொருள் சேர்க்க"),
@@ -259,6 +308,10 @@ export const ui = {
   guests: (count: number): Label => ({
     en: `${count} guests`,
     ta: `${count} விருந்தினர்கள்`,
+  }),
+  eventsCount: (count: number): Label => ({
+    en: `${count} ${count === 1 ? "event" : "events"}`,
+    ta: `${count} நிகழ்வுகள்`,
   }),
   dishesTitle: (count: number): Label => ({
     en: `${count} ${count === 1 ? "dish" : "dishes"}`,

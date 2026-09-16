@@ -1,160 +1,313 @@
-# Feature Implementation Prompts — Catering CRM
+# Catering CRM — Project Specification
 
-How to use this file: paste the **Master Template** structure once per feature, filling in the scope/acceptance criteria for whichever feature you're on. The ordered list below gives you those fill-ins ready to go, in build order. Run them one at a time — one feature, one commit, one push, then move to the next prompt.
+**Client:** Catering business (single admin/owner user)
+**Purpose:** Track events, food templates, ingredients, employees, utensil rentals, and payment status. Mobile-responsive, works offline, exportable PDF reports.
 
 ---
 
-## Master Template (structure every prompt follows)
+## 1. Project Phasing
+
+| Phase | Scope |
+|---|---|
+| **Phase 1 (this spec)** | Full frontend, all features, data persisted in `localStorage` via Zustand |
+| **Phase 2 (later)** | Swap localStorage for Supabase/Postgres backend — no UI changes expected, only the persistence layer |
+
+Single admin user throughout — no roles, multi-user auth, or real-time sync required for Phase 1.
+
+---
+
+## 2. Tech Stack
+
+| Layer | Choice |
+|---|---|
+| Framework | Next.js 16.3 (App Router) |
+| Language | TypeScript |
+| UI Library | React 19 |
+| Styling | Tailwind CSS |
+| Component Kit | Mantine |
+| State Management | Zustand (with `persist` middleware) |
+| Storage (Phase 1) | localStorage (via Zustand persist) |
+| Storage (Phase 2) | Supabase (Postgres) |
+| Forms | React Hook Form + Zod |
+| Offline / PWA | Serwist |
+| Icons | Lucide React |
+| PDF Generation | Client-side PDF library (e.g. `@react-pdf/renderer` or `pdfmake`) with Tamil font embedded |
+| Deployment | Vercel |
+| AI Coding Tools | Cursor, Antigravity, Opencode |
+
+**Note:** Confirm Serwist and Mantine both support Next.js 16 / React 19 before scaffolding — PWA tooling can lag a framework's major version by a few weeks.
+
+---
+
+## 3. Data Model (Zustand store slices)
+
+All entities live in localStorage via Zustand persist. Each has a `master` list where relevant, plus per-event associations.
+
+### 3.1 Event
+```
+Event {
+  id
+  name              // event/client name
+  phone
+  location
+  headcount
+  date
+  templateId        // selected food template
+  status             // planning / confirmed / done
+  clientPaymentStatus  // paid / pending
+  ingredientOverrides[]  // per-event edits to scaled ingredient qty/price
+  employeeAssignments[]  // { employeeId or adHocEmployee, amountToPay, amountPaid }
+  utensilAssignments[]   // { vendorId or adHocVendor, utensilId, qty, rentPrice, rentedFrom, rentedTo, returned }
+  createdAt / updatedAt
+}
+```
+
+### 3.2 FoodTemplate (master)
+```
+FoodTemplate {
+  id
+  name              // "Template 1", "Template 2", etc.
+  dishes[]          // dish name
+  ingredients[]     // { ingredientId, qtyPer100, unit }
+}
+```
+- Ingredient quantities are always defined **per 100 people**; scaling formula: `qty = qtyPer100 * (event.headcount / 100)`
+
+### 3.3 Ingredient (master)
+```
+Ingredient {
+  id
+  name              // English + Tamil name
+  nameTamil
+  unit              // kg, l, pcs, etc.
+  globalPrice        // price per unit, editable in Global Settings
+}
+```
+
+### 3.4 Employee (master)
+```
+Employee {
+  id
+  name
+  phone
+  defaultRate
+}
+```
+- Ad-hoc employees can be added directly on an event without being saved to master (optional "save to master list" toggle).
+
+### 3.5 Vendor (master)
+```
+Vendor {
+  id
+  name
+  phone
+}
+```
+
+### 3.6 Utensil (master)
+```
+Utensil {
+  id
+  name
+  unitRentPrice    // reference price, editable per event
+}
+```
+
+### 3.7 GlobalSettings
+```
+GlobalSettings {
+  ingredientPrices{}   // overrides / source of truth for Ingredient.globalPrice
+  defaultLanguage       // tamil / english
+  defaultTemplateId (optional)
+}
+```
+
+---
+
+## 4. Feature Modules
+
+### 4.1 Events
+- List view: all events, searchable/filterable by name, date, status
+- Create/edit event: Name, Phone, Location, Headcount, Date, Template selection
+- Detail view with three tabs: **Ingredients** | **Employees** | **Utensils**
+- Client payment status toggle (paid / pending), visible on list and detail view
+
+### 4.2 Food Templates (master data screen)
+- Create/edit/delete templates
+- Each template: name + list of dishes + ingredient list with qty-per-100
+- One template per event (not combinable)
+
+### 4.3 Ingredients
+- Global master list screen: name (English + Tamil), unit, global price
+- On event: selecting a template auto-generates the scaled ingredient list (qty × headcount/100, price = qty × globalPrice)
+- Scaled quantities and prices are **editable per event** without affecting the template or global master data
+- Ingredients tab shows: name, quantity, unit, unit price, subtotal, and a running total
+
+### 4.4 Employees
+- Master list screen: name, phone, default rate
+- On event: assign from master list, or add one-off employees (with option to save to master)
+- Per-event employee row: amount to be paid, amount paid, pending (computed = toPay − paid)
+- Aggregate "employees paid in full" status per event, used in PDF export
+
+### 4.5 Utensils
+- Master vendor list screen: name, phone
+- Master utensil list screen: name, reference rent price
+- On event: assign vendor (from master or one-off), select utensils + quantity, set rental price, rental duration (from/to date), and a returned status per item (or per rental group)
+- Per-event utensils tab shows all rentals with total cost and outstanding-returns indicator
+
+### 4.6 PDF Export
+- Triggered from event detail view
+- Language toggle: Tamil / English (uses `Ingredient.nameTamil` when Tamil selected)
+- Contents:
+  - Event header (name, phone, location, headcount, date)
+  - Full ingredient list with quantities and prices
+  - Client payment status (paid in full / pending)
+  - Employee payment status summary (all paid / who's pending, from employee tab)
+- Generated client-side; must render Tamil script correctly (embed a Tamil-supporting font in the PDF library config)
+
+### 4.7 Global Settings
+- Edit global ingredient prices (propagates to all future scaling; does not retroactively change already-created events' overridden values)
+- Set default language for PDF export
+- Optionally set a default food template
+
+---
+
+## 5. Navigation / Screen Structure
 
 ```
-You are implementing ONE feature for the Catering CRM app. Refer to SPEC.md
-in this repo for full context on the data model, tech stack, and overall app.
-
-FEATURE: <feature name>
-
-SCOPE — implement ONLY this:
-<bullet list>
-
-DO NOT:
-- Touch code for other features not listed above
-- Change the data model beyond what this feature needs
-- Add UI, routes, or store slices for future features
-- Install new dependencies unless explicitly required for this feature (ask first if unsure)
-
-BEFORE CODING:
-1. Re-read the relevant section of SPEC.md and confirm you understand the data shape.
-2. Look at existing components/store slices already in the repo and match their
-   patterns (naming, folder structure, Mantine usage, Zustand slice style) —
-   don't introduce a new pattern for something already established.
-
-AFTER CODING:
-1. Run `npm run lint` and `npx tsc --noEmit` — fix any errors before continuing.
-2. Self-review your diff against the acceptance criteria below. List each
-   criterion and state met/not met.
-3. Describe how you manually verified the feature works (what you'd click
-   through to confirm it).
-4. If everything passes: stage only files relevant to this feature, commit
-   with message format `feat(<scope>): <description>`, and push to the
-   current branch.
-5. If something doesn't pass, stop and report what's blocking — do not
-   commit broken or incomplete work.
-
-ACCEPTANCE CRITERIA:
-<checklist>
+/                     → Dashboard (event list)
+/events/new           → Create event
+/events/[id]          → Event detail (tabs: Ingredients | Employees | Utensils)
+/events/[id]/edit     → Edit event
+/templates            → Food template master list
+/templates/[id]       → Create/edit template
+/ingredients          → Ingredient master list
+/employees            → Employee master list
+/vendors              → Vendor master list
+/utensils             → Utensil master list
+/settings             → Global settings (prices, defaults)
 ```
 
----
-
-## Build Order & Fill-Ins
-
-### 0. Project Scaffold
-
-**Scope:** Next.js 16.3 (App Router) + TypeScript project init, Tailwind, Mantine, Zustand, React Hook Form + Zod, Lucide React installed and configured. Base layout with nav shell (empty routes per SPEC.md §5). Git repo initialized with a `.gitignore`.
-**Acceptance criteria:**
-
-- [ ] `npm run dev` runs with no errors
-- [ ] Mantine theme provider wraps the app
-- [ ] Empty pages exist for all routes in SPEC.md §5 (can just render a placeholder heading)
-- [ ] Tailwind + Mantine don't visually conflict (test one styled button)
-- [ ] Initial commit made
-
-### 1. Global Settings + Ingredient Master List
-
-**Scope:** SPEC.md §3.3, §3.7, §4.7. Ingredient CRUD (name, Tamil name, unit, global price) stored in Zustand+localStorage. Global Settings screen to edit prices and default language.
-**Acceptance criteria:**
-
-- [ ] Can add/edit/delete an ingredient with all fields
-- [ ] Data survives a page refresh (localStorage persistence working)
-- [ ] Global settings screen lets you edit default language and see/edit ingredient prices
-- [ ] Mobile: list becomes stacked cards below ~640px
-
-### 2. Employee & Vendor Master Lists
-
-**Scope:** SPEC.md §3.4, §3.5, §4.4 (master list part only), §4.5 (master vendor list only). Two simple CRUD screens: employees (name, phone, default rate) and vendors (name, phone).
-**Acceptance criteria:**
-
-- [ ] Employee CRUD works and persists
-- [ ] Vendor CRUD works and persists
-- [ ] Both mobile-responsive
-
-### 3. Utensil Master List
-
-**Scope:** SPEC.md §3.6, §4.5 (master utensil list only). CRUD for utensil name + reference rent price.
-**Acceptance criteria:**
-
-- [ ] Utensil CRUD works and persists
-- [ ] Mobile-responsive
-
-### 4. Food Templates
-
-**Scope:** SPEC.md §3.2, §4.2. Template CRUD: name, list of dishes, ingredients with qty-per-100 (pulling from the Ingredient master list built in step 1).
-**Acceptance criteria:**
-
-- [ ] Can create a template, add multiple dishes, and attach ingredients with qty-per-100 to it
-- [ ] Templates list/edit/delete correctly
-- [ ] Ingredient picker pulls live from the master ingredient list
-
-### 5. Events — Core CRUD
-
-**Scope:** SPEC.md §3.1 (core fields only, skip nested arrays for now), §4.1 (create/edit/list only, no tabs yet). Name, phone, location, headcount, date, status, template selection, client payment status.
-**Acceptance criteria:**
-
-- [ ] Can create/edit/delete an event with all core fields
-- [ ] Event list is searchable/filterable by name/date/status
-- [ ] Selecting a template on the event just saves the templateId for now (scaling comes next step)
-
-### 6. Event Detail — Ingredients Tab (the scaling logic)
-
-**Scope:** SPEC.md §4.3, the scaling formula in §3.2. Event detail page with tab navigation (Ingredients tab only for now). Selecting/changing the event's template auto-generates a scaled ingredient list (qty × headcount/100, price = qty × globalPrice). Quantities/prices editable per event without touching the template or global master data.
-**Acceptance criteria:**
-
-- [ ] Changing headcount or template recalculates the ingredient list correctly
-- [ ] Editing a quantity/price on this tab does NOT change the template or global ingredient price
-- [ ] Running total displayed
-- [ ] Tab UI in place (even if Employees/Utensils tabs are just placeholders still)
-
-### 7. Event Detail — Employees Tab
-
-**Scope:** SPEC.md §4.4 (per-event part). Assign from master list or add ad-hoc (with optional "save to master" toggle). Amount to pay / amount paid / pending (computed) per person.
-**Acceptance criteria:**
-
-- [ ] Can assign existing employees and see their default rate pre-filled (editable)
-- [ ] Can add a one-off employee, optionally saving to master list
-- [ ] Pending amount computes correctly (toPay − paid)
-
-### 8. Event Detail — Utensils Tab
-
-**Scope:** SPEC.md §4.5 (per-event part). Assign vendor (master or ad-hoc) + utensils + qty + rental price + duration (from/to dates) + returned status.
-**Acceptance criteria:**
-
-- [ ] Can assign a vendor and one or more utensils with quantities and prices
-- [ ] Rental duration dates capture correctly
-- [ ] Returned status togglable per item
-- [ ] Total utensil cost shown for the event
-
-### 9. PDF Export
-
-**Scope:** SPEC.md §4.6. Language toggle (Tamil/English), pulls ingredient list + client payment status + employee payment summary into a generated PDF.
-**Acceptance criteria:**
-
-- [ ] Tamil script renders correctly in the PDF (test this first — it's the highest-risk part)
-- [ ] English version renders correctly
-- [ ] Client payment status and employee payment summary both appear
-- [ ] PDF downloads/opens correctly on mobile
-
-### 10. PWA / Offline Support
-
-**Scope:** SPEC.md §7. Serwist setup — app shell installable and loads with no connectivity.
-**Acceptance criteria:**
-
-- [ ] App is installable on a phone
-- [ ] App shell loads with network disabled
-- [ ] Existing localStorage data is still accessible offline
+Mobile-first: tab navigation on event detail collapses to a bottom or scrollable tab bar on small screens; all master-list tables convert to stacked cards below ~640px.
 
 ---
 
-## Notes
+## 6. Core User Flow
 
-- Steps 1–3 (master data) can technically be done in any order relative to each other — 4 needs 1, and 5+ need 1–4 done.
-- Don't skip the "manually verify" step in the template even though you're doing localStorage-only — it's the only safety net before commits pile up on a broken feature.
-- If an AI tool's output touches files outside the stated scope, that's a signal to stop and re-prompt rather than accept the diff.
+1. Admin creates a new event (name, phone, location, headcount, date)
+2. Admin selects a food template → ingredient list auto-generates scaled to headcount
+3. Admin optionally edits scaled quantities/prices for this specific event
+4. Admin assigns employees (from master or ad-hoc) and sets amount to pay per person
+5. Admin assigns utensils/vendors, sets rental price and duration
+6. As event progresses, admin marks client payment status and employee payments as they occur, and marks utensils as returned
+7. Admin exports a PDF (language of choice) to hand to the person conducting the function
+
+---
+
+## 7. Non-Functional Requirements
+
+- **Mobile responsive:** usable end-to-end on a phone; primary usage assumed to be mobile at venues
+- **Offline-capable (PWA):** app shell installable and loadable with no connectivity; data already lives in localStorage so records remain accessible offline
+- **Performance:** fast navigation between events/screens (Next.js 16.3 Instant Navigations); avoid unnecessary re-renders on large master lists
+- **Data integrity:** editing global prices or master templates must not silently alter already-created events' saved/overridden values
+
+---
+
+## 8. Out of Scope for Phase 1 (Phase 2 candidates)
+
+- Supabase/Postgres backend migration
+- Multi-user login, roles, permissions
+- Real-time sync across devices
+- Cross-event reporting (e.g. "all pending payments this month" dashboard) — currently per-event only
+- Notifications/reminders (e.g. upcoming event, pending payment alerts)
+
+---
+
+## 9. Open Decisions (to revisit)
+
+- Exact PDF library choice (must support Tamil font embedding well — test early)
+- Whether "returned" status on utensils is tracked per-item or per rental group
+- Whether ad-hoc employees/vendors get a "save to master" prompt automatically or only on request
+
+---
+
+## 10. V2 Addendum (post-client-feedback, supersedes relevant V1 sections)
+
+These changes were requested after V1 was reviewed. Where they conflict with earlier sections, this addendum wins.
+
+### 10.1 Currency & Formatting
+- All monetary values (ingredient prices, employee payments, rental costs, totals) must be validated and formatted as INR (₹) throughout — inputs, tables, and PDF export.
+- Number inputs (quantity, price, headcount, etc.) must not show browser default increment/decrement spinner arrows.
+- Phone number fields (event, employee, ad-hoc entries) need validation and consistent formatting (Indian mobile number format).
+- Measurement units (Gm / Litre / Piece / Kg) need standardized, consistent formatting/labels across ingredient master data, templates, and event ingredient tabs.
+
+### 10.2 Event Date Validation
+- Event date picker must not allow selecting a date before today (and handle related edge cases — e.g. editing an existing past-dated event shouldn't force-block saving other fields).
+
+### 10.3 Vendor → Rental restructure (data model change)
+- **Remove** the global Vendor master list (§3.5, §4.5 master vendor list) entirely — no separate `/vendors` screen or `Vendor` entity.
+- The **Utensils** tab/section is renamed to **Rental**.
+- Each rental entry stores vendor as a **free-text field with autosuggest** drawn from previously-typed vendor names (no master list, no separate CRUD) — implemented as a simple "recent values" list per field, not a formal entity.
+- Utensil items themselves keep their existing master list (§3.6) — only the *vendor* concept changes.
+
+### 10.4 Full multilingual UI (Tamil beside English)
+- Previously Tamil was scoped only to ingredient names and PDF export. This expands to **all UI labels, navigation, buttons, and headings app-wide** — Tamil displayed alongside English (not a language toggle/switch — both shown together).
+- This is a larger, cross-cutting change touching every screen; implement incrementally (e.g. shared nav/layout first, then screen by screen) rather than as one commit.
+
+### 10.5 Ingredient Tamil name auto-fill
+- When adding a new ingredient, auto-fill its Tamil name from a **small built-in offline dictionary** of common Indian/Tamil/Kerala catering ingredients (no translation API call — must work offline).
+- Dictionary should be a simple local lookup (e.g. a static English→Tamil map) that's easy to extend later; unmatched ingredients fall back to manual entry.
+
+### 10.6 Deferred (not in this round)
+- Overall UI color palette / visual polish — explicitly parked for a later pass.
+
+---
+
+## 11. Dashboard / Main Section (new, post-V2)
+
+This is the app's home screen (`/`), replacing the plain event list with a proper dashboard.
+
+### 11.1 Data model additions required
+```
+Event {
+  ...existing fields...
+  totalQuoted        // NEW: amount charged to the customer for this event
+}
+
+EventIngredientRow {
+  ...existing fields...
+  purchased           // NEW: bool, has this ingredient been bought yet
+}
+
+Reminder {              // NEW entity
+  id
+  customerName (optional)
+  phone
+  note (optional)
+  remindAt            // datetime
+  eventId (optional)  // can be linked to an event or standalone
+  dismissed            // bool
+}
+```
+Event "earnings/profit" = `totalQuoted − (sum of ingredient costs + employee payments + rental costs)` for that event.
+
+### 11.2 Dashboard Widgets
+- **Upcoming Events** — next N events sorted by date, quick-tap into detail
+- **Customer Follow-up** — list of active (non-dismissed) reminders, with a quick "add reminder" action (phone number + note + remind-in dropdown: 30 min / 1 hr / custom)
+- **Inventory Alerts** — ingredients across upcoming events where `purchased = false`, aggregated by ingredient so duplicates across events are summed
+- **Total Earnings** — sum of `totalQuoted − costs` across events (filterable by this month / all time, at minimum)
+- **Payment Status Overview** — pending client payments + pending employee payments across all events
+- **Utensils Not Yet Returned** — rentals still outstanding across events
+- **Quick Add** — shortcut buttons for New Event / New Ingredient
+
+### 11.3 Pricing Calculator (standalone tool, not tied to a saved event)
+- Inputs: select a food template, enter headcount, optional markup %
+- Output: raw ingredient cost (using existing scaling logic from §4.3/§10.1) + suggested quote price with markup applied
+- Does not save anything by default — a "Convert to Event" action can optionally create a real event pre-filled with these values
+
+### 11.4 Reminders — technical note
+- Phase 1 uses the browser Notification API — fires only while the browser is open (background tab is fine, fully closed browser is not).
+- True push notifications (survive closed browser) require a backend and are Phase 2 scope.
+
+### 11.5 Deferred
+- Notification reliability/polish and further dashboard UI styling — parked for later, same as §10.6.

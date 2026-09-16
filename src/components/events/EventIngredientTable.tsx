@@ -1,6 +1,6 @@
 "use client";
 
-import { NumberInput, Table, Text } from "@mantine/core";
+import { NumberInput, Switch, Table, Text } from "@mantine/core";
 
 import { Bilingual } from "@/components/Bilingual";
 import { ui } from "@/lib/i18n";
@@ -11,7 +11,10 @@ import { normalizeUnit } from "@/lib/units";
 type EventIngredientTableProps = {
   lines: EventIngredientLine[];
   ingredients: Ingredient[];
-  onLineChange: (lineId: string, patch: { qty?: number; price?: number }) => void;
+  onLineChange: (
+    lineId: string,
+    patch: { qty?: number; price?: number; purchased?: boolean }
+  ) => void;
 };
 
 export function EventIngredientTable({
@@ -28,6 +31,7 @@ export function EventIngredientTable({
             <Table.Th><Bilingual label={ui.common.qty} /></Table.Th>
             <Table.Th><Bilingual label={ui.common.unit} /></Table.Th>
             <Table.Th><Bilingual label={ui.common.price} /></Table.Th>
+            <Table.Th><Bilingual label={ui.events.purchased} /></Table.Th>
           </Table.Tr>
         </Table.Thead>
         <Table.Tbody>
@@ -74,6 +78,13 @@ export function EventIngredientTable({
                     onChange={(value) =>
                       onLineChange(line.id, { price: typeof value === "number" ? value : 0 })
                     }
+                  />
+                </Table.Td>
+                <Table.Td>
+                  <Switch
+                    checked={line.purchased}
+                    onChange={() => onLineChange(line.id, { purchased: !line.purchased })}
+                    size="sm"
                   />
                 </Table.Td>
               </Table.Tr>

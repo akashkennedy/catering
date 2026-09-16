@@ -65,6 +65,7 @@ function buildEventSchema(isNew: boolean, currentDate?: string) {
     status: z.enum(["planned", "confirmed", "completed", "cancelled"]),
     templateId: z.string().nullable(),
     clientPaymentStatus: z.enum(["pending", "partial", "paid"]),
+    totalQuoted: z.coerce.number().min(0, "Total quoted must be 0 or more"),
   });
 }
 
@@ -87,6 +88,7 @@ type EventFormValues = {
   status: EventStatus;
   templateId: string | null;
   clientPaymentStatus: ClientPaymentStatus;
+  totalQuoted: number;
 };
 
 type EventFormModalProps = {
@@ -118,6 +120,7 @@ export function EventFormModal({ opened, event, onClose }: EventFormModalProps) 
       status: "planned",
       templateId: null,
       clientPaymentStatus: "pending",
+      totalQuoted: 0,
     },
   });
 
@@ -132,6 +135,7 @@ export function EventFormModal({ opened, event, onClose }: EventFormModalProps) 
       status: event?.status ?? "planned",
       templateId: event?.templateId ?? null,
       clientPaymentStatus: event?.clientPaymentStatus ?? "pending",
+      totalQuoted: event?.totalQuoted ?? 0,
     });
   }, [opened, event, reset]);
 
@@ -258,6 +262,25 @@ export function EventFormModal({ opened, event, onClose }: EventFormModalProps) 
                 {...field}
                 value={field.value ?? null}
                 onChange={(value) => field.onChange(value ?? null)}
+              />
+            )}
+          />
+          <Controller
+            name="totalQuoted"
+            control={control}
+            render={({ field }) => (
+              <NumberInput
+                label={<Bilingual label={ui.events.totalQuoted} />}
+                placeholder="0"
+                min={0}
+                allowNegative={false}
+                decimalScale={2}
+                leftSection="₹"
+                {...field}
+                onKeyDown={(e) => {
+                  if (e.key === "ArrowUp" || e.key === "ArrowDown") e.preventDefault();
+                }}
+                error={errors.totalQuoted?.message}
               />
             )}
           />

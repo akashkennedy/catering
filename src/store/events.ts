@@ -13,6 +13,7 @@ export type EventIngredientLine = {
   ingredientId: string;
   qty: number;
   price: number;
+  purchased: boolean;
 };
 
 export type EventEmployeeLine = {
@@ -47,6 +48,7 @@ export type CateringEvent = {
   status: EventStatus;
   templateId: string | null;
   clientPaymentStatus: ClientPaymentStatus;
+  totalQuoted: number;
   ingredients: EventIngredientLine[];
   employees: EventEmployeeLine[];
   utensils: EventUtensilLine[];
@@ -78,7 +80,7 @@ export function buildScaledIngredients(
   for (const [ingredientId, qtyPer100] of qtyPer100ByIngredient) {
     const qty = Math.round(qtyPer100 * factor * 100) / 100;
     const price = Math.round(qty * (globalPrices.get(ingredientId) ?? 0) * 100) / 100;
-    lines.push({ id: crypto.randomUUID(), ingredientId, qty, price });
+    lines.push({ id: crypto.randomUUID(), ingredientId, qty, price, purchased: false });
   }
   return lines;
 }
@@ -112,20 +114,28 @@ export const useEventsStore = create<EventsState>()(
     {
       name: "catering-events",
       storage: createJSONStorage(() => localStorage),
-      version: 2,
+      version: 3,
       migrate: (persistedState) => {
         const state = persistedState as {
           events?: Array<{
             ingredients?: unknown;
             employees?: unknown;
             utensils?: unknown;
+            totalQuoted?: unknown;
           }> | null;
         };
         return {
           ...state,
           events: (state.events ?? []).map((event) => ({
             ...event,
-            ingredients: event.ingredients ?? [],
+            totalQuoted: typeof event.totalQuoted === "number" ? event.totalQuoted : 0,
+            ingredients: ((event.ingredients ?? []) as Array<Record<string, unknown>>).map(
+              (rawLine) => ({
+                ...rawLine,
+                purchased:
+                  typeof rawLine.purchased === "boolean" ? rawLine.purchased : false,
+              })
+            ),
             employees: event.employees ?? [],
             utensils: ((event.utensils ?? []) as Array<Record<string, unknown>>).map((rawLine) => {
               const line = { ...rawLine };

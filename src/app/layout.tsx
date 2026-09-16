@@ -4,6 +4,7 @@ import { Geist, Geist_Mono } from "next/font/google";
 
 import { theme } from "@/theme";
 import AppLayout from "@/components/AppLayout";
+import { ReminderNotifier } from "@/components/ReminderNotifier";
 import "./globals.css";
 
 const geistSans = Geist({
@@ -50,6 +51,7 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
       <body>
         <MantineProvider theme={theme}>
           <AppLayout>{children}</AppLayout>
+          <ReminderNotifier />
         </MantineProvider>
       </body>
     </html>

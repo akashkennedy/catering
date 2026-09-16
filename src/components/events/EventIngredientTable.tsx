@@ -36,7 +36,9 @@ export function EventIngredientTable({
             return (
               <Table.Tr key={line.id}>
                 <Table.Td>
-                  <Text fw={500}>{ingredient?.name ?? "Unknown ingredient"}</Text>
+                  <Text fw={500}>
+                    {ingredient?.name ?? <Bilingual label={ui.events.unknownIngredient} />}
+                  </Text>
                   {ingredient?.tamilName && (
                     <Text size="xs" c="dimmed">
                       {ingredient.tamilName}

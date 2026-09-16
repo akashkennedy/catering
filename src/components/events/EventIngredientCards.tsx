@@ -27,7 +27,9 @@ export function EventIngredientCards({
           <Card key={line.id} withBorder padding="sm">
             <Stack gap="xs">
               <div>
-                <Text fw={600}>{ingredient?.name ?? "Unknown ingredient"}</Text>
+                <Text fw={600}>
+                  {ingredient?.name ?? <Bilingual label={ui.events.unknownIngredient} />}
+                </Text>
                 {ingredient?.tamilName && (
                   <Text size="xs" c="dimmed">
                     {ingredient.tamilName}

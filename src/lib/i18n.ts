@@ -45,6 +45,11 @@ export const ui = {
       "Reminders fire only while this app is open in a browser tab. If the browser is closed they stay queued and fire the next time the app is opened.",
       "இந்தப் பயன்பாடு திறந்த உலாவித் தாளில் இருக்கும் போது மட்டுமே நினைவூட்டல்கள் செயல்படும். உலாவி மூடப்பட்டால், அடுத்த முறை பயன்பாடு திறக்கும் போது செயல்படும்."
     ),
+    quickAdd: lab("Quick add", "விரைவு சேர்"),
+    quickAddHint: lab(
+      "Add a new event with just the essentials — fill in the rest later.",
+      "அடிப்படை விவரங்களுடன் புதிய நிகழ்வைச் சேர்க்கவும் — மீதியை பின்னர் நிரப்பவும்."
+    ),
   },
   moreItems: (count: number): Label => ({
     en: `${count} more`,

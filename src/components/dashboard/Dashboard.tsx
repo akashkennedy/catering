@@ -8,6 +8,7 @@ import { PaymentStatusWidget } from "./PaymentStatusWidget";
 import { InventoryAlertsWidget } from "./InventoryAlertsWidget";
 import { UtensilsNotReturnedWidget } from "./UtensilsNotReturnedWidget";
 import { RemindersWidget } from "./RemindersWidget";
+import { QuickAddWidget } from "./QuickAddWidget";
 
 export function Dashboard() {
   return (
@@ -23,6 +24,7 @@ export function Dashboard() {
         <InventoryAlertsWidget />
         <UtensilsNotReturnedWidget />
         <RemindersWidget />
+        <QuickAddWidget />
       </SimpleGrid>
     </Stack>
   );

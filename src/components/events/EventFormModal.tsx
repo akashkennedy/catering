@@ -18,6 +18,7 @@ import { useTemplatesStore } from "@/store/templates";
 import { useIngredientsStore } from "@/store/ingredients";
 import { validatePhone, formatPhone } from "@/lib/phone";
 import { ui, labelText, type Label } from "@/lib/i18n";
+import { todayLocalISO as todayISO } from "@/lib/date";
 import { Bilingual } from "@/components/Bilingual";
 import {
   buildScaledIngredients,
@@ -40,8 +41,6 @@ export const CLIENT_PAYMENT_OPTIONS: { value: ClientPaymentStatus; label: Label 
   { value: "partial", label: ui.events.paymentPartial },
   { value: "paid", label: ui.events.paymentPaid },
 ];
-
-const todayISO = () => new Date().toISOString().slice(0, 10);
 
 function buildEventSchema(isNew: boolean, currentDate?: string) {
   return z.object({

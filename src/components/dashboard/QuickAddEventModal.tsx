@@ -9,9 +9,8 @@ import { useEffect } from "react";
 import { Bilingual } from "@/components/Bilingual";
 import { ui, labelText } from "@/lib/i18n";
 import { validatePhone, formatPhone } from "@/lib/phone";
+import { todayLocalISO as todayISO } from "@/lib/date";
 import { useEventsStore, type CateringEventInput } from "@/store/events";
-
-const todayISO = () => new Date().toISOString().slice(0, 10);
 
 const quickAddEventSchema = z.object({
   name: z.string().trim().min(1, "Name is required"),

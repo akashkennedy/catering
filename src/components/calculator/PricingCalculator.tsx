@@ -39,7 +39,7 @@ export function PricingCalculator() {
   const ingredients = useIngredientsStore((state) => state.ingredients);
   const setPrefill = useEventDraftStore((state) => state.setPrefill);
 
-  const { control } = useForm<CalculatorValues>({
+  const { control, handleSubmit } = useForm<CalculatorValues>({
     resolver: zodResolver(calculatorSchema),
     defaultValues: { templateId: null, headcount: 100, markup: 0 },
   });
@@ -58,11 +58,14 @@ export function PricingCalculator() {
     label: template.name,
   }));
 
-  const convertToEvent = () => {
+  const convertToEvent = handleSubmit((values) => {
     if (!template) return;
-    setPrefill({ headcount, templateId: template.id, totalQuoted: suggestedQuote });
+    const scaled = buildScaledIngredients(template, ingredients, values.headcount);
+    const cost = scaled.reduce((sum, line) => sum + line.price, 0);
+    const quote = Math.round(cost * (1 + (values.markup || 0) / 100) * 100) / 100;
+    setPrefill({ headcount: values.headcount, templateId: template.id, totalQuoted: quote });
     router.push("/events");
-  };
+  });
 
   return (
     <Stack gap="md">

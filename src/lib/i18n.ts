@@ -221,13 +221,19 @@ export const ui = {
     refPricePrefix: lab("Reference rent price:", "குறிப்பு வாடகை விலை:"),
   },
   settings: {
-    defaultLanguage: lab("Default language", "இயல்பு மொழி"),
-    defaultLanguageNote: lab(
-      "Used for labels across the app and exported documents.",
-      "பயன்பாட்டின் லேபிள்கள் மற்றும் PDF ஏற்றுமதிகளுக்குப் பயன்படுகிறது."
+    uiLanguage: lab("UI language", "இடைமுக மொழி"),
+    uiLanguageNote: lab(
+      "Choose how labels are shown across the app interface.",
+      "பயன்பாட்டு இடைமுகத்தில் லேபிள்கள் எவ்வாறு காட்டப்படும் என்பதைத் தேர்ந்தெடுக்கவும்."
     ),
     english: lab("English", "ஆங்கிலம்"),
     tamil: lab("Tamil", "தமிழ்"),
+    both: lab("Both", "இரண்டும்"),
+    defaultLanguage: lab("Document language", "ஆவண மொழி"),
+    defaultLanguageNote: lab(
+      "Used for exported PDF documents.",
+      "ஏற்றுமதி செய்யப்படும் PDF ஆவணங்களுக்குப் பயன்படுகிறது."
+    ),
     ingredientPrices: lab("Ingredient prices", "பொருள் விலைகள்"),
     ingredientPricesNote: lab(
       "Edit the global price used as the default when planning events.",

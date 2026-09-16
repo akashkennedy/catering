@@ -3,6 +3,8 @@
 import { ActionIcon, Card, Group, Stack, Text } from "@mantine/core";
 import { Pencil, Trash } from "lucide-react";
 
+import { Bilingual } from "@/components/Bilingual";
+import { ui } from "@/lib/i18n";
 import type { Utensil } from "@/store/utensils";
 import { formatINR } from "@/lib/format";
 
@@ -21,7 +23,7 @@ export function UtensilCards({ utensils, onEdit, onDelete }: UtensilCardsProps) 
             <Stack gap={2}>
               <Text fw={600}>{utensil.name}</Text>
               <Text size="sm" fw={500}>
-                Reference rent price: {formatINR(utensil.rentPrice)}
+                <Bilingual label={ui.utensils.refPricePrefix} /> {formatINR(utensil.rentPrice)}
               </Text>
             </Stack>
             <Group gap="xs">

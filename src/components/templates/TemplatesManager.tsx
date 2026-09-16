@@ -7,6 +7,8 @@ import { Plus } from "lucide-react";
 import { TemplateCards } from "./TemplateCards";
 import { TemplateFormModal } from "./TemplateFormModal";
 import { TemplateTable } from "./TemplateTable";
+import { Bilingual } from "@/components/Bilingual";
+import { ui } from "@/lib/i18n";
 import { useTemplatesStore, type FoodTemplate } from "@/store/templates";
 
 export function TemplatesManager() {
@@ -19,7 +21,9 @@ export function TemplatesManager() {
   return (
     <>
       <Group justify="space-between" mb="md">
-        <Title order={1}>Templates</Title>
+        <Title order={1}>
+          <Bilingual label={ui.nav.templates} />
+        </Title>
         <Button
           leftSection={<Plus size={18} />}
           onClick={() => {
@@ -27,12 +31,14 @@ export function TemplatesManager() {
             setFormOpened(true);
           }}
         >
-          Add Template
+          <Bilingual label={ui.templates.addTemplate} />
         </Button>
       </Group>
 
       {templates.length === 0 ? (
-        <Text c="dimmed">No templates yet. Add one to get started.</Text>
+        <Text c="dimmed">
+          <Bilingual label={ui.templates.empty} />
+        </Text>
       ) : (
         <>
           <TemplateTable
@@ -59,14 +65,22 @@ export function TemplatesManager() {
       <Modal
         opened={deletingTemplate !== null}
         onClose={() => setDeletingTemplate(null)}
-        title="Delete template"
+        title={<Bilingual label={ui.templates.deleteTitle} />}
         centered
       >
         <Stack gap="md">
-          <Text>Are you sure you want to delete &quot;{deletingTemplate?.name}&quot;?</Text>
+          <Text>
+            <Bilingual
+              label={
+                deletingTemplate
+                  ? ui.deleteConfirm(deletingTemplate.name)
+                  : { en: "", ta: "" }
+              }
+            />
+          </Text>
           <Group justify="flex-end">
             <Button variant="default" onClick={() => setDeletingTemplate(null)}>
-              Cancel
+              <Bilingual label={ui.common.cancel} />
             </Button>
             <Button
               color="red"
@@ -75,7 +89,7 @@ export function TemplatesManager() {
                 setDeletingTemplate(null);
               }}
             >
-              Delete
+              <Bilingual label={ui.common.delete} />
             </Button>
           </Group>
         </Stack>

@@ -3,6 +3,8 @@
 import { ActionIcon, Card, Group, Stack, Text } from "@mantine/core";
 import { Pencil, Trash } from "lucide-react";
 
+import { Bilingual } from "@/components/Bilingual";
+import { ui } from "@/lib/i18n";
 import type { Ingredient } from "@/store/ingredients";
 import { formatINR } from "@/lib/format";
 import { formatMeasurement } from "@/lib/units";
@@ -26,9 +28,12 @@ export function IngredientCards({ ingredients, onEdit, onDelete }: IngredientCar
                   {ingredient.tamilName}
                 </Text>
               )}
-              <Text size="sm">Unit: {formatMeasurement(ingredient.qty, ingredient.unit)}</Text>
+              <Text size="sm">
+                <Bilingual label={ui.ingredients.unitPrefix} />{" "}
+                {formatMeasurement(ingredient.qty, ingredient.unit)}
+              </Text>
               <Text size="sm" fw={500}>
-                Price: {formatINR(ingredient.globalPrice)}
+                <Bilingual label={ui.ingredients.pricePrefix} /> {formatINR(ingredient.globalPrice)}
               </Text>
             </Stack>
             <Group gap="xs">

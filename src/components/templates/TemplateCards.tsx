@@ -3,6 +3,8 @@
 import { ActionIcon, Card, Group, Stack, Text } from "@mantine/core";
 import { Pencil, Trash } from "lucide-react";
 
+import { Bilingual } from "@/components/Bilingual";
+import { ui } from "@/lib/i18n";
 import type { FoodTemplate } from "@/store/templates";
 
 type TemplateCardsProps = {
@@ -26,8 +28,8 @@ export function TemplateCards({ templates, onEdit, onDelete }: TemplateCardsProp
               <Stack gap={2}>
                 <Text fw={600}>{template.name}</Text>
                 <Text size="sm" c="dimmed">
-                  {dishCount} {dishCount === 1 ? "dish" : "dishes"} · {ingredientCount}{" "}
-                  {ingredientCount === 1 ? "ingredient" : "ingredients"}
+                  <Bilingual label={ui.dishesTitle(dishCount)} /> ·{" "}
+                  <Bilingual label={ui.ingredientsCount(ingredientCount)} />
                 </Text>
               </Stack>
               <Group gap="xs">

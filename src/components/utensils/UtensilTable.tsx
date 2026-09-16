@@ -3,6 +3,8 @@
 import { ActionIcon, Group, Table } from "@mantine/core";
 import { Pencil, Trash } from "lucide-react";
 
+import { Bilingual } from "@/components/Bilingual";
+import { ui } from "@/lib/i18n";
 import type { Utensil } from "@/store/utensils";
 import { formatINR } from "@/lib/format";
 
@@ -18,9 +20,9 @@ export function UtensilTable({ utensils, onEdit, onDelete }: UtensilTableProps) 
       <Table striped highlightOnHover withTableBorder>
         <Table.Thead>
           <Table.Tr>
-            <Table.Th>Name</Table.Th>
-            <Table.Th>Reference rent price</Table.Th>
-            <Table.Th>Actions</Table.Th>
+            <Table.Th><Bilingual label={ui.common.name} /></Table.Th>
+            <Table.Th><Bilingual label={ui.utensils.rentPrice} /></Table.Th>
+            <Table.Th><Bilingual label={ui.common.actions} /></Table.Th>
           </Table.Tr>
         </Table.Thead>
         <Table.Tbody>

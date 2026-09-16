@@ -3,6 +3,8 @@
 import { ActionIcon, Card, Group, Stack, Text } from "@mantine/core";
 import { Pencil, Trash } from "lucide-react";
 
+import { Bilingual } from "@/components/Bilingual";
+import { ui } from "@/lib/i18n";
 import type { Employee } from "@/store/employees";
 import { formatINR } from "@/lib/format";
 import { formatPhone } from "@/lib/phone";
@@ -27,7 +29,7 @@ export function EmployeeCards({ employees, onEdit, onDelete }: EmployeeCardsProp
                 </Text>
               )}
               <Text size="sm" fw={500}>
-                Rate: {formatINR(employee.defaultRate)}
+                <Bilingual label={ui.employees.ratePrefix} /> {formatINR(employee.defaultRate)}
               </Text>
             </Stack>
             <Group gap="xs">

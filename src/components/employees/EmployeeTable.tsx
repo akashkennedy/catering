@@ -3,6 +3,8 @@
 import { ActionIcon, Group, Table } from "@mantine/core";
 import { Pencil, Trash } from "lucide-react";
 
+import { Bilingual } from "@/components/Bilingual";
+import { ui } from "@/lib/i18n";
 import type { Employee } from "@/store/employees";
 import { formatINR } from "@/lib/format";
 import { formatPhone } from "@/lib/phone";
@@ -19,10 +21,10 @@ export function EmployeeTable({ employees, onEdit, onDelete }: EmployeeTableProp
       <Table striped highlightOnHover withTableBorder>
         <Table.Thead>
           <Table.Tr>
-            <Table.Th>Name</Table.Th>
-            <Table.Th>Phone</Table.Th>
-            <Table.Th>Default Rate</Table.Th>
-            <Table.Th>Actions</Table.Th>
+            <Table.Th><Bilingual label={ui.common.name} /></Table.Th>
+            <Table.Th><Bilingual label={ui.common.phone} /></Table.Th>
+            <Table.Th><Bilingual label={ui.employees.defaultRate} /></Table.Th>
+            <Table.Th><Bilingual label={ui.common.actions} /></Table.Th>
           </Table.Tr>
         </Table.Thead>
         <Table.Tbody>

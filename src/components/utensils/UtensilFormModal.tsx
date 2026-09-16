@@ -6,6 +6,8 @@ import { Controller, useForm } from "react-hook-form";
 import { z } from "zod";
 import { useEffect } from "react";
 
+import { Bilingual } from "@/components/Bilingual";
+import { ui, labelText } from "@/lib/i18n";
 import {
   useUtensilsStore,
   type Utensil,
@@ -65,14 +67,14 @@ export function UtensilFormModal({ opened, utensil, onClose }: UtensilFormModalP
     <Modal
       opened={opened}
       onClose={onClose}
-      title={utensil ? "Edit Utensil" : "Add Utensil"}
+      title={<Bilingual label={utensil ? ui.utensils.editTitle : ui.utensils.addUtensil} />}
       centered
     >
       <form onSubmit={handleSubmit(onSubmit)}>
         <Stack gap="md">
           <TextInput
-            label="Name"
-            placeholder="e.g. Steel plate"
+            label={<Bilingual label={ui.common.name} />}
+            placeholder={labelText(ui.utensils.namePlaceholder)}
             withAsterisk
             {...register("name")}
             error={errors.name?.message}
@@ -82,8 +84,8 @@ export function UtensilFormModal({ opened, utensil, onClose }: UtensilFormModalP
             control={control}
             render={({ field }) => (
               <NumberInput
-                label="Reference rent price"
-                placeholder="e.g. 20"
+                label={<Bilingual label={ui.utensils.rentPrice} />}
+                placeholder={labelText(ui.utensils.rentPricePlaceholder)}
                 min={0}
                 allowNegative={false}
                 decimalScale={2}
@@ -98,9 +100,11 @@ export function UtensilFormModal({ opened, utensil, onClose }: UtensilFormModalP
           />
           <Group justify="flex-end" mt="md">
             <Button variant="default" onClick={onClose}>
-              Cancel
+              <Bilingual label={ui.common.cancel} />
             </Button>
-            <Button type="submit">{utensil ? "Save" : "Add"}</Button>
+            <Button type="submit">
+              <Bilingual label={utensil ? ui.common.save : ui.common.add} />
+            </Button>
           </Group>
         </Stack>
       </form>

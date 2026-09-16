@@ -6,6 +6,8 @@ import { Controller, useForm, useWatch } from "react-hook-form";
 import { z } from "zod";
 import { useEffect } from "react";
 
+import { Bilingual } from "@/components/Bilingual";
+import { ui, labelText } from "@/lib/i18n";
 import { lookupTamilName } from "@/lib/ingredientTranslations";
 import { UNITS, normalizeUnit } from "@/lib/units";
 import {
@@ -92,21 +94,21 @@ export function IngredientFormModal({ opened, ingredient, onClose }: IngredientF
     <Modal
       opened={opened}
       onClose={onClose}
-      title={ingredient ? "Edit Ingredient" : "Add Ingredient"}
+      title={<Bilingual label={ingredient ? ui.ingredients.editTitle : ui.ingredients.addIngredient} />}
       centered
     >
       <form onSubmit={handleSubmit(onSubmit)}>
         <Stack gap="md">
           <TextInput
-            label="Name"
-            placeholder="e.g. Rice"
+            label={<Bilingual label={ui.common.name} />}
+            placeholder={labelText(ui.ingredients.namePlaceholder)}
             withAsterisk
             {...register("name")}
             error={errors.name?.message}
           />
           <TextInput
-            label="Tamil name"
-            placeholder="e.g. அரிசி"
+            label={<Bilingual label={ui.ingredients.tamilName} />}
+            placeholder={labelText(ui.ingredients.tamilNamePlaceholder)}
             {...register("tamilName")}
             error={errors.tamilName?.message}
           />
@@ -116,8 +118,8 @@ export function IngredientFormModal({ opened, ingredient, onClose }: IngredientF
               control={control}
               render={({ field }) => (
                 <Select
-                  label="Unit"
-                  placeholder="Select a unit"
+                  label={<Bilingual label={ui.common.unit} />}
+                  placeholder={labelText(ui.ingredients.selectUnit)}
                   data={UNITS}
                   allowDeselect={false}
                   withAsterisk
@@ -132,8 +134,8 @@ export function IngredientFormModal({ opened, ingredient, onClose }: IngredientF
               control={control}
               render={({ field }) => (
                 <NumberInput
-                  label="Qty"
-                  placeholder="e.g. 5"
+                  label={<Bilingual label={ui.common.qty} />}
+                  placeholder={labelText(ui.ingredients.qtyPlaceholder)}
                   min={0}
                   allowNegative={false}
                   decimalScale={2}
@@ -152,8 +154,8 @@ export function IngredientFormModal({ opened, ingredient, onClose }: IngredientF
             control={control}
             render={({ field }) => (
               <NumberInput
-                label="Global price"
-                placeholder="e.g. 150"
+                label={<Bilingual label={ui.ingredients.globalPrice} />}
+                placeholder={labelText(ui.ingredients.globalPricePlaceholder)}
                 min={0}
                 allowNegative={false}
                 decimalScale={2}
@@ -168,9 +170,11 @@ export function IngredientFormModal({ opened, ingredient, onClose }: IngredientF
           />
           <Group justify="flex-end" mt="md">
             <Button variant="default" onClick={onClose}>
-              Cancel
+              <Bilingual label={ui.common.cancel} />
             </Button>
-            <Button type="submit">{ingredient ? "Save" : "Add"}</Button>
+            <Button type="submit">
+              <Bilingual label={ingredient ? ui.common.save : ui.common.add} />
+            </Button>
           </Group>
         </Stack>
       </form>

@@ -7,6 +7,8 @@ import { Plus } from "lucide-react";
 import { IngredientCards } from "./IngredientCards";
 import { IngredientFormModal } from "./IngredientFormModal";
 import { IngredientTable } from "./IngredientTable";
+import { Bilingual } from "@/components/Bilingual";
+import { ui } from "@/lib/i18n";
 import { useIngredientsStore, type Ingredient } from "@/store/ingredients";
 
 export function IngredientsManager() {
@@ -19,7 +21,9 @@ export function IngredientsManager() {
   return (
     <>
       <Group justify="space-between" mb="md">
-        <Title order={1}>Ingredients</Title>
+        <Title order={1}>
+          <Bilingual label={ui.nav.ingredients} />
+        </Title>
         <Button
           leftSection={<Plus size={18} />}
           onClick={() => {
@@ -27,12 +31,14 @@ export function IngredientsManager() {
             setFormOpened(true);
           }}
         >
-          Add Ingredient
+          <Bilingual label={ui.ingredients.addIngredient} />
         </Button>
       </Group>
 
       {ingredients.length === 0 ? (
-        <Text c="dimmed">No ingredients yet. Add one to get started.</Text>
+        <Text c="dimmed">
+          <Bilingual label={ui.ingredients.empty} />
+        </Text>
       ) : (
         <>
           <IngredientTable
@@ -59,14 +65,22 @@ export function IngredientsManager() {
       <Modal
         opened={deletingIngredient !== null}
         onClose={() => setDeletingIngredient(null)}
-        title="Delete ingredient"
+        title={<Bilingual label={ui.ingredients.deleteTitle} />}
         centered
       >
         <Stack gap="md">
-          <Text>Are you sure you want to delete &quot;{deletingIngredient?.name}&quot;?</Text>
+          <Text>
+            <Bilingual
+              label={
+                deletingIngredient
+                  ? ui.deleteConfirm(deletingIngredient.name)
+                  : { en: "", ta: "" }
+              }
+            />
+          </Text>
           <Group justify="flex-end">
             <Button variant="default" onClick={() => setDeletingIngredient(null)}>
-              Cancel
+              <Bilingual label={ui.common.cancel} />
             </Button>
             <Button
               color="red"
@@ -75,7 +89,7 @@ export function IngredientsManager() {
                 setDeletingIngredient(null);
               }}
             >
-              Delete
+              <Bilingual label={ui.common.delete} />
             </Button>
           </Group>
         </Stack>

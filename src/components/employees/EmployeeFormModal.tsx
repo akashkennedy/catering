@@ -6,6 +6,8 @@ import { Controller, useForm } from "react-hook-form";
 import { z } from "zod";
 import { useEffect } from "react";
 
+import { Bilingual } from "@/components/Bilingual";
+import { ui, labelText } from "@/lib/i18n";
 import {
   useEmployeesStore,
   type Employee,
@@ -72,21 +74,21 @@ export function EmployeeFormModal({ opened, employee, onClose }: EmployeeFormMod
     <Modal
       opened={opened}
       onClose={onClose}
-      title={employee ? "Edit Employee" : "Add Employee"}
+      title={<Bilingual label={employee ? ui.employees.editTitle : ui.employees.addEmployee} />}
       centered
     >
       <form onSubmit={handleSubmit(onSubmit)}>
         <Stack gap="md">
           <TextInput
-            label="Name"
-            placeholder="e.g. Ravi"
+            label={<Bilingual label={ui.common.name} />}
+            placeholder={labelText(ui.employees.namePlaceholder)}
             withAsterisk
             {...register("name")}
             error={errors.name?.message}
           />
           <TextInput
-            label="Phone"
-            placeholder="e.g. 9876543210"
+            label={<Bilingual label={ui.common.phone} />}
+            placeholder={labelText(ui.employees.phonePlaceholder)}
             {...register("phone")}
             error={errors.phone?.message}
           />
@@ -95,8 +97,8 @@ export function EmployeeFormModal({ opened, employee, onClose }: EmployeeFormMod
             control={control}
             render={({ field }) => (
               <NumberInput
-                label="Default rate"
-                placeholder="e.g. 1500"
+                label={<Bilingual label={ui.employees.defaultRate} />}
+                placeholder={labelText(ui.employees.ratePlaceholder)}
                 min={0}
                 allowNegative={false}
                 decimalScale={2}
@@ -111,9 +113,11 @@ export function EmployeeFormModal({ opened, employee, onClose }: EmployeeFormMod
           />
           <Group justify="flex-end" mt="md">
             <Button variant="default" onClick={onClose}>
-              Cancel
+              <Bilingual label={ui.common.cancel} />
             </Button>
-            <Button type="submit">{employee ? "Save" : "Add"}</Button>
+            <Button type="submit">
+              <Bilingual label={employee ? ui.common.save : ui.common.add} />
+            </Button>
           </Group>
         </Stack>
       </form>

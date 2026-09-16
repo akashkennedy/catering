@@ -7,6 +7,8 @@ import { Plus } from "lucide-react";
 import { UtensilCards } from "./UtensilCards";
 import { UtensilFormModal } from "./UtensilFormModal";
 import { UtensilTable } from "./UtensilTable";
+import { Bilingual } from "@/components/Bilingual";
+import { ui } from "@/lib/i18n";
 import { useUtensilsStore, type Utensil } from "@/store/utensils";
 
 export function UtensilsManager() {
@@ -19,7 +21,9 @@ export function UtensilsManager() {
   return (
     <>
       <Group justify="space-between" mb="md">
-        <Title order={1}>Rental</Title>
+        <Title order={1}>
+          <Bilingual label={ui.nav.rental} />
+        </Title>
         <Button
           leftSection={<Plus size={18} />}
           onClick={() => {
@@ -27,12 +31,14 @@ export function UtensilsManager() {
             setFormOpened(true);
           }}
         >
-          Add Utensil
+          <Bilingual label={ui.utensils.addUtensil} />
         </Button>
       </Group>
 
       {utensils.length === 0 ? (
-        <Text c="dimmed">No utensils yet. Add one to get started.</Text>
+        <Text c="dimmed">
+          <Bilingual label={ui.utensils.empty} />
+        </Text>
       ) : (
         <>
           <UtensilTable
@@ -59,14 +65,22 @@ export function UtensilsManager() {
       <Modal
         opened={deletingUtensil !== null}
         onClose={() => setDeletingUtensil(null)}
-        title="Delete utensil"
+        title={<Bilingual label={ui.utensils.deleteTitle} />}
         centered
       >
         <Stack gap="md">
-          <Text>Are you sure you want to delete &quot;{deletingUtensil?.name}&quot;?</Text>
+          <Text>
+            <Bilingual
+              label={
+                deletingUtensil
+                  ? ui.deleteConfirm(deletingUtensil.name)
+                  : { en: "", ta: "" }
+              }
+            />
+          </Text>
           <Group justify="flex-end">
             <Button variant="default" onClick={() => setDeletingUtensil(null)}>
-              Cancel
+              <Bilingual label={ui.common.cancel} />
             </Button>
             <Button
               color="red"
@@ -75,7 +89,7 @@ export function UtensilsManager() {
                 setDeletingUtensil(null);
               }}
             >
-              Delete
+              <Bilingual label={ui.common.delete} />
             </Button>
           </Group>
         </Stack>

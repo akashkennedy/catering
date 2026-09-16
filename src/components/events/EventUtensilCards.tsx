@@ -11,6 +11,8 @@ import {
 } from "@mantine/core";
 import { X } from "lucide-react";
 
+import { Bilingual } from "@/components/Bilingual";
+import { ui } from "@/lib/i18n";
 import type { EventUtensilLine } from "@/store/events";
 
 type EventUtensilCardsProps = {
@@ -52,7 +54,7 @@ export function EventUtensilCards({
             </Group>
             <Group gap="xs" wrap="wrap">
               <NumberInput
-                label="Qty"
+                label={<Bilingual label={ui.common.qty} />}
                 value={line.qty}
                 min={1}
                 allowNegative={false}
@@ -67,7 +69,7 @@ export function EventUtensilCards({
                 }
               />
               <NumberInput
-                label="Price"
+                label={<Bilingual label={ui.common.price} />}
                 value={line.rentalPrice}
                 min={0}
                 allowNegative={false}
@@ -85,7 +87,7 @@ export function EventUtensilCards({
               />
             </Group>
             <Switch
-              label="Returned"
+              label={<Bilingual label={ui.events.returned} />}
               checked={line.returned}
               onChange={() => onToggleReturned(line.id)}
               size="sm"

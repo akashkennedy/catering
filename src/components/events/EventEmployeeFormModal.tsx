@@ -14,6 +14,8 @@ import { Controller, useForm } from "react-hook-form";
 import { z } from "zod";
 import { useEffect } from "react";
 
+import { Bilingual } from "@/components/Bilingual";
+import { ui, labelText } from "@/lib/i18n";
 import { useEmployeesStore } from "@/store/employees";
 import { validatePhone, formatPhone } from "@/lib/phone";
 
@@ -83,19 +85,24 @@ export function EventEmployeeFormModal({ opened, onClose, onAdd }: EventEmployee
   };
 
   return (
-    <Modal opened={opened} onClose={onClose} title="Add one-off employee" centered>
+    <Modal
+      opened={opened}
+      onClose={onClose}
+      title={<Bilingual label={ui.events.addOneOffEmployee} />}
+      centered
+    >
       <form onSubmit={handleSubmit(onSubmit)}>
         <Stack gap="md">
           <TextInput
-            label="Name"
-            placeholder="e.g. Mani"
+            label={<Bilingual label={ui.common.name} />}
+            placeholder={labelText(ui.events.oneOffNamePlaceholder)}
             withAsterisk
             {...register("name")}
             error={errors.name?.message}
           />
           <TextInput
-            label="Phone"
-            placeholder="e.g. 9876543210"
+            label={<Bilingual label={ui.common.phone} />}
+            placeholder={labelText(ui.events.phonePlaceholder)}
             {...register("phone")}
             error={errors.phone?.message}
           />
@@ -104,8 +111,8 @@ export function EventEmployeeFormModal({ opened, onClose, onAdd }: EventEmployee
             control={control}
             render={({ field }) => (
               <NumberInput
-                label="Amount to pay"
-                placeholder="e.g. 1200"
+                label={<Bilingual label={{ en: "Amount to pay", ta: "செலுத்த வேண்டிய தொகை" }} />}
+                placeholder={labelText(ui.events.amountToPayPlaceholder)}
                 min={0}
                 allowNegative={false}
                 decimalScale={2}
@@ -119,15 +126,17 @@ export function EventEmployeeFormModal({ opened, onClose, onAdd }: EventEmployee
             )}
           />
           <Checkbox
-            label="Save to master list"
-            description="Add this employee to the master list for future events"
+            label={<Bilingual label={ui.events.saveToMaster} />}
+            description={<Bilingual label={ui.events.saveToMasterDesc} />}
             {...register("saveToMaster")}
           />
           <Group justify="flex-end" mt="md">
             <Button variant="default" onClick={onClose}>
-              Cancel
+              <Bilingual label={ui.common.cancel} />
             </Button>
-            <Button type="submit">Add</Button>
+            <Button type="submit">
+              <Bilingual label={ui.common.add} />
+            </Button>
           </Group>
         </Stack>
       </form>

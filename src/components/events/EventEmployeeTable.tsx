@@ -3,6 +3,8 @@
 import { ActionIcon, NumberInput, Table, Text } from "@mantine/core";
 import { X } from "lucide-react";
 
+import { Bilingual } from "@/components/Bilingual";
+import { ui } from "@/lib/i18n";
 import type { EventEmployeeLine } from "@/store/events";
 import { formatINR } from "@/lib/format";
 import { formatPhone } from "@/lib/phone";
@@ -19,11 +21,11 @@ export function EventEmployeeTable({ lines, onLineChange, onRemove }: EventEmplo
       <Table striped highlightOnHover withTableBorder>
         <Table.Thead>
           <Table.Tr>
-            <Table.Th>Name</Table.Th>
-            <Table.Th>Phone</Table.Th>
-            <Table.Th>To Pay</Table.Th>
-            <Table.Th>Paid</Table.Th>
-            <Table.Th>Pending</Table.Th>
+            <Table.Th><Bilingual label={ui.common.name} /></Table.Th>
+            <Table.Th><Bilingual label={ui.common.phone} /></Table.Th>
+            <Table.Th><Bilingual label={{ en: "To Pay", ta: "செலுத்த வேண்டியது" }} /></Table.Th>
+            <Table.Th><Bilingual label={{ en: "Paid", ta: "செலுத்தியது" }} /></Table.Th>
+            <Table.Th><Bilingual label={{ en: "Pending", ta: "நிலுவை" }} /></Table.Th>
             <Table.Th />
           </Table.Tr>
         </Table.Thead>

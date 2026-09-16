@@ -15,6 +15,8 @@ import { Controller, useForm } from "react-hook-form";
 import { z } from "zod";
 import { useEffect } from "react";
 
+import { Bilingual } from "@/components/Bilingual";
+import { ui, labelText } from "@/lib/i18n";
 import { useUtensilsStore } from "@/store/utensils";
 import { formatINR } from "@/lib/format";
 
@@ -117,7 +119,12 @@ export function EventUtensilFormModal({
   }));
 
   return (
-    <Modal opened={opened} onClose={onClose} title="Add utensil" centered>
+    <Modal
+      opened={opened}
+      onClose={onClose}
+      title={<Bilingual label={ui.events.addUtensil} />}
+      centered
+    >
       <form onSubmit={handleSubmit(onSubmit)}>
         <Stack gap="md">
           <Controller
@@ -125,8 +132,8 @@ export function EventUtensilFormModal({
             control={control}
             render={({ field }) => (
               <Select
-                label="Select utensil"
-                placeholder="Pick from master list"
+                label={<Bilingual label={ui.events.selectUtensil} />}
+                placeholder={labelText(ui.events.pickFromMaster)}
                 data={utensilOptions}
                 searchable
                 clearable
@@ -143,8 +150,8 @@ export function EventUtensilFormModal({
             )}
           />
           <TextInput
-            label="Utensil name"
-            placeholder="e.g. Steel plates (100 pcs)"
+            label={<Bilingual label={ui.events.utensilName} />}
+            placeholder={labelText(ui.events.utensilNamePlaceholder)}
             withAsterisk
             {...register("utensilName")}
             error={errors.utensilName?.message}
@@ -154,8 +161,8 @@ export function EventUtensilFormModal({
             control={control}
             render={({ field }) => (
               <NumberInput
-                label="Quantity"
-                placeholder="e.g. 10"
+                label={<Bilingual label={{ en: "Quantity", ta: "அளவு" }} />}
+                placeholder={labelText(ui.events.quantityPlaceholder)}
                 min={1}
                 allowNegative={false}
                 {...field}
@@ -171,8 +178,8 @@ export function EventUtensilFormModal({
             control={control}
             render={({ field }) => (
               <NumberInput
-                label="Rental price"
-                placeholder="e.g. 500"
+                label={<Bilingual label={ui.events.rentalPrice} />}
+                placeholder={labelText(ui.events.rentalPricePlaceholder)}
                 min={0}
                 allowNegative={false}
                 decimalScale={2}
@@ -186,29 +193,31 @@ export function EventUtensilFormModal({
             )}
           />
           <TextInput
-            label="Rental from"
+            label={<Bilingual label={ui.events.rentalFrom} />}
             type="date"
             withAsterisk
             {...register("dateFrom")}
             error={errors.dateFrom?.message}
           />
           <TextInput
-            label="Rental to"
+            label={<Bilingual label={ui.events.rentalTo} />}
             type="date"
             withAsterisk
             {...register("dateTo")}
             error={errors.dateTo?.message}
           />
           <Checkbox
-            label="Save utensil to master list"
-            description="Add this utensil to the master list for future events"
+            label={<Bilingual label={ui.events.saveUtensilToMaster} />}
+            description={<Bilingual label={ui.events.saveUtensilToMasterDesc} />}
             {...register("saveToMaster")}
           />
           <Group justify="flex-end" mt="md">
             <Button variant="default" onClick={onClose}>
-              Cancel
+              <Bilingual label={ui.common.cancel} />
             </Button>
-            <Button type="submit">Add</Button>
+            <Button type="submit">
+              <Bilingual label={ui.common.add} />
+            </Button>
           </Group>
         </Stack>
       </form>

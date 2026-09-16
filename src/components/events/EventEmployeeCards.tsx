@@ -3,6 +3,8 @@
 import { ActionIcon, Card, Group, NumberInput, Stack, Text } from "@mantine/core";
 import { X } from "lucide-react";
 
+import { Bilingual } from "@/components/Bilingual";
+import { ui } from "@/lib/i18n";
 import type { EventEmployeeLine } from "@/store/events";
 import { formatINR } from "@/lib/format";
 import { formatPhone } from "@/lib/phone";
@@ -38,7 +40,7 @@ export function EventEmployeeCards({ lines, onLineChange, onRemove }: EventEmplo
               </ActionIcon>
             </Group>
             <NumberInput
-              label="To pay"
+              label={<Bilingual label={ui.events.toPay} />}
               value={line.toPay}
               min={0}
               allowNegative={false}
@@ -52,7 +54,7 @@ export function EventEmployeeCards({ lines, onLineChange, onRemove }: EventEmplo
               }
             />
             <NumberInput
-              label="Paid"
+              label={<Bilingual label={ui.events.paid} />}
               value={line.paid}
               min={0}
               allowNegative={false}
@@ -66,7 +68,7 @@ export function EventEmployeeCards({ lines, onLineChange, onRemove }: EventEmplo
               }
             />
             <Text size="sm" fw={600}>
-              Pending: {formatINR(line.toPay - line.paid)}
+              <Bilingual label={ui.events.pending} />: {formatINR(line.toPay - line.paid)}
             </Text>
           </Stack>
         </Card>

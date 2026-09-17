@@ -112,7 +112,7 @@ function DishIngredientFields({
         ) as { message?: string } | undefined;
 
         return (
-          <Group key={field.id} align="flex-end" gap="xs" wrap="nowrap">
+          <Group key={field.id} align="flex-end" gap="xs" wrap="wrap">
             <Controller
               name={`dishes.${dishIndex}.ingredients.${fieldIndex}.ingredientId`}
               control={control}
@@ -123,7 +123,7 @@ function DishIngredientFields({
                   data={ingredients}
                   searchable
                   clearable
-                  style={{ flex: 1, minWidth: 160 }}
+                  style={{ flex: 1, minWidth: 140 }}
                   {...selectField}
                   error={ingredientError?.message}
                 />
@@ -138,7 +138,7 @@ function DishIngredientFields({
                   placeholder={labelText(ui.templates.qtyPlaceholder)}
                   min={0}
                   allowNegative={false}
-                  style={{ width: 110 }}
+                  style={{ width: "100%", maxWidth: 110 }}
                   {...qtyField}
                   onKeyDown={(e) => {
                     if (e.key === "ArrowUp" || e.key === "ArrowDown") e.preventDefault();

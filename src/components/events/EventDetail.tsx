@@ -359,7 +359,7 @@ export function EventDetail() {
               value={event.headcount}
               min={1}
               allowNegative={false}
-              w={160}
+              w={{ base: "100%", sm: 160 }}
               onKeyDown={(e) => {
                 if (e.key === "ArrowUp" || e.key === "ArrowDown") e.preventDefault();
               }}
@@ -371,7 +371,7 @@ export function EventDetail() {
               data={templateOptions}
               searchable
               clearable
-              w={260}
+              w={{ base: "100%", sm: 260 }}
               value={event.templateId ?? null}
               onChange={(value) => handleTemplateChange(value ?? null)}
             />
@@ -381,7 +381,7 @@ export function EventDetail() {
                 value: option.value,
                 label: labelText(option.label),
               }))}
-              w={180}
+              w={{ base: "100%", sm: 180 }}
               value={event.status}
               onChange={(value) => handleStatusChange((value ?? "enquiry") as CateringEventInput["status"])}
             />
@@ -397,7 +397,7 @@ export function EventDetail() {
               allowNegative={false}
               decimalScale={2}
               leftSection="₹"
-              w={160}
+              w={{ base: "100%", sm: 160 }}
               onKeyDown={(e) => {
                 if (e.key === "ArrowUp" || e.key === "ArrowDown") e.preventDefault();
               }}
@@ -410,7 +410,7 @@ export function EventDetail() {
               allowNegative={false}
               decimalScale={2}
               leftSection="₹"
-              w={180}
+              w={{ base: "100%", sm: 180 }}
               onKeyDown={(e) => {
                 if (e.key === "ArrowUp" || e.key === "ArrowDown") e.preventDefault();
               }}
@@ -423,7 +423,7 @@ export function EventDetail() {
               allowNegative={false}
               decimalScale={2}
               leftSection="₹"
-              w={180}
+              w={{ base: "100%", sm: 180 }}
               onKeyDown={(e) => {
                 if (e.key === "ArrowUp" || e.key === "ArrowDown") e.preventDefault();
               }}
@@ -504,7 +504,7 @@ export function EventDetail() {
                 }))}
                 searchable
                 clearable
-                w={280}
+                w={{ base: "100%", sm: 280 }}
                 value={assignValue}
                 onChange={(value) => {
                   setAssignValue(null);
@@ -579,7 +579,7 @@ export function EventDetail() {
                 label={<Bilingual label={ui.events.vendor} />}
                 placeholder={labelText(ui.events.vendorPlaceholder)}
                 data={vendorSuggestions}
-                w={280}
+                w={{ base: "100%", sm: 280 }}
                 value={utensilVendorName}
                 onChange={(value) => setUtensilVendorName(value)}
               />

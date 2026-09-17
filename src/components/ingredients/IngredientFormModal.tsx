@@ -129,7 +129,7 @@ export function IngredientFormModal({ opened, ingredient, onClose }: IngredientF
                   data={UNITS}
                   allowDeselect={false}
                   withAsterisk
-                  style={{ flex: 1, minWidth: 140 }}
+                  style={{ flex: "1 1 140px" }}
                   {...field}
                   error={errors.unit?.message}
                 />
@@ -145,7 +145,7 @@ export function IngredientFormModal({ opened, ingredient, onClose }: IngredientF
                   min={0}
                   allowNegative={false}
                   decimalScale={2}
-                  style={{ width: 140 }}
+                  style={{ flex: "1 1 120px" }}
                   {...field}
                   onKeyDown={(e) => {
                     if (e.key === "ArrowUp" || e.key === "ArrowDown") e.preventDefault();
@@ -185,7 +185,7 @@ export function IngredientFormModal({ opened, ingredient, onClose }: IngredientF
                   min={0}
                   allowNegative={false}
                   decimalScale={2}
-                  style={{ flex: 1, minWidth: 150 }}
+                  style={{ flex: "1 1 140px" }}
                   {...field}
                   onKeyDown={(e) => {
                     if (e.key === "ArrowUp" || e.key === "ArrowDown") e.preventDefault();
@@ -204,7 +204,7 @@ export function IngredientFormModal({ opened, ingredient, onClose }: IngredientF
                   min={0}
                   allowNegative={false}
                   decimalScale={2}
-                  style={{ flex: 1, minWidth: 150 }}
+                  style={{ flex: "1 1 140px" }}
                   {...field}
                   onKeyDown={(e) => {
                     if (e.key === "ArrowUp" || e.key === "ArrowDown") e.preventDefault();

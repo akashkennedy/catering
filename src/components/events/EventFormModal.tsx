@@ -237,8 +237,8 @@ export function EventFormModal({ opened, event, onClose, createPrefill }: EventF
       centered
       size="lg"
       styles={{
-        body: { padding: 0 },
-        content: { overflow: "hidden" },
+        body: { padding: 0, overflowY: "auto" },
+        content: { overflow: "auto" },
       }}
     >
       <form onSubmit={handleSubmit(onSubmit)}>

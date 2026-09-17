@@ -373,6 +373,15 @@ export const ui = {
       "No ingredients yet. Add them from the Ingredients page.",
       "இன்னும் பொருட்கள் இல்லை. பொருட்கள் பக்கத்திலிருந்து சேர்க்கவும்."
     ),
+    theme: lab("Theme", "தீம்"),
+    themeNote: lab(
+      "Choose between light, dark, or automatic (follows your device setting).",
+      "வெளிச்சம், இருள், அல்லது தானியங்கி (உங்கள் சாதன அமைப்பைப் பின்பற்றுகிறது) என தேர்வு செய்யவும்."
+    ),
+    light: lab("Light", "வெளிச்சம்"),
+    dark: lab("Dark", "இருள்"),
+    auto: lab("Auto", "தானியங்கி"),
+    toggleTheme: lab("Toggle theme", "தீம் மாற்று"),
   },
   finance: {
     income: lab("Income", "வருமானம்"),

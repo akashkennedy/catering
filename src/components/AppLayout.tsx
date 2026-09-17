@@ -7,6 +7,7 @@ import {
   Burger,
   Group,
   NavLink,
+  Stack,
   Title,
 } from "@mantine/core";
 import Link from "next/link";
@@ -24,6 +25,7 @@ import {
 } from "lucide-react";
 
 import { Bilingual } from "@/components/Bilingual";
+import { ThemeControl } from "@/components/ThemeControl";
 import { ui, type Label } from "@/lib/i18n";
 
 type NavItem = {
@@ -68,20 +70,25 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
         </Group>
       </AppShell.Header>
       <AppShell.Navbar p="md">
-        {NAV_ITEMS.map((item) => {
-          const Icon = item.icon;
-          return (
-            <NavLink
-              key={item.href}
-              component={Link}
-              href={item.href}
-              label={<Bilingual label={item.label} />}
-              leftSection={<Icon size={18} />}
-              active={pathname === item.href}
-              onClick={() => setOpened(false)}
-            />
-          );
-        })}
+        <Stack justify="space-between" gap="md" style={{ flex: 1, minHeight: 0 }}>
+          <Stack gap={4}>
+            {NAV_ITEMS.map((item) => {
+              const Icon = item.icon;
+              return (
+                <NavLink
+                  key={item.href}
+                  component={Link}
+                  href={item.href}
+                  label={<Bilingual label={item.label} />}
+                  leftSection={<Icon size={18} />}
+                  active={pathname === item.href}
+                  onClick={() => setOpened(false)}
+                />
+              );
+            })}
+          </Stack>
+          <ThemeControl />
+        </Stack>
       </AppShell.Navbar>
       <AppShell.Main>{children}</AppShell.Main>
     </AppShell>

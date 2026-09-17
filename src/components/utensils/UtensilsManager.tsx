@@ -27,50 +27,52 @@ export function UtensilsManager() {
   const [assignUtensil, setAssignUtensil] = useState<Utensil | null>(null);
 
   return (
-    <>
-      <Group justify="space-between" mb="md">
-        <Title order={1}>
-          <Bilingual label={ui.nav.rental} />
-        </Title>
-        <Button
-          leftSection={<Plus size={18} />}
-          onClick={() => {
-            setEditingUtensil(null);
-            setFormOpened(true);
-          }}
-        >
-          <Bilingual label={ui.utensils.addUtensil} />
-        </Button>
-      </Group>
+    <div className="dash-card" style={{ padding: 0 }}>
+      <div style={{ padding: 16 }}>
+        <Group justify="space-between" mb="md">
+          <Title order={2}>
+            <Bilingual label={ui.nav.rental} />
+          </Title>
+          <Button
+            leftSection={<Plus size={18} />}
+            onClick={() => {
+              setEditingUtensil(null);
+              setFormOpened(true);
+            }}
+          >
+            <Bilingual label={ui.utensils.addUtensil} />
+          </Button>
+        </Group>
 
-      {utensils.length === 0 ? (
-        <Text c="dimmed">
-          <Bilingual label={ui.utensils.empty} />
-        </Text>
-      ) : (
-        <>
-          <UtensilTable
-            utensils={utensils}
-            onEdit={(utensil) => {
-              setEditingUtensil(utensil);
-              setFormOpened(true);
-            }}
-            onDelete={setDeletingUtensil}
-            onLogRentIn={setRentInUtensil}
-            onAssign={setAssignUtensil}
-          />
-          <UtensilCards
-            utensils={utensils}
-            onEdit={(utensil) => {
-              setEditingUtensil(utensil);
-              setFormOpened(true);
-            }}
-            onDelete={setDeletingUtensil}
-            onLogRentIn={setRentInUtensil}
-            onAssign={setAssignUtensil}
-          />
-        </>
-      )}
+        {utensils.length === 0 ? (
+          <Text c="dimmed">
+            <Bilingual label={ui.utensils.empty} />
+          </Text>
+        ) : (
+          <>
+            <UtensilTable
+              utensils={utensils}
+              onEdit={(utensil) => {
+                setEditingUtensil(utensil);
+                setFormOpened(true);
+              }}
+              onDelete={setDeletingUtensil}
+              onLogRentIn={setRentInUtensil}
+              onAssign={setAssignUtensil}
+            />
+            <UtensilCards
+              utensils={utensils}
+              onEdit={(utensil) => {
+                setEditingUtensil(utensil);
+                setFormOpened(true);
+              }}
+              onDelete={setDeletingUtensil}
+              onLogRentIn={setRentInUtensil}
+              onAssign={setAssignUtensil}
+            />
+          </>
+        )}
+      </div>
 
       <UtensilFormModal opened={formOpened} utensil={editingUtensil} onClose={() => setFormOpened(false)} />
 
@@ -107,7 +109,7 @@ export function UtensilsManager() {
               <Bilingual label={ui.common.cancel} />
             </Button>
             <Button
-              color="red"
+              color="kumkum"
               onClick={() => {
                 if (deletingUtensil) {
                   removeEntriesForUtensil(deletingUtensil.id);
@@ -121,6 +123,6 @@ export function UtensilsManager() {
           </Group>
         </Stack>
       </Modal>
-    </>
+    </div>
   );
 }

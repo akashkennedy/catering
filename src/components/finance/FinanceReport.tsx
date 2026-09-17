@@ -4,8 +4,6 @@ import { useState } from "react";
 import {
   Badge,
   Button,
-  Card,
-  Divider,
   Group,
   Modal,
   SegmentedControl,
@@ -125,57 +123,57 @@ export function FinanceReport() {
       </Group>
 
       <SimpleGrid cols={{ base: 1, sm: 3 }} spacing="md">
-        <Card withBorder padding="md" radius="md">
-          <Group gap="xs" mb="xs">
-            <IndianRupee size={18} />
-            <Text fw={600}>
-              <Bilingual label={ui.finance.income} />
-            </Text>
+        <div className="dash-card" style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+          <Group gap="xs" justify="space-between">
+            <Group gap="xs">
+              <IndianRupee size={18} style={{ color: "var(--ink-muted)" }} />
+              <Text size="sm" fw={600} c="dimmed">
+                <Bilingual label={ui.finance.income} />
+              </Text>
+            </Group>
           </Group>
-          <Divider mb="sm" />
-          <Stack gap={4}>
-            <Text fw={700} size="xl">
-              {formatINR(summary.income)}
-            </Text>
-            <Text size="xs" c="dimmed">
+          <div className="dash-stat">
+            <span className="dash-stat__value">{formatINR(summary.income)}</span>
+            <span className="dash-stat__label">
               <Bilingual label={ui.finance.eventCollections} />: {formatINR(summary.eventIncome)}
-            </Text>
-            <Text size="xs" c="dimmed">
+            </span>
+            <span className="dash-stat__label">
               <Bilingual label={ui.finance.otherIncome} />: {formatINR(summary.otherIncome)}
-            </Text>
-          </Stack>
-        </Card>
-        <Card withBorder padding="md" radius="md">
-          <Group gap="xs" mb="xs">
-            <TrendingDown size={18} />
-            <Text fw={600}>
-              <Bilingual label={ui.finance.expenses} />
-            </Text>
+            </span>
+          </div>
+        </div>
+        <div className="dash-card" style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+          <Group gap="xs" justify="space-between">
+            <Group gap="xs">
+              <TrendingDown size={18} style={{ color: "var(--ink-muted)" }} />
+              <Text size="sm" fw={600} c="dimmed">
+                <Bilingual label={ui.finance.expenses} />
+              </Text>
+            </Group>
           </Group>
-          <Divider mb="sm" />
-          <Stack gap={4}>
-            <Text fw={700} size="xl">
-              {formatINR(summary.expense)}
-            </Text>
-            <Text size="xs" c="dimmed">
+          <div className="dash-stat">
+            <span className="dash-stat__value">{formatINR(summary.expense)}</span>
+            <span className="dash-stat__label">
               <Bilingual label={ui.finance.entries(visibleExpenses.length)} />
-            </Text>
-          </Stack>
-        </Card>
-        <Card withBorder padding="md" radius="md">
-          <Group gap="xs" mb="xs">
-            <TrendingUp size={18} />
-            <Text fw={600}>
-              <Bilingual label={ui.finance.profit} />
-            </Text>
+            </span>
+          </div>
+        </div>
+        <div className="dash-card" style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+          <Group gap="xs" justify="space-between">
+            <Group gap="xs">
+              <TrendingUp size={18} style={{ color: "var(--ink-muted)" }} />
+              <Text size="sm" fw={600} c="dimmed">
+                <Bilingual label={ui.finance.profit} />
+              </Text>
+            </Group>
+            <span className={`dash-pill ${summary.profit >= 0 ? "dash-pill--leaf" : "dash-pill--kumkum"}`}>
+              {summary.profit >= 0 ? "+" : "-"}
+            </span>
           </Group>
-          <Divider mb="sm" />
-          <Stack gap={4}>
-            <Text fw={700} size="xl" c={summary.profit >= 0 ? "teal" : "red"}>
-              {formatINR(summary.profit)}
-            </Text>
-          </Stack>
-        </Card>
+          <div className="dash-stat">
+            <span className="dash-stat__value">{formatINR(summary.profit)}</span>
+          </div>
+        </div>
       </SimpleGrid>
 
       <Stack gap="sm">
@@ -271,7 +269,7 @@ export function FinanceReport() {
             <Button variant="default" onClick={() => setDeleteTarget(null)}>
               <Bilingual label={ui.common.cancel} />
             </Button>
-            <Button color="red" onClick={confirmDelete}>
+            <Button color="kumkum" onClick={confirmDelete}>
               <Bilingual label={ui.common.delete} />
             </Button>
           </Group>

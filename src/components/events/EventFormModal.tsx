@@ -236,186 +236,219 @@ export function EventFormModal({ opened, event, onClose, createPrefill }: EventF
       }
       centered
       size="lg"
+      styles={{
+        body: { padding: 0 },
+        content: { overflow: "hidden" },
+      }}
     >
       <form onSubmit={handleSubmit(onSubmit)}>
-        <Stack gap="md">
-          <TextInput
-            label={<Bilingual label={ui.common.name} />}
-            placeholder={labelText(ui.events.namePlaceholder)}
-            withAsterisk
-            {...register("name")}
-            error={errors.name?.message}
-          />
-          <TextInput
-            label={<Bilingual label={ui.common.phone} />}
-            placeholder={labelText(ui.events.phonePlaceholder)}
-            {...register("phone")}
-            error={errors.phone?.message}
-          />
-          <TextInput
-            label={<Bilingual label={ui.events.venue} />}
-            placeholder={labelText(ui.events.venuePlaceholder)}
-            {...register("venue")}
-            error={errors.venue?.message}
-          />
-          <TextInput
-            label={<Bilingual label={ui.events.address} />}
-            placeholder={labelText(ui.events.addressPlaceholder)}
-            {...register("address")}
-            error={errors.address?.message}
-          />
-          <Controller
-            name="functionType"
-            control={control}
-            render={({ field }) => (
-              <Autocomplete
-                label={<Bilingual label={ui.events.functionType} />}
-                placeholder={labelText({
-                  en: "e.g. Wedding",
-                  ta: "எ.கா. திருமணம்",
-                })}
-                data={FUNCTION_TYPE_OPTIONS}
-                {...field}
-                value={field.value ?? ""}
-                error={errors.functionType?.message}
-              />
+        <div className="form-two-col">
+          <div className="form-two-col__left">
+            <div className="form-section">
+              <h4 className="form-section__title">
+                <Bilingual label={ui.events.eventDetails} />
+              </h4>
+              <div className="form-two-col__grid">
+                <TextInput
+                  label={<Bilingual label={ui.common.name} />}
+                  placeholder={labelText(ui.events.namePlaceholder)}
+                  withAsterisk
+                  {...register("name")}
+                  error={errors.name?.message}
+                />
+                <Controller
+                  name="functionType"
+                  control={control}
+                  render={({ field }) => (
+                    <Autocomplete
+                      label={<Bilingual label={ui.events.functionType} />}
+                      placeholder={labelText({
+                        en: "e.g. Wedding",
+                        ta: "எ.கா. திருமணம்",
+                      })}
+                      data={FUNCTION_TYPE_OPTIONS}
+                      {...field}
+                      value={field.value ?? ""}
+                      error={errors.functionType?.message}
+                    />
+                  )}
+                />
+                <TextInput
+                  label={<Bilingual label={ui.common.date} />}
+                  type="date"
+                  withAsterisk
+                  {...register("date")}
+                  min={!event ? todayISO() : undefined}
+                  error={errors.date?.message}
+                />
+                <Controller
+                  name="status"
+                  control={control}
+                  render={({ field }) => (
+                    <Select
+                      label={<Bilingual label={ui.common.status} />}
+                      data={STATUS_DATA}
+                      withAsterisk
+                      {...field}
+                    />
+                  )}
+                />
+                <Controller
+                  name="templateId"
+                  control={control}
+                  render={({ field }) => (
+                    <Select
+                      label={<Bilingual label={ui.common.template} />}
+                      placeholder={labelText(ui.events.selectTemplate)}
+                      data={templateOptions}
+                      searchable
+                      clearable
+                      {...field}
+                      value={field.value ?? null}
+                      onChange={(value) => field.onChange(value ?? null)}
+                    />
+                  )}
+                />
+                <Controller
+                  name="headcount"
+                  control={control}
+                  render={({ field }) => (
+                    <NumberInput
+                      label={<Bilingual label={ui.common.headcount} />}
+                      placeholder={labelText(ui.events.headcountPlaceholder)}
+                      min={1}
+                      allowNegative={false}
+                      withAsterisk
+                      {...field}
+                      onKeyDown={(e) => {
+                        if (e.key === "ArrowUp" || e.key === "ArrowDown") e.preventDefault();
+                      }}
+                      error={errors.headcount?.message}
+                    />
+                  )}
+                />
+              </div>
+            </div>
+
+            <div className="form-section">
+              <h4 className="form-section__title">
+                <Bilingual label={ui.events.customerDetails} />
+              </h4>
+              <div className="form-two-col__grid">
+                <TextInput
+                  label={<Bilingual label={ui.common.phone} />}
+                  placeholder={labelText(ui.events.phonePlaceholder)}
+                  {...register("phone")}
+                  error={errors.phone?.message}
+                />
+                <TextInput
+                  label={<Bilingual label={ui.events.venue} />}
+                  placeholder={labelText(ui.events.venuePlaceholder)}
+                  {...register("venue")}
+                  error={errors.venue?.message}
+                />
+                <TextInput
+                  label={<Bilingual label={ui.events.address} />}
+                  placeholder={labelText(ui.events.addressPlaceholder)}
+                  style={{ gridColumn: "1 / -1" }}
+                  {...register("address")}
+                  error={errors.address?.message}
+                />
+              </div>
+            </div>
+          </div>
+
+          <div className="form-two-col__right">
+            <div className="form-section">
+              <h4 className="form-section__title">
+                <Bilingual label={ui.events.pricing} />
+              </h4>
+              <Stack gap="md">
+                <Controller
+                  name="ratePerPerson"
+                  control={control}
+                  render={({ field }) => (
+                    <NumberInput
+                      label={<Bilingual label={ui.events.ratePerPerson} />}
+                      placeholder="0"
+                      min={0}
+                      allowNegative={false}
+                      decimalScale={2}
+                      leftSection="₹"
+                      {...field}
+                      onKeyDown={(e) => {
+                        if (e.key === "ArrowUp" || e.key === "ArrowDown") e.preventDefault();
+                      }}
+                      error={errors.ratePerPerson?.message}
+                    />
+                  )}
+                />
+                <Controller
+                  name="totalAmount"
+                  control={control}
+                  render={({ field }) => (
+                    <NumberInput
+                      label={<Bilingual label={ui.events.totalAmount} />}
+                      description={<Bilingual label={ui.events.totalAmountHint} />}
+                      placeholder="0"
+                      min={0}
+                      allowNegative={false}
+                      decimalScale={2}
+                      leftSection="₹"
+                      {...field}
+                      onChange={(value) => {
+                        field.onChange(value);
+                        setAmountOverridden(true);
+                      }}
+                      onKeyDown={(e) => {
+                        if (e.key === "ArrowUp" || e.key === "ArrowDown") e.preventDefault();
+                      }}
+                      error={errors.totalAmount?.message}
+                    />
+                  )}
+                />
+                <Controller
+                  name="advancePaid"
+                  control={control}
+                  render={({ field }) => (
+                    <NumberInput
+                      label={<Bilingual label={ui.events.advancePaid} />}
+                      placeholder="0"
+                      min={0}
+                      allowNegative={false}
+                      decimalScale={2}
+                      leftSection="₹"
+                      {...field}
+                      onKeyDown={(e) => {
+                        if (e.key === "ArrowUp" || e.key === "ArrowDown") e.preventDefault();
+                      }}
+                      error={errors.advancePaid?.message}
+                    />
+                  )}
+                />
+                <div className="form-balance">
+                  <Text fw={600} size="sm">
+                    <Bilingual label={ui.events.balance} />
+                  </Text>
+                  <Text fw={700} size="lg">{formatINR(balance)}</Text>
+                </div>
+              </Stack>
+            </div>
+          </div>
+        </div>
+
+        <div className="form-actions">
+          <Button variant="default" onClick={onClose}>
+            <Bilingual label={ui.common.cancel} />
+          </Button>
+          <Button type="submit" color="turmeric">
+            {event ? (
+              <Bilingual label={ui.common.save} />
+            ) : (
+              <Bilingual label={ui.common.add} />
             )}
-          />
-          <Controller
-            name="headcount"
-            control={control}
-            render={({ field }) => (
-              <NumberInput
-                label={<Bilingual label={ui.common.headcount} />}
-                placeholder={labelText(ui.events.headcountPlaceholder)}
-                min={1}
-                allowNegative={false}
-                withAsterisk
-                {...field}
-                onKeyDown={(e) => {
-                  if (e.key === "ArrowUp" || e.key === "ArrowDown") e.preventDefault();
-                }}
-                error={errors.headcount?.message}
-              />
-            )}
-          />
-          <TextInput
-            label={<Bilingual label={ui.common.date} />}
-            type="date"
-            withAsterisk
-            {...register("date")}
-            min={!event ? todayISO() : undefined}
-            error={errors.date?.message}
-          />
-          <Controller
-            name="status"
-            control={control}
-            render={({ field }) => (
-              <Select
-                label={<Bilingual label={ui.common.status} />}
-                data={STATUS_DATA}
-                withAsterisk
-                {...field}
-              />
-            )}
-          />
-          <Controller
-            name="templateId"
-            control={control}
-            render={({ field }) => (
-              <Select
-                label={<Bilingual label={ui.common.template} />}
-                placeholder={labelText(ui.events.selectTemplate)}
-                data={templateOptions}
-                searchable
-                clearable
-                {...field}
-                value={field.value ?? null}
-                onChange={(value) => field.onChange(value ?? null)}
-              />
-            )}
-          />
-          <Controller
-            name="ratePerPerson"
-            control={control}
-            render={({ field }) => (
-              <NumberInput
-                label={<Bilingual label={ui.events.ratePerPerson} />}
-                placeholder="0"
-                min={0}
-                allowNegative={false}
-                decimalScale={2}
-                leftSection="₹"
-                {...field}
-                onKeyDown={(e) => {
-                  if (e.key === "ArrowUp" || e.key === "ArrowDown") e.preventDefault();
-                }}
-                error={errors.ratePerPerson?.message}
-              />
-            )}
-          />
-          <Controller
-            name="totalAmount"
-            control={control}
-            render={({ field }) => (
-              <NumberInput
-                label={<Bilingual label={ui.events.totalAmount} />}
-                description={<Bilingual label={ui.events.totalAmountHint} />}
-                placeholder="0"
-                min={0}
-                allowNegative={false}
-                decimalScale={2}
-                leftSection="₹"
-                {...field}
-                onChange={(value) => {
-                  field.onChange(value);
-                  setAmountOverridden(true);
-                }}
-                onKeyDown={(e) => {
-                  if (e.key === "ArrowUp" || e.key === "ArrowDown") e.preventDefault();
-                }}
-                error={errors.totalAmount?.message}
-              />
-            )}
-          />
-          <Controller
-            name="advancePaid"
-            control={control}
-            render={({ field }) => (
-              <NumberInput
-                label={<Bilingual label={ui.events.advancePaid} />}
-                placeholder="0"
-                min={0}
-                allowNegative={false}
-                decimalScale={2}
-                leftSection="₹"
-                {...field}
-                onKeyDown={(e) => {
-                  if (e.key === "ArrowUp" || e.key === "ArrowDown") e.preventDefault();
-                }}
-                error={errors.advancePaid?.message}
-              />
-            )}
-          />
-          <Group justify="space-between" wrap="nowrap" px={2}>
-            <Text fw={600}>
-              <Bilingual label={ui.events.balance} />
-            </Text>
-            <Text fw={700}>{formatINR(balance)}</Text>
-          </Group>
-          <Group justify="flex-end" mt="md">
-            <Button variant="default" onClick={onClose}>
-              <Bilingual label={ui.common.cancel} />
-            </Button>
-            <Button type="submit">
-              {event ? (
-                <Bilingual label={ui.common.save} />
-              ) : (
-                <Bilingual label={ui.common.add} />
-              )}
-            </Button>
-          </Group>
-        </Stack>
+          </Button>
+        </div>
       </form>
     </Modal>
   );

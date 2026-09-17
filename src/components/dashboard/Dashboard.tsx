@@ -12,7 +12,7 @@ import { QuickAddWidget } from "./QuickAddWidget";
 
 export function Dashboard() {
   return (
-    <Stack>
+    <Stack gap="lg">
       <SimpleGrid
         cols={{ base: 1, sm: 2, lg: 3 }}
         spacing="md"
@@ -21,6 +21,12 @@ export function Dashboard() {
         <UpcomingEventsWidget />
         <EarningsWidget />
         <PaymentStatusWidget />
+      </SimpleGrid>
+      <SimpleGrid
+        cols={{ base: 1, sm: 2, lg: 3 }}
+        spacing="md"
+        verticalSpacing="md"
+      >
         <InventoryAlertsWidget />
         <UtensilsNotReturnedWidget />
         <RemindersWidget />

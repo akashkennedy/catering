@@ -4,8 +4,6 @@ import { useState } from "react";
 import {
   ActionIcon,
   Button,
-  Card,
-  Divider,
   Group,
   Select,
   Stack,
@@ -97,16 +95,22 @@ export function RemindersWidget() {
   };
 
   return (
-    <Card withBorder padding="md" radius="md" h="100%">
-      <Group gap="xs" mb="xs">
-        <Bell size={18} />
-        <Text fw={600}>
-          <Bilingual label={ui.dashboard.customerFollowUp} />
-        </Text>
+    <div className="dash-card" style={{ display: "flex", flexDirection: "column", gap: 12, height: "100%" }}>
+      <Group gap="xs" justify="space-between">
+        <Group gap="xs">
+          <Bell size={18} style={{ color: "var(--ink-muted)" }} />
+          <Text size="sm" fw={600} c="dimmed">
+            <Bilingual label={ui.dashboard.customerFollowUp} />
+          </Text>
+        </Group>
+        {active.length > 0 ? (
+          <span className="dash-pill dash-pill--kumkum">
+            {active.length}
+          </span>
+        ) : null}
       </Group>
-      <Divider mb="sm" />
 
-      <Stack gap="sm">
+      <Stack gap="sm" style={{ flex: 1 }}>
         <TextInput
           label={<Bilingual label={ui.reminders.phone} />}
           placeholder={labelText(ui.reminders.phonePlaceholder)}
@@ -150,18 +154,16 @@ export function RemindersWidget() {
         </Group>
       </Stack>
 
-      <Divider my="sm" />
-
       {active.length === 0 ? (
         <Text size="sm" c="dimmed">
           <Bilingual label={ui.dashboard.remindersEmpty} />
         </Text>
       ) : (
-        <Stack gap="xs">
+        <Stack gap="xs" style={{ borderTop: "1px solid var(--border)", paddingTop: 12 }}>
           {active.map((reminder) => (
             <Group key={reminder.id} justify="space-between" wrap="nowrap" gap="sm">
               <Stack gap={0}>
-                <Text size="sm" fw={500}>
+                <Text size="sm" fw={500} style={{ color: "var(--ink)" }}>
                   {formatPhone(reminder.phone)}
                 </Text>
                 <Text size="xs" c="dimmed">
@@ -175,7 +177,7 @@ export function RemindersWidget() {
               </Stack>
               <ActionIcon
                 variant="subtle"
-                color="green"
+                color="leaf"
                 aria-label={ui.reminders.dismiss.en}
                 onClick={() => dismissReminder(reminder.id)}
               >
@@ -189,6 +191,6 @@ export function RemindersWidget() {
       <Text size="xs" c="dimmed" mt="sm">
         <Bilingual label={ui.dashboard.notificationNote} />
       </Text>
-    </Card>
+    </div>
   );
 }

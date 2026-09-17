@@ -16,7 +16,7 @@ export const useSettingsStore = create<SettingsState>()(
     (set) => ({
       defaultLanguage: "en",
       setDefaultLanguage: (language) => set({ defaultLanguage: language }),
-      uiLanguage: "both",
+      uiLanguage: "en",
       setUiLanguage: (language) => set({ uiLanguage: language }),
     }),
     {

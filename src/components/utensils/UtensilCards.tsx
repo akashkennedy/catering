@@ -85,7 +85,7 @@ export function UtensilCards({
               <Button
                 variant="subtle"
                 size="xs"
-                color="blue"
+                color="leaf"
                 leftSection={<CalendarClock size={16} />}
                 onClick={() => onAssign(utensil)}
               >

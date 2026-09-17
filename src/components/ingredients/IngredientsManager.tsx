@@ -25,48 +25,50 @@ export function IngredientsManager() {
   const [purchaseIngredient, setPurchaseIngredient] = useState<Ingredient | null>(null);
 
   return (
-    <>
-      <Group justify="space-between" mb="md">
-        <Title order={1}>
-          <Bilingual label={ui.nav.ingredients} />
-        </Title>
-        <Button
-          leftSection={<Plus size={18} />}
-          onClick={() => {
-            setEditingIngredient(null);
-            setFormOpened(true);
-          }}
-        >
-          <Bilingual label={ui.ingredients.addIngredient} />
-        </Button>
-      </Group>
+    <div className="dash-card" style={{ padding: 0 }}>
+      <div style={{ padding: 16 }}>
+        <Group justify="space-between" mb="md">
+          <Title order={2}>
+            <Bilingual label={ui.nav.ingredients} />
+          </Title>
+          <Button
+            leftSection={<Plus size={18} />}
+            onClick={() => {
+              setEditingIngredient(null);
+              setFormOpened(true);
+            }}
+          >
+            <Bilingual label={ui.ingredients.addIngredient} />
+          </Button>
+        </Group>
 
-      {ingredients.length === 0 ? (
-        <Text c="dimmed">
-          <Bilingual label={ui.ingredients.empty} />
-        </Text>
-      ) : (
-        <>
-          <IngredientTable
-            ingredients={ingredients}
-            onEdit={(ingredient) => {
-              setEditingIngredient(ingredient);
-              setFormOpened(true);
-            }}
-            onDelete={setDeletingIngredient}
-            onLogPurchase={setPurchaseIngredient}
-          />
-          <IngredientCards
-            ingredients={ingredients}
-            onEdit={(ingredient) => {
-              setEditingIngredient(ingredient);
-              setFormOpened(true);
-            }}
-            onDelete={setDeletingIngredient}
-            onLogPurchase={setPurchaseIngredient}
-          />
-        </>
-      )}
+        {ingredients.length === 0 ? (
+          <Text c="dimmed">
+            <Bilingual label={ui.ingredients.empty} />
+          </Text>
+        ) : (
+          <>
+            <IngredientTable
+              ingredients={ingredients}
+              onEdit={(ingredient) => {
+                setEditingIngredient(ingredient);
+                setFormOpened(true);
+              }}
+              onDelete={setDeletingIngredient}
+              onLogPurchase={setPurchaseIngredient}
+            />
+            <IngredientCards
+              ingredients={ingredients}
+              onEdit={(ingredient) => {
+                setEditingIngredient(ingredient);
+                setFormOpened(true);
+              }}
+              onDelete={setDeletingIngredient}
+              onLogPurchase={setPurchaseIngredient}
+            />
+          </>
+        )}
+      </div>
 
       <IngredientFormModal opened={formOpened} ingredient={editingIngredient} onClose={() => setFormOpened(false)} />
 
@@ -97,7 +99,7 @@ export function IngredientsManager() {
               <Bilingual label={ui.common.cancel} />
             </Button>
             <Button
-              color="red"
+              color="kumkum"
               onClick={() => {
                 if (deletingIngredient) {
                   removeEntriesForIngredient(deletingIngredient.id);
@@ -111,6 +113,6 @@ export function IngredientsManager() {
           </Group>
         </Stack>
       </Modal>
-    </>
+    </div>
   );
 }

@@ -3,8 +3,6 @@
 import { zodResolver } from "@hookform/resolvers/zod";
 import {
   Button,
-  Card,
-  Divider,
   Group,
   NumberInput,
   Select,
@@ -70,7 +68,7 @@ export function PricingCalculator() {
   return (
     <Stack gap="md">
       <Stack gap={4}>
-        <Title order={1}>
+        <Title order={2}>
           <Bilingual label={ui.calculator.title} />
         </Title>
         <Text size="sm" c="dimmed">
@@ -78,7 +76,7 @@ export function PricingCalculator() {
         </Text>
       </Stack>
 
-      <Card withBorder padding="md" radius="md">
+      <div className="dash-card">
         <Stack gap="md">
           <Controller
             name="templateId"
@@ -133,43 +131,44 @@ export function PricingCalculator() {
             )}
           />
         </Stack>
-      </Card>
+      </div>
 
-      <Card withBorder padding="md" radius="md">
-        <Group gap="sm" mb="xs" wrap="nowrap">
-          <Calculator size={18} />
-          <Text fw={600}>
-            <Bilingual label={ui.calculator.rawCost} />
-          </Text>
+      <div className="dash-card">
+        <Group gap="xs" mb="xs" justify="space-between">
+          <Group gap="xs">
+            <Calculator size={18} style={{ color: "var(--ink-muted)" }} />
+            <Text size="sm" fw={600} c="dimmed">
+              <Bilingual label={ui.calculator.rawCost} />
+            </Text>
+          </Group>
         </Group>
-        <Divider mb="sm" />
         {!template ? (
           <Text size="sm" c="dimmed">
             <Bilingual label={ui.calculator.noTemplate} />
           </Text>
         ) : (
-          <Stack gap="sm">
-            <Group justify="space-between">
-              <Text size="sm">
+          <Stack gap="sm" style={{ flex: 1 }}>
+            <div className="dash-stat">
+              <span className="dash-stat__label">
                 <Bilingual label={ui.calculator.rawCost} />
-              </Text>
-              <Text fw={600}>{formatINR(rawCost)}</Text>
-            </Group>
-            <Group justify="space-between">
-              <Text size="sm">
+              </span>
+              <span className="dash-stat__value">{formatINR(rawCost)}</span>
+            </div>
+            <div className="dash-stat" style={{ borderTop: "1px solid var(--border)", paddingTop: 12 }}>
+              <span className="dash-stat__label">
                 <Bilingual label={ui.calculator.suggestedQuote} />
-              </Text>
-              <Text fw={700}>{formatINR(suggestedQuote)}</Text>
-            </Group>
+              </span>
+              <span className="dash-stat__value">{formatINR(suggestedQuote)}</span>
+            </div>
             <Text size="xs" c="dimmed">
               <Bilingual label={ui.calculator.convertNote} />
             </Text>
-            <Button fullWidth h={44} onClick={convertToEvent}>
+            <Button fullWidth h={44} onClick={convertToEvent} color="turmeric">
               <Bilingual label={ui.calculator.convertToEvent} />
             </Button>
           </Stack>
         )}
-      </Card>
+      </div>
     </Stack>
   );
 }

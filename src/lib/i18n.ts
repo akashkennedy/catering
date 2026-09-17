@@ -364,7 +364,6 @@ export const ui = {
     ),
     english: lab("English", "ஆங்கிலம்"),
     tamil: lab("Tamil", "தமிழ்"),
-    both: lab("Both", "இரண்டும்"),
     defaultLanguage: lab("Document language", "ஆவண மொழி"),
     defaultLanguageNote: lab(
       "Used for exported PDF documents.",
@@ -463,10 +462,6 @@ export const ui = {
     ta: `உணவு ${n}`,
   }),
 } as const;
-
-export function labelText(label: Label): string {
-  return `${label.en} · ${label.ta}`;
-}
 
 export function preferredText(label: Label, preference: "en" | "ta"): string {
   return preference === "ta" ? (label.ta || label.en) : label.en;

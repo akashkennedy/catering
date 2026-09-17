@@ -16,7 +16,8 @@ import {
 import { IndianRupee, Plus, TrendingDown, TrendingUp } from "lucide-react";
 
 import { Bilingual } from "@/components/Bilingual";
-import { ui, labelText } from "@/lib/i18n";
+import { ui, preferredText } from "@/lib/i18n";
+import { useSettingsStore } from "@/store/settings";
 import { formatINR } from "@/lib/format";
 import { formatIndianDate } from "@/lib/date";
 import {
@@ -41,6 +42,7 @@ type DeleteTarget = {
 };
 
 export function FinanceReport() {
+  const uiLanguage = useSettingsStore((state) => state.uiLanguage);
   const events = useEventsStore((state) => state.events);
   const expenses = useFinanceStore((state) => state.expenses);
   const otherIncomes = useFinanceStore((state) => state.otherIncomes);
@@ -112,7 +114,7 @@ export function FinanceReport() {
         {filter === "month" ? (
           <TextInput
             type="month"
-            aria-label={labelText(ui.finance.month)}
+            aria-label={preferredText(ui.finance.month, uiLanguage)}
             label={<Bilingual label={ui.finance.month} />}
             value={monthKey}
             onChange={(event) => setMonthKey(event.currentTarget.value)}
@@ -202,7 +204,7 @@ export function FinanceReport() {
               <Group gap="xs" wrap="wrap">
                 {categoryTotals.map((row) => (
                   <Badge key={row.category} variant="light" size="lg" radius="sm">
-                    {labelText(ui.finance.categories[row.category])}: {formatINR(row.total)}
+                    {preferredText(ui.finance.categories[row.category], uiLanguage)}: {formatINR(row.total)}
                   </Badge>
                 ))}
               </Group>
@@ -213,7 +215,7 @@ export function FinanceReport() {
                 setDeleteTarget({
                   kind: "expense",
                   id: expense.id,
-                  descriptor: `${labelText(ui.finance.categories[expense.category])} · ${formatIndianDate(expense.date)}`,
+                  descriptor: `${preferredText(ui.finance.categories[expense.category], uiLanguage)} · ${formatIndianDate(expense.date)}`,
                 })
               }
             />

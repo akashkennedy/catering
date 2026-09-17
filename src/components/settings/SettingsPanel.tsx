@@ -52,7 +52,6 @@ export function SettingsPanel() {
             data={[
               { label: <Bilingual label={ui.settings.tamil} />, value: "ta" },
               { label: <Bilingual label={ui.settings.english} />, value: "en" },
-              { label: <Bilingual label={ui.settings.both} />, value: "both" },
             ]}
           />
         </Stack>

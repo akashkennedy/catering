@@ -7,7 +7,8 @@ import { z } from "zod";
 import { useEffect } from "react";
 
 import { Bilingual } from "@/components/Bilingual";
-import { ui, labelText } from "@/lib/i18n";
+import { ui, preferredText } from "@/lib/i18n";
+import { useSettingsStore } from "@/store/settings";
 import { todayLocalISO } from "@/lib/date";
 import { vesselStockSummary } from "@/lib/vesselStock";
 import {
@@ -33,6 +34,7 @@ type RentInModalProps = {
 };
 
 export function RentInModal({ opened, utensil, onClose }: RentInModalProps) {
+  const uiLanguage = useSettingsStore((state) => state.uiLanguage);
   const addRentInEntry = useVesselStockLedgerStore((state) => state.addRentInEntry);
   const ledgerEntries = useVesselStockLedgerStore((state) => state.entries);
   const utensils = useUtensilsStore((state) => state.utensils);
@@ -118,7 +120,7 @@ export function RentInModal({ opened, utensil, onClose }: RentInModalProps) {
               render={({ field }) => (
                 <NumberInput
                   label={<Bilingual label={ui.utensils.rentInQty} />}
-                  placeholder={labelText(ui.utensils.openingStockPlaceholder)}
+                  placeholder={preferredText(ui.utensils.openingStockPlaceholder, uiLanguage)}
                   description={<Bilingual label={ui.utensils.rentInNote} />}
                   min={0}
                   allowNegative={false}
@@ -145,7 +147,7 @@ export function RentInModal({ opened, utensil, onClose }: RentInModalProps) {
               render={({ field }) => (
                 <Select
                   label={<Bilingual label={ui.utensils.rentInEvent} />}
-                  placeholder={labelText(ui.utensils.assignEventPlaceholder)}
+                  placeholder={preferredText(ui.utensils.assignEventPlaceholder, uiLanguage)}
                   data={eventOptions}
                   searchable
                   clearable
@@ -157,7 +159,7 @@ export function RentInModal({ opened, utensil, onClose }: RentInModalProps) {
             />
             <TextInput
               label={<Bilingual label={ui.ingredients.note} />}
-              placeholder={labelText(ui.ingredients.notePlaceholder)}
+              placeholder={preferredText(ui.ingredients.notePlaceholder, uiLanguage)}
               {...register("note")}
               error={errors.note?.message}
             />

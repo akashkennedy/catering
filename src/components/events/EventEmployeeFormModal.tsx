@@ -15,7 +15,8 @@ import { z } from "zod";
 import { useEffect } from "react";
 
 import { Bilingual } from "@/components/Bilingual";
-import { ui, labelText } from "@/lib/i18n";
+import { ui, preferredText } from "@/lib/i18n";
+import { useSettingsStore } from "@/store/settings";
 import { useEmployeesStore } from "@/store/employees";
 import { validatePhone, formatPhone } from "@/lib/phone";
 
@@ -38,6 +39,7 @@ type EventEmployeeFormModalProps = {
 };
 
 export function EventEmployeeFormModal({ opened, onClose, onAdd }: EventEmployeeFormModalProps) {
+  const uiLanguage = useSettingsStore((state) => state.uiLanguage);
   const addEmployee = useEmployeesStore((state) => state.addEmployee);
 
   const {
@@ -95,14 +97,14 @@ export function EventEmployeeFormModal({ opened, onClose, onAdd }: EventEmployee
         <Stack gap="md">
           <TextInput
             label={<Bilingual label={ui.common.name} />}
-            placeholder={labelText(ui.events.oneOffNamePlaceholder)}
+            placeholder={preferredText(ui.events.oneOffNamePlaceholder, uiLanguage)}
             withAsterisk
             {...register("name")}
             error={errors.name?.message}
           />
           <TextInput
             label={<Bilingual label={ui.common.phone} />}
-            placeholder={labelText(ui.events.phonePlaceholder)}
+            placeholder={preferredText(ui.events.phonePlaceholder, uiLanguage)}
             {...register("phone")}
             error={errors.phone?.message}
           />
@@ -112,7 +114,7 @@ export function EventEmployeeFormModal({ opened, onClose, onAdd }: EventEmployee
             render={({ field }) => (
               <NumberInput
                 label={<Bilingual label={{ en: "Amount to pay", ta: "செலுத்த வேண்டிய தொகை" }} />}
-                placeholder={labelText(ui.events.amountToPayPlaceholder)}
+                placeholder={preferredText(ui.events.amountToPayPlaceholder, uiLanguage)}
                 min={0}
                 allowNegative={false}
                 decimalScale={2}

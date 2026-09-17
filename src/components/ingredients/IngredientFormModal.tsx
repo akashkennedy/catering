@@ -7,7 +7,8 @@ import { z } from "zod";
 import { useEffect } from "react";
 
 import { Bilingual } from "@/components/Bilingual";
-import { ui, labelText } from "@/lib/i18n";
+import { ui, preferredText } from "@/lib/i18n";
+import { useSettingsStore } from "@/store/settings";
 import { lookupTamilName } from "@/lib/ingredientTranslations";
 import { UNITS, normalizeUnit } from "@/lib/units";
 import {
@@ -35,6 +36,7 @@ type IngredientFormModalProps = {
 };
 
 export function IngredientFormModal({ opened, ingredient, onClose }: IngredientFormModalProps) {
+  const uiLanguage = useSettingsStore((state) => state.uiLanguage);
   const addIngredient = useIngredientsStore((state) => state.addIngredient);
   const updateIngredient = useIngredientsStore((state) => state.updateIngredient);
 
@@ -107,14 +109,14 @@ export function IngredientFormModal({ opened, ingredient, onClose }: IngredientF
         <Stack gap="md">
           <TextInput
             label={<Bilingual label={ui.common.name} />}
-            placeholder={labelText(ui.ingredients.namePlaceholder)}
+            placeholder={preferredText(ui.ingredients.namePlaceholder, uiLanguage)}
             withAsterisk
             {...register("name")}
             error={errors.name?.message}
           />
           <TextInput
             label={<Bilingual label={ui.ingredients.tamilName} />}
-            placeholder={labelText(ui.ingredients.tamilNamePlaceholder)}
+            placeholder={preferredText(ui.ingredients.tamilNamePlaceholder, uiLanguage)}
             {...register("tamilName")}
             error={errors.tamilName?.message}
           />
@@ -125,7 +127,7 @@ export function IngredientFormModal({ opened, ingredient, onClose }: IngredientF
               render={({ field }) => (
                 <Select
                   label={<Bilingual label={ui.common.unit} />}
-                  placeholder={labelText(ui.ingredients.selectUnit)}
+                  placeholder={preferredText(ui.ingredients.selectUnit, uiLanguage)}
                   data={UNITS}
                   allowDeselect={false}
                   withAsterisk
@@ -141,7 +143,7 @@ export function IngredientFormModal({ opened, ingredient, onClose }: IngredientF
               render={({ field }) => (
                 <NumberInput
                   label={<Bilingual label={ui.common.qty} />}
-                  placeholder={labelText(ui.ingredients.qtyPlaceholder)}
+                  placeholder={preferredText(ui.ingredients.qtyPlaceholder, uiLanguage)}
                   min={0}
                   allowNegative={false}
                   decimalScale={2}
@@ -161,7 +163,7 @@ export function IngredientFormModal({ opened, ingredient, onClose }: IngredientF
             render={({ field }) => (
               <NumberInput
                 label={<Bilingual label={ui.ingredients.globalPrice} />}
-                placeholder={labelText(ui.ingredients.globalPricePlaceholder)}
+                placeholder={preferredText(ui.ingredients.globalPricePlaceholder, uiLanguage)}
                 min={0}
                 allowNegative={false}
                 decimalScale={2}
@@ -181,7 +183,7 @@ export function IngredientFormModal({ opened, ingredient, onClose }: IngredientF
               render={({ field }) => (
                 <NumberInput
                   label={<Bilingual label={ui.ingredients.openingStock} />}
-                  placeholder={labelText(ui.ingredients.openingStockPlaceholder)}
+                  placeholder={preferredText(ui.ingredients.openingStockPlaceholder, uiLanguage)}
                   min={0}
                   allowNegative={false}
                   decimalScale={2}
@@ -200,7 +202,7 @@ export function IngredientFormModal({ opened, ingredient, onClose }: IngredientF
               render={({ field }) => (
                 <NumberInput
                   label={<Bilingual label={ui.ingredients.lowStockThreshold} />}
-                  placeholder={labelText(ui.ingredients.thresholdPlaceholder)}
+                  placeholder={preferredText(ui.ingredients.thresholdPlaceholder, uiLanguage)}
                   min={0}
                   allowNegative={false}
                   decimalScale={2}

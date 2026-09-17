@@ -5,7 +5,7 @@ import Link from "next/link";
 import { CalendarDays, MapPin, Users } from "lucide-react";
 
 import { Bilingual } from "@/components/Bilingual";
-import { ui, labelText } from "@/lib/i18n";
+import { ui } from "@/lib/i18n";
 import { formatIndianDate } from "@/lib/date";
 import { useEventsStore } from "@/store/events";
 

@@ -2,10 +2,10 @@ import type { Metadata } from "next";
 import { Stack, Title, Text } from "@mantine/core";
 
 import { Bilingual } from "@/components/Bilingual";
-import { ui, labelText } from "@/lib/i18n";
+import { ui } from "@/lib/i18n";
 
 export const metadata: Metadata = {
-  title: labelText(ui.offline.title),
+  title: ui.offline.title.en,
 };
 
 export default function OfflinePage() {

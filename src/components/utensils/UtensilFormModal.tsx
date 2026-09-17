@@ -7,7 +7,8 @@ import { z } from "zod";
 import { useEffect } from "react";
 
 import { Bilingual } from "@/components/Bilingual";
-import { ui, labelText } from "@/lib/i18n";
+import { ui, preferredText } from "@/lib/i18n";
+import { useSettingsStore } from "@/store/settings";
 import {
   useUtensilsStore,
   type Utensil,
@@ -30,6 +31,7 @@ type UtensilFormModalProps = {
 };
 
 export function UtensilFormModal({ opened, utensil, onClose }: UtensilFormModalProps) {
+  const uiLanguage = useSettingsStore((state) => state.uiLanguage);
   const addUtensil = useUtensilsStore((state) => state.addUtensil);
   const updateUtensil = useUtensilsStore((state) => state.updateUtensil);
 
@@ -80,7 +82,7 @@ export function UtensilFormModal({ opened, utensil, onClose }: UtensilFormModalP
         <Stack gap="md">
           <TextInput
             label={<Bilingual label={ui.common.name} />}
-            placeholder={labelText(ui.utensils.namePlaceholder)}
+            placeholder={preferredText(ui.utensils.namePlaceholder, uiLanguage)}
             withAsterisk
             {...register("name")}
             error={errors.name?.message}
@@ -91,7 +93,7 @@ export function UtensilFormModal({ opened, utensil, onClose }: UtensilFormModalP
             render={({ field }) => (
               <NumberInput
                 label={<Bilingual label={ui.utensils.rentPrice} />}
-                placeholder={labelText(ui.utensils.rentPricePlaceholder)}
+                placeholder={preferredText(ui.utensils.rentPricePlaceholder, uiLanguage)}
                 min={0}
                 allowNegative={false}
                 decimalScale={2}
@@ -111,7 +113,7 @@ export function UtensilFormModal({ opened, utensil, onClose }: UtensilFormModalP
               render={({ field }) => (
                 <NumberInput
                   label={<Bilingual label={ui.utensils.openingStock} />}
-                  placeholder={labelText(ui.utensils.openingStockPlaceholder)}
+                  placeholder={preferredText(ui.utensils.openingStockPlaceholder, uiLanguage)}
                   min={0}
                   allowNegative={false}
                   decimalScale={2}
@@ -130,7 +132,7 @@ export function UtensilFormModal({ opened, utensil, onClose }: UtensilFormModalP
               render={({ field }) => (
                 <NumberInput
                   label={<Bilingual label={ui.utensils.lowStockThreshold} />}
-                  placeholder={labelText(ui.utensils.thresholdPlaceholder)}
+                  placeholder={preferredText(ui.utensils.thresholdPlaceholder, uiLanguage)}
                   min={0}
                   allowNegative={false}
                   decimalScale={2}

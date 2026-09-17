@@ -13,7 +13,7 @@ import {
 import { ArrowLeft, Search } from "lucide-react";
 import { useRouter } from "next/navigation";
 
-import { labelText, preferredText, ui, type Label } from "@/lib/i18n";
+import { preferredText, ui, type Label } from "@/lib/i18n";
 import { useHydrated } from "@/hooks/useHydrated";
 import { useSettingsStore } from "@/store/settings";
 import { useEventsStore } from "@/store/events";
@@ -46,7 +46,7 @@ export function MobileSearchOverlay({ opened, onClose }: MobileSearchOverlayProp
   const [value, setValue] = useState("");
   const query = value.trim().toLowerCase();
   const uiLanguage = useSettingsStore((state) => state.uiLanguage);
-  const placeholder = preferredText(ui.search.placeholder, uiLanguage === "ta" ? "ta" : "en");
+  const placeholder = preferredText(ui.search.placeholder, uiLanguage);
 
   const events = useEventsStore((state) => state.events);
   const templates = useTemplatesStore((state) => state.templates);
@@ -201,7 +201,7 @@ export function MobileSearchOverlay({ opened, onClose }: MobileSearchOverlayProp
                           component="span"
                           truncate
                         >
-                          {labelText(result.typeLabel)}
+                          {preferredText(result.typeLabel, uiLanguage)}
                         </Text>
                       </Group>
                     </Combobox.Option>
@@ -209,7 +209,7 @@ export function MobileSearchOverlay({ opened, onClose }: MobileSearchOverlayProp
                 ) : (
                   <Combobox.Empty>
                     <Text size="sm" c="dimmed">
-                      {labelText(ui.search.noResults)}
+                      {preferredText(ui.search.noResults, uiLanguage)}
                     </Text>
                   </Combobox.Empty>
                 )}

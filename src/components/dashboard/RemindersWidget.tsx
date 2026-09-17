@@ -13,7 +13,8 @@ import {
 import { Bell, Check, Plus } from "lucide-react";
 
 import { Bilingual } from "@/components/Bilingual";
-import { ui, labelText } from "@/lib/i18n";
+import { ui, preferredText } from "@/lib/i18n";
+import { useSettingsStore } from "@/store/settings";
 import { formatPhone, validatePhone } from "@/lib/phone";
 import { useRemindersStore } from "@/store/reminders";
 
@@ -50,6 +51,7 @@ function formatRemindAt(iso: string): string {
 }
 
 export function RemindersWidget() {
+  const uiLanguage = useSettingsStore((state) => state.uiLanguage);
   const reminders = useRemindersStore((state) => state.reminders);
   const addReminder = useRemindersStore((state) => state.addReminder);
   const dismissReminder = useRemindersStore((state) => state.dismissReminder);
@@ -113,7 +115,7 @@ export function RemindersWidget() {
       <Stack gap="sm" style={{ flex: 1 }}>
         <TextInput
           label={<Bilingual label={ui.reminders.phone} />}
-          placeholder={labelText(ui.reminders.phonePlaceholder)}
+          placeholder={preferredText(ui.reminders.phonePlaceholder, uiLanguage)}
           value={phone}
           error={phoneError ? <Bilingual label={ui.reminders.invalidPhone} /> : undefined}
           onChange={(event) => {
@@ -123,7 +125,7 @@ export function RemindersWidget() {
         />
         <TextInput
           label={<Bilingual label={ui.reminders.note} />}
-          placeholder={labelText(ui.reminders.notePlaceholder)}
+          placeholder={preferredText(ui.reminders.notePlaceholder, uiLanguage)}
           value={note}
           onChange={(event) => setNote(event.currentTarget.value)}
         />

@@ -4,7 +4,8 @@ import { ActionIcon, Badge, Card, Group, Stack, Table, Text } from "@mantine/cor
 import { Trash } from "lucide-react";
 
 import { Bilingual } from "@/components/Bilingual";
-import { ui, labelText } from "@/lib/i18n";
+import { ui, preferredText } from "@/lib/i18n";
+import { useSettingsStore } from "@/store/settings";
 import { formatINR } from "@/lib/format";
 import { formatIndianDate } from "@/lib/date";
 import type { Expense } from "@/store/finance";
@@ -15,6 +16,7 @@ type ExpenseListProps = {
 };
 
 export function ExpenseList({ expenses, onDelete }: ExpenseListProps) {
+  const uiLanguage = useSettingsStore((state) => state.uiLanguage);
   return (
     <>
       <div className="hidden sm:block">
@@ -34,7 +36,7 @@ export function ExpenseList({ expenses, onDelete }: ExpenseListProps) {
                 <Table.Td>{formatIndianDate(expense.date)}</Table.Td>
                 <Table.Td>
                   <Badge variant="light" size="sm">
-                    {labelText(ui.finance.categories[expense.category])}
+                    {preferredText(ui.finance.categories[expense.category], uiLanguage)}
                   </Badge>
                 </Table.Td>
                 <Table.Td>
@@ -64,7 +66,7 @@ export function ExpenseList({ expenses, onDelete }: ExpenseListProps) {
             <Group justify="space-between" align="flex-start" wrap="nowrap">
               <Stack gap={2}>
                 <Badge variant="light" size="sm" style={{ alignSelf: "flex-start" }}>
-                  {labelText(ui.finance.categories[expense.category])}
+                  {preferredText(ui.finance.categories[expense.category], uiLanguage)}
                 </Badge>
                 <Text size="sm" c="dimmed">
                   {formatIndianDate(expense.date)}

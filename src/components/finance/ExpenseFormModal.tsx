@@ -7,7 +7,8 @@ import { z } from "zod";
 import { useEffect } from "react";
 
 import { Bilingual } from "@/components/Bilingual";
-import { ui, labelText } from "@/lib/i18n";
+import { ui, preferredText } from "@/lib/i18n";
+import { useSettingsStore } from "@/store/settings";
 import { todayLocalISO } from "@/lib/date";
 import { EXPENSE_CATEGORIES, useFinanceStore } from "@/store/finance";
 
@@ -26,6 +27,7 @@ type ExpenseFormModalProps = {
 };
 
 export function ExpenseFormModal({ opened, onClose }: ExpenseFormModalProps) {
+  const uiLanguage = useSettingsStore((state) => state.uiLanguage);
   const addExpense = useFinanceStore((state) => state.addExpense);
 
   const {
@@ -74,10 +76,10 @@ export function ExpenseFormModal({ opened, onClose }: ExpenseFormModalProps) {
             render={({ field }) => (
               <Select
                 label={<Bilingual label={ui.finance.category} />}
-                placeholder={labelText(ui.finance.selectCategory)}
+                placeholder={preferredText(ui.finance.selectCategory, uiLanguage)}
                 data={EXPENSE_CATEGORIES.map((category) => ({
                   value: category,
-                  label: labelText(ui.finance.categories[category]),
+                  label: preferredText(ui.finance.categories[category], uiLanguage),
                 }))}
                 allowDeselect={false}
                 withAsterisk
@@ -95,7 +97,7 @@ export function ExpenseFormModal({ opened, onClose }: ExpenseFormModalProps) {
             render={({ field }) => (
               <NumberInput
                 label={<Bilingual label={ui.finance.amount} />}
-                placeholder={labelText(ui.finance.amountPlaceholder)}
+                placeholder={preferredText(ui.finance.amountPlaceholder, uiLanguage)}
                 min={0}
                 allowNegative={false}
                 decimalScale={2}
@@ -118,7 +120,7 @@ export function ExpenseFormModal({ opened, onClose }: ExpenseFormModalProps) {
           />
           <TextInput
             label={<Bilingual label={ui.finance.note} />}
-            placeholder={labelText(ui.finance.notePlaceholder)}
+            placeholder={preferredText(ui.finance.notePlaceholder, uiLanguage)}
             {...register("note")}
             error={errors.note?.message}
           />

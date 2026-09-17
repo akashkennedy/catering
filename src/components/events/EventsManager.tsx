@@ -18,7 +18,8 @@ import { EventCards } from "./EventCards";
 import { EventFormModal } from "./EventFormModal";
 import { EventTable } from "./EventTable";
 import { Bilingual } from "@/components/Bilingual";
-import { ui, labelText } from "@/lib/i18n";
+import { ui, preferredText } from "@/lib/i18n";
+import { useSettingsStore } from "@/store/settings";
 import { useEventsStore, type CateringEvent, type EventStatus } from "@/store/events";
 import { useEventDraftStore } from "@/store/eventDraft";
 
@@ -34,6 +35,7 @@ const STATUS_FILTER_DATA: { label: React.ReactNode; value: StatusFilter }[] = [
 ];
 
 export function EventsManager() {
+  const uiLanguage = useSettingsStore((state) => state.uiLanguage);
   const events = useEventsStore((state) => state.events);
   const deleteEvent = useEventsStore((state) => state.deleteEvent);
   const [manualOpen, setManualOpen] = useState(false);
@@ -74,7 +76,7 @@ export function EventsManager() {
 
       <Stack gap="sm" mb="md">
         <TextInput
-          placeholder={labelText(ui.events.searchByName)}
+          placeholder={preferredText(ui.events.searchByName, uiLanguage)}
           leftSection={<Search size={16} />}
           value={searchQuery}
           onChange={(event) => setSearchQuery(event.currentTarget.value)}
@@ -83,7 +85,7 @@ export function EventsManager() {
           <Input
             type="date"
             w={180}
-            placeholder={labelText(ui.events.filterByDate)}
+            placeholder={preferredText(ui.events.filterByDate, uiLanguage)}
             value={dateFilter}
             onChange={(event) => setDateFilter(event.currentTarget.value)}
           />

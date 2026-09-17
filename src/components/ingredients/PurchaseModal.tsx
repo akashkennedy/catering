@@ -7,7 +7,8 @@ import { z } from "zod";
 import { useEffect } from "react";
 
 import { Bilingual } from "@/components/Bilingual";
-import { ui, labelText } from "@/lib/i18n";
+import { ui, preferredText } from "@/lib/i18n";
+import { useSettingsStore } from "@/store/settings";
 import { todayLocalISO } from "@/lib/date";
 import { formatStock, remainingStock } from "@/lib/stock";
 import {
@@ -31,6 +32,7 @@ type PurchaseModalProps = {
 };
 
 export function PurchaseModal({ opened, ingredient, onClose }: PurchaseModalProps) {
+  const uiLanguage = useSettingsStore((state) => state.uiLanguage);
   const addPurchaseEntry = useStockLedgerStore((state) => state.addPurchaseEntry);
   const ledgerEntries = useStockLedgerStore((state) => state.entries);
   const ingredients = useIngredientsStore((state) => state.ingredients);
@@ -99,7 +101,7 @@ export function PurchaseModal({ opened, ingredient, onClose }: PurchaseModalProp
               render={({ field }) => (
                 <NumberInput
                   label={<Bilingual label={ui.ingredients.purchaseQty} />}
-                  placeholder={labelText(ui.ingredients.qtyPlaceholder)}
+                  placeholder={preferredText(ui.ingredients.qtyPlaceholder, uiLanguage)}
                   description={<Bilingual label={ui.ingredients.purchaseNote} />}
                   min={0}
                   allowNegative={false}
@@ -122,7 +124,7 @@ export function PurchaseModal({ opened, ingredient, onClose }: PurchaseModalProp
             />
             <TextInput
               label={<Bilingual label={ui.ingredients.note} />}
-              placeholder={labelText(ui.ingredients.notePlaceholder)}
+              placeholder={preferredText(ui.ingredients.notePlaceholder, uiLanguage)}
               {...register("note")}
               error={errors.note?.message}
             />

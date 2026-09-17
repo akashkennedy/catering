@@ -7,7 +7,8 @@ import { z } from "zod";
 import { useEffect } from "react";
 
 import { Bilingual } from "@/components/Bilingual";
-import { ui, labelText } from "@/lib/i18n";
+import { ui, preferredText } from "@/lib/i18n";
+import { useSettingsStore } from "@/store/settings";
 import {
   useEmployeesStore,
   type Employee,
@@ -33,6 +34,7 @@ type EmployeeFormModalProps = {
 };
 
 export function EmployeeFormModal({ opened, employee, onClose }: EmployeeFormModalProps) {
+  const uiLanguage = useSettingsStore((state) => state.uiLanguage);
   const addEmployee = useEmployeesStore((state) => state.addEmployee);
   const updateEmployee = useEmployeesStore((state) => state.updateEmployee);
 
@@ -81,14 +83,14 @@ export function EmployeeFormModal({ opened, employee, onClose }: EmployeeFormMod
         <Stack gap="md">
           <TextInput
             label={<Bilingual label={ui.common.name} />}
-            placeholder={labelText(ui.employees.namePlaceholder)}
+            placeholder={preferredText(ui.employees.namePlaceholder, uiLanguage)}
             withAsterisk
             {...register("name")}
             error={errors.name?.message}
           />
           <TextInput
             label={<Bilingual label={ui.common.phone} />}
-            placeholder={labelText(ui.employees.phonePlaceholder)}
+            placeholder={preferredText(ui.employees.phonePlaceholder, uiLanguage)}
             {...register("phone")}
             error={errors.phone?.message}
           />
@@ -98,7 +100,7 @@ export function EmployeeFormModal({ opened, employee, onClose }: EmployeeFormMod
             render={({ field }) => (
               <NumberInput
                 label={<Bilingual label={ui.employees.defaultRate} />}
-                placeholder={labelText(ui.employees.ratePlaceholder)}
+                placeholder={preferredText(ui.employees.ratePlaceholder, uiLanguage)}
                 min={0}
                 allowNegative={false}
                 decimalScale={2}

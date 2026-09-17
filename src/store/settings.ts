@@ -2,7 +2,7 @@ import { create } from "zustand";
 import { createJSONStorage, persist } from "zustand/middleware";
 
 export type DefaultLanguage = "en" | "ta";
-export type UiLanguage = "en" | "ta" | "both";
+export type UiLanguage = "en" | "ta";
 
 type SettingsState = {
   defaultLanguage: DefaultLanguage;
@@ -22,6 +22,17 @@ export const useSettingsStore = create<SettingsState>()(
     {
       name: "catering-settings",
       storage: createJSONStorage(() => localStorage),
+      version: 1,
+      migrate: (persisted: unknown) => {
+        const state = (persisted ?? {}) as Record<string, unknown>;
+        if (state.uiLanguage !== "ta" && state.uiLanguage !== "en") {
+          state.uiLanguage = "en";
+        }
+        if (state.defaultLanguage !== "ta" && state.defaultLanguage !== "en") {
+          state.defaultLanguage = "en";
+        }
+        return state;
+      },
     }
   )
 );

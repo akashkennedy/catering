@@ -68,21 +68,22 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
     >
       <AppShell.Header style={{ background: "var(--surface)", borderColor: "var(--border)" }}>
         <Group h="100%" px="md" wrap="nowrap" gap="xs" style={{ alignItems: "center" }}>
-          <Text fw={700} size="lg" truncate hiddenFrom="sm" style={{ flexShrink: 0 }}>
+          <Text fw={700} size="lg" truncate style={{ flexShrink: 0 }}>
             Catering
           </Text>
-          <Box style={{ flex: 1, minWidth: 0 }} visibleFrom="sm">
+          <Box visibleFrom="sm" style={{ flex: 1, minWidth: 0, display: "flex", justifyContent: "center" }}>
             <ShellSearch />
           </Box>
-          <Box
-            hiddenFrom="sm"
-            onClick={() => setSearchOpened(true)}
-            ml="auto"
-            style={{ flexShrink: 0, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", width: 40, height: 40, WebkitTapHighlightColor: "transparent" }}
-          >
-            <Search size={20} style={{ color: "var(--ink-muted)" }} />
-          </Box>
-          <NotificationCenter />
+          <Group gap="xs" wrap="nowrap" ml="auto" style={{ flexShrink: 0 }}>
+            <Box
+              hiddenFrom="sm"
+              onClick={() => setSearchOpened(true)}
+              style={{ cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", width: 40, height: 40, WebkitTapHighlightColor: "transparent" }}
+            >
+              <Search size={20} style={{ color: "var(--ink-muted)" }} />
+            </Box>
+            <NotificationCenter />
+          </Group>
         </Group>
       </AppShell.Header>
       <AppShell.Navbar

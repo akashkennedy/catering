@@ -15,7 +15,7 @@ export function Dashboard() {
   const [eventOpened, setEventOpened] = useState(false);
 
   return (
-    <Stack gap="xl">
+    <Stack gap={40}>
       <Button
         leftSection={<CalendarPlus size={18} />}
         onClick={() => setEventOpened(true)}
@@ -24,8 +24,8 @@ export function Dashboard() {
       </Button>
       <SimpleGrid
         cols={{ base: 1, sm: 2, lg: 3 }}
-        spacing="lg"
-        verticalSpacing="lg"
+        spacing="xl"
+        verticalSpacing="xl"
       >
         <UpcomingEventsWidget />
         <EarningsWidget />

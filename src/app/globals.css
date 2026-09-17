@@ -346,6 +346,74 @@ body {
   gap: 1px;
 }
 
+.theme-toggle {
+  position: relative;
+  flex-shrink: 0;
+  width: 56px;
+  height: 30px;
+  border-radius: 999px;
+  border: 1px solid var(--border);
+  background: var(--bg-paper);
+  cursor: pointer;
+  padding: 0;
+  transition: background-color 250ms ease, border-color 250ms ease;
+}
+
+.theme-toggle:disabled {
+  opacity: 0.5;
+  cursor: default;
+}
+
+.theme-toggle--dark {
+  background: var(--accent-leaf);
+  border-color: var(--accent-leaf);
+}
+
+.theme-toggle__knob {
+  position: absolute;
+  top: 50%;
+  left: 4px;
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  background: var(--surface);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
+  transform: translate(0, -50%);
+  transition: transform 250ms cubic-bezier(0.34, 1.4, 0.64, 1);
+}
+
+.theme-toggle--dark .theme-toggle__knob {
+  transform: translate(26px, -50%);
+}
+
+.theme-toggle__icon {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  display: flex;
+  color: var(--ink-muted);
+  transition: opacity 250ms ease, color 250ms ease;
+}
+
+.theme-toggle__icon--sun {
+  left: 7px;
+  opacity: 1;
+}
+
+.theme-toggle__icon--moon {
+  right: 7px;
+  opacity: 0.45;
+}
+
+.theme-toggle--dark .theme-toggle__icon--sun {
+  opacity: 0.45;
+}
+
+.theme-toggle--dark .theme-toggle__icon--moon {
+  opacity: 1;
+  color: var(--ink);
+}
+
 input[type="number"]::-webkit-inner-spin-button,
 input[type="number"]::-webkit-outer-spin-button {
   -webkit-appearance: none;

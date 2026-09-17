@@ -31,7 +31,7 @@ export function UpcomingEventsWidget() {
     .slice(0, UPCOMING_COUNT);
 
   return (
-    <div className="dash-card" style={{ display: "flex", flexDirection: "column", gap: 16, height: "100%" }}>
+    <div className="dash-card" style={{ display: "flex", flexDirection: "column", gap: 24, height: "100%" }}>
       <Group gap="xs" justify="space-between">
         <Group gap="xs">
           <CalendarDays size={18} style={{ color: "var(--ink-muted)" }} />
@@ -48,9 +48,9 @@ export function UpcomingEventsWidget() {
           <Bilingual label={ui.dashboard.upcomingEmpty} />
         </Text>
       ) : (
-        <Stack gap="sm" style={{ flex: 1 }}>
+        <Stack gap="md" style={{ flex: 1 }}>
           {upcoming.map((event) => (
-            <Stack key={event.id} gap={2}>
+            <Stack key={event.id} gap={6}>
               <Anchor
                 component={Link}
                 href={`/events/${event.id}`}

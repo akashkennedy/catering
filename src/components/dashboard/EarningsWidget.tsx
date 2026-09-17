@@ -7,29 +7,23 @@ import { IndianRupee } from "lucide-react";
 import { Bilingual } from "@/components/Bilingual";
 import { ui } from "@/lib/i18n";
 import { formatINR } from "@/lib/format";
-import { eventEarnings } from "@/lib/eventFinances";
+import { currentMonthKey, eventCollected } from "@/lib/financeReport";
 import { useEventsStore } from "@/store/events";
 
 type EarningsFilter = "month" | "all";
-
-function currentMonthKey(): string {
-  const now = new Date();
-  return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}`;
-}
 
 export function EarningsWidget() {
   const events = useEventsStore((state) => state.events);
   const [filter, setFilter] = useState<EarningsFilter>("month");
 
-  const monthKey = currentMonthKey();
-  const filtered =
-    filter === "month"
-      ? events.filter((event) => (event.date ?? "").startsWith(monthKey))
-      : events;
-  const total = filtered.reduce((sum, event) => sum + eventEarnings(event), 0);
+  const monthKey = filter === "month" ? currentMonthKey() : null;
+  const filtered = monthKey
+    ? events.filter((event) => (event.date ?? "").startsWith(monthKey))
+    : [...events];
+  const total = filtered.reduce((sum, event) => sum + eventCollected(event), 0);
 
   return (
-    <div className="dash-card" style={{ display: "flex", flexDirection: "column", gap: 16, height: "100%" }}>
+    <div className="dash-card" style={{ display: "flex", flexDirection: "column", gap: 24, height: "100%" }}>
       <Group gap="xs" justify="space-between">
         <Group gap="xs">
           <IndianRupee size={18} style={{ color: "var(--ink-muted)" }} />
@@ -52,7 +46,7 @@ export function EarningsWidget() {
           <Bilingual label={ui.dashboard.earningsEmpty} />
         </Text>
       ) : (
-        <Stack gap={8}>
+        <Stack gap={12}>
           <div className="dash-stat">
             <span className="dash-stat__value">{formatINR(total)}</span>
             <span className="dash-stat__label">

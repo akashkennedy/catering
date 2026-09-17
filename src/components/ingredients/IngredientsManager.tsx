@@ -9,6 +9,7 @@ import { IngredientFormModal } from "./IngredientFormModal";
 import { IngredientTable } from "./IngredientTable";
 import { PurchaseModal } from "./PurchaseModal";
 import { Bilingual } from "@/components/Bilingual";
+import { InventoryAlertsWidget } from "@/components/dashboard/InventoryAlertsWidget";
 import { ui } from "@/lib/i18n";
 import { useIngredientsStore, type Ingredient } from "@/store/ingredients";
 import { useStockLedgerStore } from "@/store/stockLedger";
@@ -25,7 +26,9 @@ export function IngredientsManager() {
   const [purchaseIngredient, setPurchaseIngredient] = useState<Ingredient | null>(null);
 
   return (
-    <div className="dash-card" style={{ padding: 0 }}>
+    <Stack gap="lg">
+      <InventoryAlertsWidget />
+      <div className="dash-card" style={{ padding: 0 }}>
       <div style={{ padding: 16 }}>
         <Group justify="space-between" mb="md">
           <Title order={2}>
@@ -68,6 +71,7 @@ export function IngredientsManager() {
             />
           </>
         )}
+      </div>
       </div>
 
       <IngredientFormModal opened={formOpened} ingredient={editingIngredient} onClose={() => setFormOpened(false)} />
@@ -113,6 +117,6 @@ export function IngredientsManager() {
           </Group>
         </Stack>
       </Modal>
-    </div>
+    </Stack>
   );
 }

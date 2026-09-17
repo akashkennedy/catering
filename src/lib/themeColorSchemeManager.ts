@@ -11,7 +11,7 @@ function readPersistedMode(): ThemeMode | null {
     if (!raw) return null;
     const parsed = JSON.parse(raw) as { state?: { mode?: ThemeMode } };
     const mode = parsed?.state?.mode;
-    return mode === "light" || mode === "dark" || mode === "auto" ? mode : null;
+    return mode === "light" || mode === "dark" ? mode : null;
   } catch {
     return null;
   }
@@ -22,7 +22,7 @@ let unsubscribeStore: (() => void) | undefined;
 export const themeColorSchemeManager: MantineColorSchemeManager = {
   get: (defaultValue) => readPersistedMode() ?? defaultValue,
   set: (value) => {
-    useThemeStore.getState().setMode(value);
+    useThemeStore.getState().setMode(value === "dark" ? "dark" : "light");
   },
   subscribe: (onUpdate) => {
     unsubscribeStore = useThemeStore.subscribe((state) => {

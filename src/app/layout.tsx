@@ -17,9 +17,9 @@ const APP_NAME = "Catering CRM";
 
 const THEME_BOOTSTRAP_SCRIPT = `try {
   var _t = window.localStorage.getItem("catering-theme");
-  var _m = _t ? ((JSON.parse(_t).state || {}).mode || "auto") : "auto";
-  if (_m === "auto") {
-    _m = window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light";
+  var _m = _t ? ((JSON.parse(_t).state || {}).mode || "light") : "light";
+  if (_m !== "dark" && _m !== "light") {
+    _m = "light";
   }
   document.documentElement.setAttribute("data-mantine-color-scheme", _m);
 } catch (e) {
@@ -35,7 +35,6 @@ const THEME_COLOR_SYNC_SCRIPT = `(function(){
   }
   sync();
   new MutationObserver(sync).observe(document.documentElement, { attributes: true, attributeFilter: ["data-mantine-color-scheme"] });
-  window.matchMedia("(prefers-color-scheme: dark)").addEventListener("change", sync);
 })();`;
 
 export const metadata: Metadata = {

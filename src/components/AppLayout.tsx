@@ -20,6 +20,7 @@ import {
   Search,
   Settings,
   ShoppingBasket,
+  PhoneCall,
   UserRound,
   Wallet,
 } from "lucide-react";
@@ -41,13 +42,13 @@ type NavItem = {
 const NAV_ITEMS: NavItem[] = [
   { label: ui.nav.dashboard, href: "/", icon: LayoutDashboard },
   { label: ui.nav.events, href: "/events", icon: CalendarDays },
+  { label: ui.dashboard.customerFollowUp, href: "/follow-ups", icon: PhoneCall },
   { label: ui.nav.templates, href: "/templates", icon: ClipboardList },
-  { label: ui.nav.ingredients, href: "/ingredients", icon: ShoppingBasket },
+  { label: ui.nav.ingredients, href: "/inventory", icon: ShoppingBasket },
   { label: ui.nav.employees, href: "/employees", icon: UserRound },
   { label: ui.nav.rental, href: "/utensils", icon: CookingPot },
   { label: ui.nav.calculator, href: "/calculator", icon: Calculator },
   { label: ui.nav.finance, href: "/finance", icon: Wallet },
-  { label: ui.nav.settings, href: "/settings", icon: Settings },
 ];
 
 function isActive(pathname: string, href: string): boolean {
@@ -114,6 +115,17 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
             </Stack>
           </Stack>
           <ThemeControl />
+          <Link
+            href="/settings"
+            onClick={() => setOpened(false)}
+            className={`app-nav-item${isActive(pathname, "/settings") ? " app-nav-item--active" : ""}`}
+            aria-current={isActive(pathname, "/settings") ? "page" : undefined}
+          >
+            <Settings size={18} aria-hidden />
+            <span className="app-nav-item__label">
+              <Bilingual label={ui.nav.settings} />
+            </span>
+          </Link>
         </Stack>
       </AppShell.Navbar>
       <AppShell.Main>{children}</AppShell.Main>

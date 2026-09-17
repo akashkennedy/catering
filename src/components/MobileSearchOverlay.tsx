@@ -89,7 +89,7 @@ export function MobileSearchOverlay({ opened, onClose }: MobileSearchOverlayProp
         key: `ingredient:${ingredient.id}`,
         name: ingredient.name,
         typeLabel: ui.nav.ingredients,
-        href: "/ingredients",
+        href: "/inventory",
       })),
     ...employees
       .filter((employee) => matches(employee.name))

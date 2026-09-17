@@ -47,13 +47,13 @@ export const metadata: Metadata = {
     "mobile-web-app-capable": "yes",
     "apple-mobile-web-app-status-bar-style": "black-translucent",
     "apple-mobile-web-app-capable": "yes",
-    "msapplication-TileColor": "#1971c2",
+    "msapplication-TileColor": "#ffffff",
     "msapplication-tap-highlight": "no",
   },
 };
 
 export const viewport: Viewport = {
-  themeColor: "#1971c2",
+  themeColor: "#ffffff",
   width: "device-width",
   initialScale: 1,
   maximumScale: 1,

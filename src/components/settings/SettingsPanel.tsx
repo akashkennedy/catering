@@ -3,6 +3,7 @@
 import { Group, NumberInput, Paper, SegmentedControl, Stack, Text, Title } from "@mantine/core";
 
 import { Bilingual } from "@/components/Bilingual";
+import { ThemeControl } from "@/components/ThemeControl";
 import { ui } from "@/lib/i18n";
 import { useIngredientsStore } from "@/store/ingredients";
 import {
@@ -24,6 +25,18 @@ export function SettingsPanel() {
       <Title order={1}>
         <Bilingual label={ui.nav.settings} />
       </Title>
+
+      <Paper withBorder p="md">
+        <Stack gap="sm">
+          <Title order={3}>
+            <Bilingual label={ui.settings.theme} />
+          </Title>
+          <Text size="sm" c="dimmed">
+            <Bilingual label={ui.settings.themeNote} />
+          </Text>
+          <ThemeControl />
+        </Stack>
+      </Paper>
 
       <Paper withBorder p="md">
         <Stack gap="sm">

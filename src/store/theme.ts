@@ -1,7 +1,9 @@
 import { create } from "zustand";
 import { createJSONStorage, persist } from "zustand/middleware";
 
-export type ThemeMode = "light" | "dark";
+export type ThemeMode = "light" | "dark" | "auto";
+
+const CYCLE: ThemeMode[] = ["light", "dark", "auto"];
 
 type ThemeState = {
   mode: ThemeMode;
@@ -12,10 +14,14 @@ type ThemeState = {
 export const useThemeStore = create<ThemeState>()(
   persist(
     (set) => ({
-      mode: "light",
-      setMode: (mode) => set({ mode }),
+      mode: "auto",
+      setMode: (mode) =>
+        set((state) => (state.mode === mode ? state : { mode })),
       toggleTheme: () =>
-        set((state) => ({ mode: state.mode === "light" ? "dark" : "light" })),
+        set((state) => {
+          const next = CYCLE[(CYCLE.indexOf(state.mode) + 1) % CYCLE.length];
+          return state.mode === next ? state : { mode: next };
+        }),
     }),
     {
       name: "catering-theme",

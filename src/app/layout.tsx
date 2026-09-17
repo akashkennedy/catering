@@ -1,10 +1,10 @@
 import type { Metadata, Viewport } from "next";
-import { ColorSchemeScript, MantineProvider, mantineHtmlProps } from "@mantine/core";
+import { mantineHtmlProps } from "@mantine/core";
 import { Catamaran } from "next/font/google";
 
-import { theme } from "@/theme";
 import AppLayout from "@/components/AppLayout";
 import { ReminderNotifier } from "@/components/ReminderNotifier";
+import { ThemeProvider } from "@/components/ThemeProvider";
 import "./globals.css";
 
 const catamaran = Catamaran({
@@ -14,6 +14,17 @@ const catamaran = Catamaran({
 });
 
 const APP_NAME = "Catering CRM";
+
+const THEME_BOOTSTRAP_SCRIPT = `try {
+  var _t = window.localStorage.getItem("catering-theme");
+  var _m = _t ? ((JSON.parse(_t).state || {}).mode || "auto") : "auto";
+  if (_m === "auto") {
+    _m = window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light";
+  }
+  document.documentElement.setAttribute("data-mantine-color-scheme", _m);
+} catch (e) {
+  document.documentElement.setAttribute("data-mantine-color-scheme", "light");
+}`;
 
 export const metadata: Metadata = {
   title: APP_NAME,
@@ -42,13 +53,13 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
   return (
     <html lang="en" {...mantineHtmlProps} className={`${catamaran.variable} antialiased`}>
       <head>
-        <ColorSchemeScript defaultColorScheme="auto" />
+        <script dangerouslySetInnerHTML={{ __html: THEME_BOOTSTRAP_SCRIPT }} />
       </head>
       <body>
-        <MantineProvider theme={theme}>
+        <ThemeProvider>
           <AppLayout>{children}</AppLayout>
           <ReminderNotifier />
-        </MantineProvider>
+        </ThemeProvider>
       </body>
     </html>
   );

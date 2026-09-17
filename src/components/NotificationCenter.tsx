@@ -1,22 +1,21 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useCallback, useMemo, useState } from "react";
 import {
   ActionIcon,
   Badge,
+  Button,
   Group,
   Popover,
   ScrollArea,
   Stack,
   Text,
 } from "@mantine/core";
-import { Bell, CalendarClock, Check, CreditCard, Package, Truck } from "lucide-react";
+import { Bell, CalendarClock, Check, CreditCard, Package, Truck, X } from "lucide-react";
 import Link from "next/link";
 
-import { Bilingual } from "@/components/Bilingual";
-import { ui, labelText } from "@/lib/i18n";
 import { formatINR } from "@/lib/format";
-import { formatIndianDate, todayLocalISO } from "@/lib/date";
+import { todayLocalISO } from "@/lib/date";
 import { formatPhone } from "@/lib/phone";
 import { clientPendingAmount, eventEmployeePending } from "@/lib/eventFinances";
 import { isLowStock, remainingStock } from "@/lib/stock";
@@ -30,6 +29,7 @@ import { useVesselStockLedgerStore } from "@/store/vesselStockLedger";
 
 type NotificationItem = {
   id: string;
+  type: "reminder" | "data";
   icon: React.ReactNode;
   label: string;
   detail: string;
@@ -51,21 +51,34 @@ function formatRemindAt(iso: string): string {
 
 export function NotificationCenter() {
   const [opened, setOpened] = useState(false);
+  const [hidden, setHidden] = useState<Set<string>>(new Set());
 
   const reminders = useRemindersStore((s) => s.reminders);
   const dismissReminder = useRemindersStore((s) => s.dismissReminder);
+  const dismissAllReminders = useRemindersStore((s) => s.dismissAll);
   const events = useEventsStore((s) => s.events);
   const ingredients = useIngredientsStore((s) => s.ingredients);
   const ledgerEntries = useStockLedgerStore((s) => s.entries);
   const utensils = useUtensilsStore((s) => s.utensils);
   const vesselEntries = useVesselStockLedgerStore((s) => s.entries);
 
+  const dismiss = useCallback((id: string) => {
+    if (id.startsWith("reminder-")) {
+      dismissReminder(id.replace("reminder-", ""));
+    }
+    setHidden((prev) => new Set(prev).add(id));
+  }, [dismissReminder]);
+
+  const dismissAll = useCallback(() => {
+    for (const r of reminders) {
+      if (!r.dismissed) dismissReminder(r.id);
+    }
+    setHidden(new Set());
+  }, [reminders, dismissReminder]);
+
   const notifications = useMemo<NotificationItem[]>(() => {
     const items: NotificationItem[] = [];
     const today = todayLocalISO();
-    const upcomingIds = new Set(
-      events.filter((e) => e.date >= today).map((e) => e.id)
-    );
 
     const activeReminders = reminders
       .filter((r) => !r.dismissed)
@@ -73,6 +86,7 @@ export function NotificationCenter() {
     for (const r of activeReminders) {
       items.push({
         id: `reminder-${r.id}`,
+        type: "reminder",
         icon: <CalendarClock size={16} />,
         label: formatPhone(r.phone),
         detail: `${formatRemindAt(r.remindAt)}${r.note ? ` · ${r.note}` : ""}`,
@@ -87,6 +101,7 @@ export function NotificationCenter() {
       if (pending <= 0) continue;
       items.push({
         id: `payment-${event.id}`,
+        type: "data",
         icon: <CreditCard size={16} />,
         label: event.name,
         detail: `${formatINR(pending)} pending`,
@@ -101,6 +116,7 @@ export function NotificationCenter() {
         if (line.returned) continue;
         items.push({
           id: `utensil-${event.id}-${line.utensilId ?? line.utensilName}`,
+          type: "data",
           icon: <Truck size={16} />,
           label: line.utensilName,
           detail: `${line.qty}× · ${event.name}`,
@@ -115,6 +131,7 @@ export function NotificationCenter() {
         const remaining = remainingStock(ingredient, ledgerEntries);
         items.push({
           id: `stock-${ingredient.id}`,
+          type: "data",
           icon: <Package size={16} />,
           label: ingredient.name,
           detail: `${remaining} ${ingredient.unit ?? ""} remaining`,
@@ -129,6 +146,7 @@ export function NotificationCenter() {
         const available = vesselAvailability(utensil, vesselEntries);
         items.push({
           id: `vessel-${utensil.id}`,
+          type: "data",
           icon: <Package size={16} />,
           label: utensil.name,
           detail: `${available} available`,
@@ -138,10 +156,11 @@ export function NotificationCenter() {
       }
     }
 
-    return items;
-  }, [reminders, events, ingredients, ledgerEntries, utensils, vesselEntries]);
+    return items.filter((item) => !hidden.has(item.id));
+  }, [reminders, events, ingredients, ledgerEntries, utensils, vesselEntries, hidden]);
 
   const count = notifications.length;
+  const reminderCount = notifications.filter((n) => n.type === "reminder").length;
 
   return (
     <Popover
@@ -189,11 +208,24 @@ export function NotificationCenter() {
             <Text fw={600} size="sm" style={{ color: "var(--ink)" }}>
               Notifications
             </Text>
-            {count > 0 ? (
-              <Badge size="sm" variant="light" color="kumkum">
-                {count}
-              </Badge>
-            ) : null}
+            <Group gap="xs">
+              {count > 0 ? (
+                <Badge size="sm" variant="light" color="kumkum">
+                  {count}
+                </Badge>
+              ) : null}
+              {reminderCount > 0 ? (
+                <Button
+                  size="compact-xs"
+                  variant="subtle"
+                  color="kumkum"
+                  onClick={dismissAll}
+                  leftSection={<Check size={12} />}
+                >
+                  Clear all
+                </Button>
+              ) : null}
+            </Group>
           </Group>
         </div>
         <ScrollArea.Autosize mah={360}>
@@ -206,26 +238,37 @@ export function NotificationCenter() {
           ) : (
             <Stack gap={0}>
               {notifications.map((item) => (
-                <Link
-                  key={item.id}
-                  href={item.href}
-                  onClick={() => setOpened(false)}
-                  className="notification-item"
-                >
-                  <div className="notification-item__icon" style={{
-                    color: item.accent === "kumkum" ? "var(--accent-kumkum)" : "var(--accent-turmeric)",
-                  }}>
-                    {item.icon}
-                  </div>
-                  <div className="notification-item__body">
-                    <Text size="sm" fw={500} style={{ color: "var(--ink)" }} lineClamp={1}>
-                      {item.label}
-                    </Text>
-                    <Text size="xs" c="dimmed" lineClamp={1}>
-                      {item.detail}
-                    </Text>
-                  </div>
-                </Link>
+                <div key={item.id} className="notification-item">
+                  <Link
+                    href={item.href}
+                    onClick={() => setOpened(false)}
+                    className="notification-item__link"
+                  >
+                    <div className="notification-item__icon" style={{
+                      color: item.accent === "kumkum" ? "var(--accent-kumkum)" : "var(--accent-turmeric)",
+                    }}>
+                      {item.icon}
+                    </div>
+                    <div className="notification-item__body">
+                      <Text size="sm" fw={500} style={{ color: "var(--ink)" }} lineClamp={1}>
+                        {item.label}
+                      </Text>
+                      <Text size="xs" c="dimmed" lineClamp={1}>
+                        {item.detail}
+                      </Text>
+                    </div>
+                  </Link>
+                  <ActionIcon
+                    variant="subtle"
+                    size="sm"
+                    color="dimmed"
+                    aria-label="Dismiss"
+                    onClick={() => dismiss(item.id)}
+                    style={{ flexShrink: 0, marginTop: 2 }}
+                  >
+                    <X size={14} />
+                  </ActionIcon>
+                </div>
               ))}
             </Stack>
           )}

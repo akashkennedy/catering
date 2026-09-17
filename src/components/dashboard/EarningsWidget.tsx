@@ -29,7 +29,7 @@ export function EarningsWidget() {
   const total = filtered.reduce((sum, event) => sum + eventEarnings(event), 0);
 
   return (
-    <div className="dash-card" style={{ display: "flex", flexDirection: "column", gap: 12, height: "100%" }}>
+    <div className="dash-card" style={{ display: "flex", flexDirection: "column", gap: 16, height: "100%" }}>
       <Group gap="xs" justify="space-between">
         <Group gap="xs">
           <IndianRupee size={18} style={{ color: "var(--ink-muted)" }} />
@@ -52,7 +52,7 @@ export function EarningsWidget() {
           <Bilingual label={ui.dashboard.earningsEmpty} />
         </Text>
       ) : (
-        <Stack gap={4}>
+        <Stack gap={8}>
           <div className="dash-stat">
             <span className="dash-stat__value">{formatINR(total)}</span>
             <span className="dash-stat__label">

@@ -31,7 +31,7 @@ export function UpcomingEventsWidget() {
     .slice(0, UPCOMING_COUNT);
 
   return (
-    <div className="dash-card" style={{ display: "flex", flexDirection: "column", gap: 12, height: "100%" }}>
+    <div className="dash-card" style={{ display: "flex", flexDirection: "column", gap: 16, height: "100%" }}>
       <Group gap="xs" justify="space-between">
         <Group gap="xs">
           <CalendarDays size={18} style={{ color: "var(--ink-muted)" }} />
@@ -39,7 +39,7 @@ export function UpcomingEventsWidget() {
             <Bilingual label={ui.dashboard.upcomingEvents} />
           </Text>
         </Group>
-        <span className="dash-pill dash-pill--turmeric">
+        <span className="dash-pill dash-pill--leaf">
           {upcoming.length}
         </span>
       </Group>

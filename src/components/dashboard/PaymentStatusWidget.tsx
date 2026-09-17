@@ -26,7 +26,7 @@ export function PaymentStatusWidget() {
   const totalEmployeePending = withPending.reduce((sum, row) => sum + row.employeePending, 0);
 
   return (
-    <div className="dash-card" style={{ display: "flex", flexDirection: "column", gap: 12, height: "100%" }}>
+    <div className="dash-card" style={{ display: "flex", flexDirection: "column", gap: 16, height: "100%" }}>
       <Group gap="xs" justify="space-between">
         <Group gap="xs">
           <CreditCard size={18} style={{ color: "var(--ink-muted)" }} />

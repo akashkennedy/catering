@@ -442,7 +442,7 @@ export function EventFormModal({ opened, event, onClose, createPrefill }: EventF
           <Button variant="default" onClick={onClose}>
             <Bilingual label={ui.common.cancel} />
           </Button>
-          <Button type="submit" color="turmeric">
+          <Button type="submit">
             {event ? (
               <Bilingual label={ui.common.save} />
             ) : (

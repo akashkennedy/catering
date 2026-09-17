@@ -48,7 +48,7 @@ export function ExpenseList({ expenses, onDelete }: ExpenseListProps) {
                 <Table.Td>
                   <ActionIcon
                     variant="subtle"
-                    color="red"
+                    color="kumkum"
                     aria-label={`Delete expense on ${expense.date}`}
                     onClick={() => onDelete(expense)}
                   >
@@ -62,9 +62,9 @@ export function ExpenseList({ expenses, onDelete }: ExpenseListProps) {
       </div>
       <Stack gap="sm" className="sm:hidden">
         {expenses.map((expense) => (
-          <Card key={expense.id} withBorder padding="sm">
+          <Card key={expense.id} withBorder padding="md">
             <Group justify="space-between" align="flex-start" wrap="nowrap">
-              <Stack gap={2}>
+              <Stack gap={6}>
                 <Badge variant="light" size="sm" style={{ alignSelf: "flex-start" }}>
                   {preferredText(ui.finance.categories[expense.category], uiLanguage)}
                 </Badge>
@@ -77,11 +77,11 @@ export function ExpenseList({ expenses, onDelete }: ExpenseListProps) {
                   </Text>
                 ) : null}
               </Stack>
-              <Group gap="xs" align="flex-start" wrap="nowrap">
+              <Group gap="sm" align="flex-start" wrap="nowrap">
                 <Text fw={600}>{formatINR(expense.amount)}</Text>
                 <ActionIcon
                   variant="subtle"
-                  color="red"
+                  color="kumkum"
                   aria-label={`Delete expense on ${expense.date}`}
                   onClick={() => onDelete(expense)}
                 >

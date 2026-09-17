@@ -97,7 +97,7 @@ export function InventoryAlertsWidget() {
   const hiddenCount = rows.length - MAX_ITEMS;
 
   return (
-    <div className="dash-card" style={{ display: "flex", flexDirection: "column", gap: 12, height: "100%" }}>
+    <div className="dash-card" style={{ display: "flex", flexDirection: "column", gap: 16, height: "100%" }}>
       <Group gap="xs" justify="space-between">
         <Group gap="xs">
           <Package size={18} style={{ color: "var(--ink-muted)" }} />

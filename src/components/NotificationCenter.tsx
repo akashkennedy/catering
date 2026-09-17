@@ -34,7 +34,7 @@ type NotificationItem = {
   label: string;
   detail: string;
   href: string;
-  accent: "kumkum" | "turmeric";
+  accent: "kumkum" | "leaf";
 };
 
 function formatRemindAt(iso: string): string {
@@ -91,7 +91,7 @@ export function NotificationCenter() {
         label: formatPhone(r.phone),
         detail: `${formatRemindAt(r.remindAt)}${r.note ? ` · ${r.note}` : ""}`,
         href: "/",
-        accent: "turmeric",
+        accent: "leaf",
       });
     }
 
@@ -245,7 +245,7 @@ export function NotificationCenter() {
                     className="notification-item__link"
                   >
                     <div className="notification-item__icon" style={{
-                      color: item.accent === "kumkum" ? "var(--accent-kumkum)" : "var(--accent-turmeric)",
+                      color: item.accent === "kumkum" ? "var(--accent-kumkum)" : "var(--accent-leaf)",
                     }}>
                       {item.icon}
                     </div>

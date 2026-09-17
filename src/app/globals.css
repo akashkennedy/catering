@@ -50,13 +50,11 @@
   --surface: #ffffff;
   --ink: #2b2420;
   --ink-muted: #6b5f52;
-  --accent-turmeric: #c68a2e;
   --accent-leaf: #97a54b;
   --accent-kumkum: #8b2e2e;
   --border: #e8e1d3;
   --pill-leaf-fg: #5a6b2a;
   --pill-kumkum-fg: #6e2424;
-  --pill-turmeric-fg: #8a5e1a;
 }
 
 :root[data-mantine-color-scheme="dark"] {
@@ -64,13 +62,11 @@
   --surface: #26221c;
   --ink: #f0ebe0;
   --ink-muted: #a79a87;
-  --accent-turmeric: #d9a544;
   --accent-leaf: #5b6f33;
   --accent-kumkum: #c24949;
   --border: #3a352c;
   --pill-leaf-fg: #8aab5e;
   --pill-kumkum-fg: #e08080;
-  --pill-turmeric-fg: #e8bf5e;
 }
 
 body {
@@ -98,7 +94,7 @@ body {
 
 .app-nav-item--active,
 .app-nav-item--active:hover {
-  background: var(--accent-turmeric);
+  background: var(--accent-leaf);
   color: var(--ink);
 }
 
@@ -118,13 +114,13 @@ body {
   background: var(--surface);
   border: 1px solid var(--border);
   border-radius: 10px;
-  padding: 16px;
+  padding: 20px;
 }
 
 .dash-stat {
   display: flex;
   flex-direction: column;
-  gap: 2px;
+  gap: 6px;
 }
 
 .dash-stat__value {
@@ -158,11 +154,6 @@ body {
 .dash-pill--kumkum {
   background: color-mix(in srgb, var(--accent-kumkum) 18%, transparent);
   color: var(--pill-kumkum-fg);
-}
-
-.dash-pill--turmeric {
-  background: color-mix(in srgb, var(--accent-turmeric) 18%, transparent);
-  color: var(--pill-turmeric-fg);
 }
 
 .form-two-col {
@@ -279,7 +270,7 @@ body {
   }
 
   .mobile-bottom-nav__item--active {
-    color: var(--accent-turmeric);
+    color: var(--accent-leaf);
   }
 
   .mobile-bottom-nav__label {
@@ -305,7 +296,7 @@ body {
   }
 
   .mobile-more-item--active {
-    color: var(--accent-turmeric);
+    color: var(--accent-leaf);
   }
 
   .mantine-Modal-content {

@@ -67,7 +67,7 @@ export function EventCards({ events, onEdit, onDelete }: EventCardsProps) {
               </ActionIcon>
               <ActionIcon
                 variant="subtle"
-                color="red"
+                color="kumkum"
                 aria-label={`Delete ${event.name}`}
                 onClick={() => onDelete(event)}
               >

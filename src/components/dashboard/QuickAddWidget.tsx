@@ -12,7 +12,7 @@ export function QuickAddWidget() {
   const [eventOpened, setEventOpened] = useState(false);
 
   return (
-    <div className="dash-card" style={{ display: "flex", flexDirection: "column", gap: 12, height: "100%" }}>
+    <div className="dash-card" style={{ display: "flex", flexDirection: "column", gap: 16, height: "100%" }}>
       <Stack gap="xs" style={{ flex: 1 }}>
         <Text size="sm" fw={600} c="dimmed">
           <Bilingual label={ui.dashboard.quickAdd} />
@@ -27,7 +27,6 @@ export function QuickAddWidget() {
           fullWidth
           onClick={() => setEventOpened(true)}
           variant="filled"
-          color="turmeric"
         >
           <Bilingual label={ui.events.addEvent} />
         </Button>

@@ -48,7 +48,7 @@ export function TemplateTable({ templates, onEdit, onDelete }: TemplateTableProp
                     </ActionIcon>
                     <ActionIcon
                       variant="subtle"
-                      color="red"
+                      color="kumkum"
                       aria-label={`Delete ${template.name}`}
                       onClick={() => onDelete(template)}
                     >

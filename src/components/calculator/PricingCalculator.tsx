@@ -165,7 +165,7 @@ export function PricingCalculator() {
             <Text size="xs" c="dimmed">
               <Bilingual label={ui.calculator.convertNote} />
             </Text>
-            <Button fullWidth h={44} onClick={convertToEvent} color="turmeric">
+            <Button fullWidth h={44} onClick={convertToEvent}>
               <Bilingual label={ui.calculator.convertToEvent} />
             </Button>
           </Stack>

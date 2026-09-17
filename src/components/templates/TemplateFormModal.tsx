@@ -151,7 +151,7 @@ function DishIngredientFields({
             />
             <ActionIcon
               variant="subtle"
-              color="red"
+              color="kumkum"
               aria-label="Remove ingredient"
               onClick={() => remove(fieldIndex)}
             >
@@ -266,7 +266,7 @@ export function TemplateFormModal({ opened, template, onClose }: TemplateFormMod
                   </Text>
                   <ActionIcon
                     variant="subtle"
-                    color="red"
+                    color="kumkum"
                     aria-label="Remove dish"
                     onClick={() => removeDish(dishIndex)}
                   >

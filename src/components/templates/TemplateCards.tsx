@@ -42,7 +42,7 @@ export function TemplateCards({ templates, onEdit, onDelete }: TemplateCardsProp
                 </ActionIcon>
                 <ActionIcon
                   variant="subtle"
-                  color="red"
+                  color="kumkum"
                   aria-label={`Delete ${template.name}`}
                   onClick={() => onDelete(template)}
                 >

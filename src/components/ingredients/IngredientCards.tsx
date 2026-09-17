@@ -55,7 +55,7 @@ export function IngredientCards({
                       {formatStock(remaining, ingredient.unit)}
                     </Text>
                     {low && (
-                      <Badge color="red" variant="light" size="sm">
+                      <Badge color="kumkum" variant="light" size="sm">
                         <Bilingual label={ui.ingredients.lowStock} />
                       </Badge>
                     )}
@@ -71,7 +71,7 @@ export function IngredientCards({
                   </ActionIcon>
                   <ActionIcon
                     variant="subtle"
-                    color="red"
+                    color="kumkum"
                     aria-label={`Delete ${ingredient.name}`}
                     onClick={() => onDelete(ingredient)}
                   >

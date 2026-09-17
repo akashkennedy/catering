@@ -57,7 +57,7 @@ export function UtensilTable({
                       {available}
                     </Text>
                     {low ? (
-                      <Badge color="red" variant="light" size="sm">
+                      <Badge color="kumkum" variant="light" size="sm">
                         <Bilingual label={ui.utensils.lowStock} />
                       </Badge>
                     ) : threshold > 0 ? (
@@ -92,7 +92,7 @@ export function UtensilTable({
                     </ActionIcon>
                     <ActionIcon
                       variant="subtle"
-                      color="red"
+                      color="kumkum"
                       aria-label={`Delete ${utensil.name}`}
                       onClick={() => onDelete(utensil)}
                     >

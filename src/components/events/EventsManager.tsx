@@ -159,7 +159,7 @@ export function EventsManager() {
               <Bilingual label={ui.common.cancel} />
             </Button>
             <Button
-              color="red"
+              color="kumkum"
               onClick={() => {
                 if (deletingEvent) deleteEvent(deletingEvent.id);
                 setDeletingEvent(null);

@@ -17,6 +17,7 @@ import {
   ClipboardList,
   CookingPot,
   LayoutDashboard,
+  Search,
   Settings,
   ShoppingBasket,
   UserRound,
@@ -25,6 +26,7 @@ import {
 
 import { Bilingual } from "@/components/Bilingual";
 import { MobileBottomNav } from "@/components/MobileBottomNav";
+import { MobileSearchOverlay } from "@/components/MobileSearchOverlay";
 import { NotificationCenter } from "@/components/NotificationCenter";
 import { ShellSearch } from "@/components/ShellSearch";
 import { ThemeControl } from "@/components/ThemeControl";
@@ -55,6 +57,7 @@ function isActive(pathname: string, href: string): boolean {
 
 export default function AppLayout({ children }: { children: React.ReactNode }) {
   const [opened, setOpened] = useState(false);
+  const [searchOpened, setSearchOpened] = useState(false);
   const pathname = usePathname();
 
   return (
@@ -65,11 +68,18 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
     >
       <AppShell.Header style={{ background: "var(--surface)", borderColor: "var(--border)" }}>
         <Group h="100%" px="md" wrap="nowrap" gap="xs" style={{ alignItems: "center" }}>
-          <Text fw={700} size="lg" truncate hiddenFrom="sm" style={{ flexShrink: 0 }}>
-            <Bilingual label={ui.appName} />
-          </Text>
-          <Box style={{ flex: 1, minWidth: 0 }}>
+          <Link href="/" aria-label="Home" style={{ flexShrink: 0, color: "var(--accent-turmeric)", display: "flex" }}>
+            <CookingPot size={28} />
+          </Link>
+          <Box style={{ flex: 1, minWidth: 0 }} visibleFrom="sm">
             <ShellSearch />
+          </Box>
+          <Box
+            hiddenFrom="sm"
+            onClick={() => setSearchOpened(true)}
+            style={{ flexShrink: 0, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", width: 40, height: 40, WebkitTapHighlightColor: "transparent" }}
+          >
+            <Search size={20} style={{ color: "var(--ink-muted)" }} />
           </Box>
           <NotificationCenter />
         </Group>
@@ -106,6 +116,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
       </AppShell.Navbar>
       <AppShell.Main>{children}</AppShell.Main>
       <MobileBottomNav />
+      <MobileSearchOverlay opened={searchOpened} onClose={() => setSearchOpened(false)} />
     </AppShell>
   );
 }

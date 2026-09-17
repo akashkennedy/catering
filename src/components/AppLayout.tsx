@@ -77,6 +77,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
           <Box
             hiddenFrom="sm"
             onClick={() => setSearchOpened(true)}
+            ml="auto"
             style={{ flexShrink: 0, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", width: 40, height: 40, WebkitTapHighlightColor: "transparent" }}
           >
             <Search size={20} style={{ color: "var(--ink-muted)" }} />

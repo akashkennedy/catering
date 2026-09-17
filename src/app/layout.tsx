@@ -26,6 +26,18 @@ const THEME_BOOTSTRAP_SCRIPT = `try {
   document.documentElement.setAttribute("data-mantine-color-scheme", "light");
 }`;
 
+const THEME_COLOR_SYNC_SCRIPT = `(function(){
+  var meta = document.querySelector('meta[name="theme-color"]');
+  var colors = { light: "#ffffff", dark: "#26221c" };
+  function sync() {
+    var scheme = document.documentElement.getAttribute("data-mantine-color-scheme") || "light";
+    if (meta) meta.setAttribute("content", colors[scheme] || colors.light);
+  }
+  sync();
+  new MutationObserver(sync).observe(document.documentElement, { attributes: true, attributeFilter: ["data-mantine-color-scheme"] });
+  window.matchMedia("(prefers-color-scheme: dark)").addEventListener("change", sync);
+})();`;
+
 export const metadata: Metadata = {
   title: APP_NAME,
   description: "Catering event management and costing app",
@@ -53,7 +65,6 @@ export const metadata: Metadata = {
 };
 
 export const viewport: Viewport = {
-  themeColor: "#ffffff",
   width: "device-width",
   initialScale: 1,
   maximumScale: 1,
@@ -65,7 +76,9 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
   return (
     <html lang="en" {...mantineHtmlProps} className={`${catamaran.variable} antialiased`}>
       <head>
+        <meta name="theme-color" content="#ffffff" />
         <script dangerouslySetInnerHTML={{ __html: THEME_BOOTSTRAP_SCRIPT }} />
+        <script dangerouslySetInnerHTML={{ __html: THEME_COLOR_SYNC_SCRIPT }} />
       </head>
       <body>
         <ThemeProvider>

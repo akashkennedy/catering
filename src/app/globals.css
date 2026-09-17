@@ -308,10 +308,6 @@ body {
     color: var(--accent-turmeric);
   }
 
-  body {
-    padding-bottom: calc(64px + env(safe-area-inset-bottom, 0px));
-  }
-
   .mantine-Modal-content {
     margin: 0;
     max-width: none;
@@ -400,26 +396,6 @@ input[type="number"] {
       opacity: 1;
     }
   }
-
-  .mobile-search-trigger {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    width: 40px;
-    height: 40px;
-    -webkit-tap-highlight-color: transparent;
-    cursor: pointer;
-  }
-
-  .mobile-search-trigger:active {
-    opacity: 0.7;
-  }
-}
-
-@media (min-width: 640px) {
-  .mobile-search-trigger {
-    display: none;
-  }
 }
 
 html {
@@ -445,6 +421,15 @@ body {
 }
 
 @media (max-width: 639px) {
+  .mantine-AppShell-header {
+    padding-top: env(safe-area-inset-top, 0px);
+    background: var(--surface) !important;
+  }
+
+  .mantine-AppShell-main {
+    padding-bottom: calc(64px + env(safe-area-inset-bottom, 0px)) !important;
+  }
+
   .mantine-Modal-root {
     --mobile-header-height: 60px;
   }

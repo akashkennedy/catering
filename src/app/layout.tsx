@@ -1,20 +1,16 @@
 import type { Metadata, Viewport } from "next";
 import { ColorSchemeScript, MantineProvider, mantineHtmlProps } from "@mantine/core";
-import { Geist, Geist_Mono } from "next/font/google";
+import { Catamaran } from "next/font/google";
 
 import { theme } from "@/theme";
 import AppLayout from "@/components/AppLayout";
 import { ReminderNotifier } from "@/components/ReminderNotifier";
 import "./globals.css";
 
-const geistSans = Geist({
-  variable: "--font-geist-sans",
-  subsets: ["latin"],
-});
-
-const geistMono = Geist_Mono({
-  variable: "--font-geist-mono",
-  subsets: ["latin"],
+const catamaran = Catamaran({
+  variable: "--font-catamaran",
+  subsets: ["latin", "tamil"],
+  weight: ["400", "600", "700"],
 });
 
 const APP_NAME = "Catering CRM";
@@ -44,7 +40,7 @@ export const viewport: Viewport = {
 
 export default function RootLayout({ children }: LayoutProps<"/">) {
   return (
-    <html lang="en" {...mantineHtmlProps} className={`${geistSans.variable} ${geistMono.variable} antialiased`}>
+    <html lang="en" {...mantineHtmlProps} className={`${catamaran.variable} antialiased`}>
       <head>
         <ColorSchemeScript defaultColorScheme="auto" />
       </head>

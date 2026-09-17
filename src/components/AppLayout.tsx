@@ -68,9 +68,9 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
     >
       <AppShell.Header style={{ background: "var(--surface)", borderColor: "var(--border)" }}>
         <Group h="100%" px="md" wrap="nowrap" gap="xs" style={{ alignItems: "center" }}>
-          <Link href="/" aria-label="Home" style={{ flexShrink: 0, color: "var(--accent-turmeric)", display: "flex" }}>
-            <CookingPot size={28} />
-          </Link>
+          <Text fw={700} size="lg" truncate hiddenFrom="sm" style={{ flexShrink: 0 }}>
+            Catering
+          </Text>
           <Box style={{ flex: 1, minWidth: 0 }} visibleFrom="sm">
             <ShellSearch />
           </Box>

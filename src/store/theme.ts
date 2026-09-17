@@ -14,7 +14,7 @@ type ThemeState = {
 export const useThemeStore = create<ThemeState>()(
   persist(
     (set) => ({
-      mode: "auto",
+      mode: "light",
       setMode: (mode) =>
         set((state) => (state.mode === mode ? state : { mode })),
       toggleTheme: () =>

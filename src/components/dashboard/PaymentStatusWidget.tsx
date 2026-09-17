@@ -1,6 +1,6 @@
 "use client";
 
-import { Anchor, Card, Divider, Group, Stack, Text } from "@mantine/core";
+import { Anchor, Group, Stack, Text } from "@mantine/core";
 import Link from "next/link";
 import { CreditCard } from "lucide-react";
 
@@ -26,40 +26,45 @@ export function PaymentStatusWidget() {
   const totalEmployeePending = withPending.reduce((sum, row) => sum + row.employeePending, 0);
 
   return (
-    <Card withBorder padding="md" radius="md" h="100%">
-      <Group gap="xs" mb="xs">
-        <CreditCard size={18} />
-        <Text fw={600}>
-          <Bilingual label={ui.dashboard.paymentOverview} />
-        </Text>
+    <div className="dash-card" style={{ display: "flex", flexDirection: "column", gap: 12, height: "100%" }}>
+      <Group gap="xs" justify="space-between">
+        <Group gap="xs">
+          <CreditCard size={18} style={{ color: "var(--ink-muted)" }} />
+          <Text size="sm" fw={600} c="dimmed">
+            <Bilingual label={ui.dashboard.paymentOverview} />
+          </Text>
+        </Group>
+        {withPending.length > 0 ? (
+          <span className="dash-pill dash-pill--kumkum">
+            {withPending.length}
+          </span>
+        ) : null}
       </Group>
-      <Divider mb="sm" />
       {withPending.length === 0 ? (
         <Text size="sm" c="dimmed">
           <Bilingual label={ui.dashboard.paymentEmpty} />
         </Text>
       ) : (
-        <Stack gap="sm">
+        <Stack gap="sm" style={{ flex: 1 }}>
           <Stack gap={6}>
             <Group justify="space-between" wrap="nowrap" gap="sm">
-              <Text size="sm">
+              <Text size="sm" c="dimmed">
                 <Bilingual label={ui.dashboard.clientPending} />
               </Text>
-              <Text size="sm" fw={600}>
+              <span className="dash-pill dash-pill--kumkum">
                 {formatINR(totalClientPending)}
-              </Text>
+              </span>
             </Group>
             <Group justify="space-between" wrap="nowrap" gap="sm">
-              <Text size="sm">
+              <Text size="sm" c="dimmed">
                 <Bilingual label={ui.dashboard.employeePending} />
               </Text>
-              <Text size="sm" fw={600}>
+              <span className="dash-pill dash-pill--kumkum">
                 {formatINR(totalEmployeePending)}
-              </Text>
+              </span>
             </Group>
           </Stack>
-          <Divider />
-          <Stack gap="sm">
+          <Stack gap="sm" style={{ borderTop: "1px solid var(--border)", paddingTop: 12 }}>
             {withPending.map(({ event, clientPending, employeePending }) => (
               <Stack key={event.id} gap={2}>
                 <Anchor
@@ -68,6 +73,7 @@ export function PaymentStatusWidget() {
                   fw={600}
                   size="sm"
                   lineClamp={1}
+                  style={{ color: "var(--ink)" }}
                 >
                   {event.name}
                 </Anchor>
@@ -98,6 +104,6 @@ export function PaymentStatusWidget() {
           </Stack>
         </Stack>
       )}
-    </Card>
+    </div>
   );
 }

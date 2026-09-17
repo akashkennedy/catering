@@ -1,11 +1,11 @@
 "use client";
 
-import { Anchor, Card, Divider, Group, Stack, Text } from "@mantine/core";
+import { Anchor, Group, Stack, Text } from "@mantine/core";
 import Link from "next/link";
 import { CalendarDays, MapPin, Users } from "lucide-react";
 
 import { Bilingual } from "@/components/Bilingual";
-import { ui } from "@/lib/i18n";
+import { ui, labelText } from "@/lib/i18n";
 import { formatIndianDate } from "@/lib/date";
 import { useEventsStore } from "@/store/events";
 
@@ -31,20 +31,24 @@ export function UpcomingEventsWidget() {
     .slice(0, UPCOMING_COUNT);
 
   return (
-    <Card withBorder padding="md" radius="md" h="100%">
-      <Group gap="xs" mb="xs">
-        <CalendarDays size={18} />
-        <Text fw={600}>
-          <Bilingual label={ui.dashboard.upcomingEvents} />
-        </Text>
+    <div className="dash-card" style={{ display: "flex", flexDirection: "column", gap: 12, height: "100%" }}>
+      <Group gap="xs" justify="space-between">
+        <Group gap="xs">
+          <CalendarDays size={18} style={{ color: "var(--ink-muted)" }} />
+          <Text size="sm" fw={600} c="dimmed">
+            <Bilingual label={ui.dashboard.upcomingEvents} />
+          </Text>
+        </Group>
+        <span className="dash-pill dash-pill--turmeric">
+          {upcoming.length}
+        </span>
       </Group>
-      <Divider mb="sm" />
       {upcoming.length === 0 ? (
         <Text size="sm" c="dimmed">
           <Bilingual label={ui.dashboard.upcomingEmpty} />
         </Text>
       ) : (
-        <Stack gap="sm">
+        <Stack gap="sm" style={{ flex: 1 }}>
           {upcoming.map((event) => (
             <Stack key={event.id} gap={2}>
               <Anchor
@@ -53,6 +57,7 @@ export function UpcomingEventsWidget() {
                 fw={600}
                 size="sm"
                 lineClamp={1}
+                style={{ color: "var(--ink)" }}
               >
                 {event.name}
               </Anchor>
@@ -61,14 +66,14 @@ export function UpcomingEventsWidget() {
                   {formatIndianDate(event.date)}
                 </Text>
                 <Group gap={4} wrap="nowrap">
-                  <Users size={12} />
+                  <Users size={12} style={{ color: "var(--ink-muted)" }} />
                   <Text size="xs" c="dimmed" component="span">
                     {event.headcount}
                   </Text>
                 </Group>
                 {event.venue ? (
                   <Group gap={4} wrap="nowrap">
-                    <MapPin size={12} />
+                    <MapPin size={12} style={{ color: "var(--ink-muted)" }} />
                     <Text size="xs" c="dimmed" component="span" lineClamp={1}>
                       {event.venue}
                     </Text>
@@ -79,6 +84,6 @@ export function UpcomingEventsWidget() {
           ))}
         </Stack>
       )}
-    </Card>
+    </div>
   );
 }

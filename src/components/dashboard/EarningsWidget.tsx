@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { Card, Divider, Group, SegmentedControl, Stack, Text } from "@mantine/core";
+import { Group, SegmentedControl, Stack, Text } from "@mantine/core";
 import { IndianRupee } from "lucide-react";
 
 import { Bilingual } from "@/components/Bilingual";
@@ -29,11 +29,11 @@ export function EarningsWidget() {
   const total = filtered.reduce((sum, event) => sum + eventEarnings(event), 0);
 
   return (
-    <Card withBorder padding="md" radius="md" h="100%">
-      <Group gap="xs" mb="xs" justify="space-between">
+    <div className="dash-card" style={{ display: "flex", flexDirection: "column", gap: 12, height: "100%" }}>
+      <Group gap="xs" justify="space-between">
         <Group gap="xs">
-          <IndianRupee size={18} />
-          <Text fw={600}>
+          <IndianRupee size={18} style={{ color: "var(--ink-muted)" }} />
+          <Text size="sm" fw={600} c="dimmed">
             <Bilingual label={ui.dashboard.totalEarnings} />
           </Text>
         </Group>
@@ -47,21 +47,20 @@ export function EarningsWidget() {
           ]}
         />
       </Group>
-      <Divider mb="sm" />
       {filtered.length === 0 ? (
         <Text size="sm" c="dimmed">
           <Bilingual label={ui.dashboard.earningsEmpty} />
         </Text>
       ) : (
         <Stack gap={4}>
-          <Text fw={700} size="xl">
-            {formatINR(total)}
-          </Text>
-          <Text size="xs" c="dimmed">
-            <Bilingual label={ui.eventsCount(filtered.length)} />
-          </Text>
+          <div className="dash-stat">
+            <span className="dash-stat__value">{formatINR(total)}</span>
+            <span className="dash-stat__label">
+              <Bilingual label={ui.eventsCount(filtered.length)} />
+            </span>
+          </div>
         </Stack>
       )}
-    </Card>
+    </div>
   );
 }

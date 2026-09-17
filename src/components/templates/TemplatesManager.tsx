@@ -19,46 +19,48 @@ export function TemplatesManager() {
   const [deletingTemplate, setDeletingTemplate] = useState<FoodTemplate | null>(null);
 
   return (
-    <>
-      <Group justify="space-between" mb="md">
-        <Title order={1}>
-          <Bilingual label={ui.nav.templates} />
-        </Title>
-        <Button
-          leftSection={<Plus size={18} />}
-          onClick={() => {
-            setEditingTemplate(null);
-            setFormOpened(true);
-          }}
-        >
-          <Bilingual label={ui.templates.addTemplate} />
-        </Button>
-      </Group>
+    <div className="dash-card" style={{ padding: 0 }}>
+      <div style={{ padding: 16 }}>
+        <Group justify="space-between" mb="md">
+          <Title order={2}>
+            <Bilingual label={ui.nav.templates} />
+          </Title>
+          <Button
+            leftSection={<Plus size={18} />}
+            onClick={() => {
+              setEditingTemplate(null);
+              setFormOpened(true);
+            }}
+          >
+            <Bilingual label={ui.templates.addTemplate} />
+          </Button>
+        </Group>
 
-      {templates.length === 0 ? (
-        <Text c="dimmed">
-          <Bilingual label={ui.templates.empty} />
-        </Text>
-      ) : (
-        <>
-          <TemplateTable
-            templates={templates}
-            onEdit={(template) => {
-              setEditingTemplate(template);
-              setFormOpened(true);
-            }}
-            onDelete={setDeletingTemplate}
-          />
-          <TemplateCards
-            templates={templates}
-            onEdit={(template) => {
-              setEditingTemplate(template);
-              setFormOpened(true);
-            }}
-            onDelete={setDeletingTemplate}
-          />
-        </>
-      )}
+        {templates.length === 0 ? (
+          <Text c="dimmed">
+            <Bilingual label={ui.templates.empty} />
+          </Text>
+        ) : (
+          <>
+            <TemplateTable
+              templates={templates}
+              onEdit={(template) => {
+                setEditingTemplate(template);
+                setFormOpened(true);
+              }}
+              onDelete={setDeletingTemplate}
+            />
+            <TemplateCards
+              templates={templates}
+              onEdit={(template) => {
+                setEditingTemplate(template);
+                setFormOpened(true);
+              }}
+              onDelete={setDeletingTemplate}
+            />
+          </>
+        )}
+      </div>
 
       <TemplateFormModal opened={formOpened} template={editingTemplate} onClose={() => setFormOpened(false)} />
 
@@ -83,7 +85,7 @@ export function TemplatesManager() {
               <Bilingual label={ui.common.cancel} />
             </Button>
             <Button
-              color="red"
+              color="kumkum"
               onClick={() => {
                 if (deletingTemplate) deleteTemplate(deletingTemplate.id);
                 setDeletingTemplate(null);
@@ -94,6 +96,6 @@ export function TemplatesManager() {
           </Group>
         </Stack>
       </Modal>
-    </>
+    </div>
   );
 }

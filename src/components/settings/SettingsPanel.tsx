@@ -1,6 +1,6 @@
 "use client";
 
-import { Group, NumberInput, Paper, SegmentedControl, Stack, Text, Title } from "@mantine/core";
+import { Group, NumberInput, SegmentedControl, Stack, Text, Title } from "@mantine/core";
 
 import { Bilingual } from "@/components/Bilingual";
 import { ThemeControl } from "@/components/ThemeControl";
@@ -22,28 +22,28 @@ export function SettingsPanel() {
 
   return (
     <Stack gap="lg">
-      <Title order={1}>
+      <Title order={2}>
         <Bilingual label={ui.nav.settings} />
       </Title>
 
-      <Paper withBorder p="md">
+      <div className="dash-card">
         <Stack gap="sm">
-          <Title order={3}>
+          <Text fw={600} size="sm">
             <Bilingual label={ui.settings.theme} />
-          </Title>
-          <Text size="sm" c="dimmed">
+          </Text>
+          <Text size="xs" c="dimmed">
             <Bilingual label={ui.settings.themeNote} />
           </Text>
           <ThemeControl />
         </Stack>
-      </Paper>
+      </div>
 
-      <Paper withBorder p="md">
+      <div className="dash-card">
         <Stack gap="sm">
-          <Title order={3}>
+          <Text fw={600} size="sm">
             <Bilingual label={ui.settings.uiLanguage} />
-          </Title>
-          <Text size="sm" c="dimmed">
+          </Text>
+          <Text size="xs" c="dimmed">
             <Bilingual label={ui.settings.uiLanguageNote} />
           </Text>
           <SegmentedControl
@@ -56,14 +56,14 @@ export function SettingsPanel() {
             ]}
           />
         </Stack>
-      </Paper>
+      </div>
 
-      <Paper withBorder p="md">
+      <div className="dash-card">
         <Stack gap="sm">
-          <Title order={3}>
+          <Text fw={600} size="sm">
             <Bilingual label={ui.settings.defaultLanguage} />
-          </Title>
-          <Text size="sm" c="dimmed">
+          </Text>
+          <Text size="xs" c="dimmed">
             <Bilingual label={ui.settings.defaultLanguageNote} />
           </Text>
           <SegmentedControl
@@ -75,15 +75,15 @@ export function SettingsPanel() {
             ]}
           />
         </Stack>
-      </Paper>
+      </div>
 
-      <Paper withBorder p="md">
+      <div className="dash-card">
         <Stack gap="md">
           <div>
-            <Title order={3}>
+            <Text fw={600} size="sm">
               <Bilingual label={ui.settings.ingredientPrices} />
-            </Title>
-            <Text size="sm" c="dimmed">
+            </Text>
+            <Text size="xs" c="dimmed">
               <Bilingual label={ui.settings.ingredientPricesNote} />
             </Text>
           </div>
@@ -93,9 +93,9 @@ export function SettingsPanel() {
             </Text>
           ) : (
             ingredients.map((ingredient) => (
-              <Group key={ingredient.id} justify="space-between" wrap="nowrap" gap="md">
+              <Group key={ingredient.id} justify="space-between" wrap="nowrap" gap="md" style={{ borderTop: "1px solid var(--border)", paddingTop: 12 }}>
                 <Stack gap={0}>
-                  <Text fw={500}>{ingredient.name}</Text>
+                  <Text fw={500} style={{ color: "var(--ink)" }}>{ingredient.name}</Text>
                   {ingredient.tamilName && (
                     <Text size="xs" c="dimmed">
                       {ingredient.tamilName}
@@ -120,7 +120,7 @@ export function SettingsPanel() {
             ))
           )}
         </Stack>
-      </Paper>
+      </div>
     </Stack>
   );
 }

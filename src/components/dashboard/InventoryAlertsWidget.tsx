@@ -1,6 +1,6 @@
 "use client";
 
-import { Card, Divider, Group, Stack, Text } from "@mantine/core";
+import { Group, Stack, Text } from "@mantine/core";
 import { Package } from "lucide-react";
 import type { ReactNode } from "react";
 
@@ -24,6 +24,7 @@ type AlertRow = {
   key: string;
   name: ReactNode;
   value: ReactNode;
+  isLow: boolean;
 };
 
 export function InventoryAlertsWidget() {
@@ -50,15 +51,11 @@ export function InventoryAlertsWidget() {
       key: ingredient.id,
       name: ingredient.name ?? <Bilingual label={ui.events.unknownIngredient} />,
       value: (
-        <Text
-          size="sm"
-          c={isLowStock(ingredient, ledgerEntries) ? "red" : "dimmed"}
-          component="span"
-          style={{ whiteSpace: "nowrap" }}
-        >
+        <span className="dash-pill dash-pill--kumkum">
           {formatStock(remaining, ingredient.unit)}
-        </Text>
+        </span>
       ),
+      isLow: isLowStock(ingredient, ledgerEntries),
     }));
 
   const vesselRows: AlertRow[] = utensils
@@ -77,14 +74,9 @@ export function InventoryAlertsWidget() {
       name: utensil.name,
       value: (
         <Group gap={6} wrap="nowrap">
-          <Text
-            size="sm"
-            c={low || insufficient ? "red" : "dimmed"}
-            component="span"
-            style={{ whiteSpace: "nowrap" }}
-          >
+          <span className="dash-pill dash-pill--kumkum">
             {available}
-          </Text>
+          </span>
           {insufficient ? (
             <Text
               size="xs"
@@ -97,6 +89,7 @@ export function InventoryAlertsWidget() {
           ) : null}
         </Group>
       ),
+      isLow: low || insufficient,
     }));
 
   const rows = [...ingredientRows, ...vesselRows];
@@ -104,23 +97,29 @@ export function InventoryAlertsWidget() {
   const hiddenCount = rows.length - MAX_ITEMS;
 
   return (
-    <Card withBorder padding="md" radius="md" h="100%">
-      <Group gap="xs" mb="xs">
-        <Package size={18} />
-        <Text fw={600}>
-          <Bilingual label={ui.dashboard.inventoryAlerts} />
-        </Text>
+    <div className="dash-card" style={{ display: "flex", flexDirection: "column", gap: 12, height: "100%" }}>
+      <Group gap="xs" justify="space-between">
+        <Group gap="xs">
+          <Package size={18} style={{ color: "var(--ink-muted)" }} />
+          <Text size="sm" fw={600} c="dimmed">
+            <Bilingual label={ui.dashboard.inventoryAlerts} />
+          </Text>
+        </Group>
+        {rows.length > 0 ? (
+          <span className="dash-pill dash-pill--kumkum">
+            {rows.length}
+          </span>
+        ) : null}
       </Group>
-      <Divider mb="sm" />
       {visible.length === 0 ? (
         <Text size="sm" c="dimmed">
           <Bilingual label={ui.dashboard.inventoryEmpty} />
         </Text>
       ) : (
-        <Stack gap="xs">
+        <Stack gap="xs" style={{ flex: 1 }}>
           {visible.map((row) => (
             <Group key={row.key} justify="space-between" gap="sm">
-              <Text size="sm" fw={500} lineClamp={1}>
+              <Text size="sm" fw={500} lineClamp={1} style={{ color: "var(--ink)" }}>
                 {row.name}
               </Text>
               {row.value}
@@ -133,6 +132,6 @@ export function InventoryAlertsWidget() {
           ) : null}
         </Stack>
       )}
-    </Card>
+    </div>
   );
 }

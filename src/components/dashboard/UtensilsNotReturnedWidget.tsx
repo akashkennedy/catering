@@ -1,6 +1,6 @@
 "use client";
 
-import { Anchor, Card, Divider, Group, Stack, Text } from "@mantine/core";
+import { Anchor, Group, Stack, Text } from "@mantine/core";
 import Link from "next/link";
 import { Truck } from "lucide-react";
 
@@ -44,20 +44,26 @@ export function UtensilsNotReturnedWidget() {
   const hiddenCount = rows.length - MAX_ITEMS;
 
   return (
-    <Card withBorder padding="md" radius="md" h="100%">
-      <Group gap="xs" mb="xs">
-        <Truck size={18} />
-        <Text fw={600}>
-          <Bilingual label={ui.dashboard.utensilsNotReturned} />
-        </Text>
+    <div className="dash-card" style={{ display: "flex", flexDirection: "column", gap: 12, height: "100%" }}>
+      <Group gap="xs" justify="space-between">
+        <Group gap="xs">
+          <Truck size={18} style={{ color: "var(--ink-muted)" }} />
+          <Text size="sm" fw={600} c="dimmed">
+            <Bilingual label={ui.dashboard.utensilsNotReturned} />
+          </Text>
+        </Group>
+        {rows.length > 0 ? (
+          <span className="dash-pill dash-pill--kumkum">
+            {rows.length}
+          </span>
+        ) : null}
       </Group>
-      <Divider mb="sm" />
       {visible.length === 0 ? (
         <Text size="sm" c="dimmed">
           <Bilingual label={ui.dashboard.utensilsEmpty} />
         </Text>
       ) : (
-        <Stack gap="xs">
+        <Stack gap="xs" style={{ flex: 1 }}>
           {visible.map((row, index) => (
             <Stack key={`${row.eventId}-${index}`} gap={0}>
               <Group justify="space-between" gap="sm">
@@ -67,6 +73,7 @@ export function UtensilsNotReturnedWidget() {
                   fw={600}
                   size="sm"
                   lineClamp={1}
+                  style={{ color: "var(--ink)" }}
                 >
                   {row.utensilName}
                 </Anchor>
@@ -87,6 +94,6 @@ export function UtensilsNotReturnedWidget() {
           ) : null}
         </Stack>
       )}
-    </Card>
+    </div>
   );
 }

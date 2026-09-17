@@ -51,6 +51,10 @@ export const ui = {
     en: `${count} more`,
     ta: `${count} மேலும்`,
   }),
+  search: {
+    placeholder: lab("Search", "தேடு"),
+    noResults: lab("No results found", "முடிவுகள் எதுவும் இல்லை"),
+  },
   nav: {
     dashboard: lab("Dashboard", "டாஷ்போர்டு"),
     events: lab("Events", "நிகழ்வுகள்"),
@@ -162,6 +166,8 @@ export const ui = {
     ),
     totalRentalCost: lab("Total rental cost", "மொத்த வாடகை செலவு"),
     eventDetails: lab("Event details", "நிகழ்வு விவரங்கள்"),
+    customerDetails: lab("Customer details", "வாடிக்கையாளர் விவரங்கள்"),
+    pricing: lab("Pricing", "விலை நிர்ணயம்"),
     selectTemplate: lab("Select a template", "டெம்ப்ளேட்டைத் தேர்ந்தெடுக்கவும்"),
     headcountNote: lab(
       "Changing the headcount or template recalculates the ingredient list below.",
@@ -460,4 +466,8 @@ export const ui = {
 
 export function labelText(label: Label): string {
   return `${label.en} · ${label.ta}`;
+}
+
+export function preferredText(label: Label, preference: "en" | "ta"): string {
+  return preference === "ta" ? (label.ta || label.en) : label.en;
 }

@@ -19,46 +19,48 @@ export function EmployeesManager() {
   const [deletingEmployee, setDeletingEmployee] = useState<Employee | null>(null);
 
   return (
-    <>
-      <Group justify="space-between" mb="md">
-        <Title order={1}>
-          <Bilingual label={ui.nav.employees} />
-        </Title>
-        <Button
-          leftSection={<Plus size={18} />}
-          onClick={() => {
-            setEditingEmployee(null);
-            setFormOpened(true);
-          }}
-        >
-          <Bilingual label={ui.employees.addEmployee} />
-        </Button>
-      </Group>
+    <div className="dash-card" style={{ padding: 0 }}>
+      <div style={{ padding: 16 }}>
+        <Group justify="space-between" mb="md">
+          <Title order={2}>
+            <Bilingual label={ui.nav.employees} />
+          </Title>
+          <Button
+            leftSection={<Plus size={18} />}
+            onClick={() => {
+              setEditingEmployee(null);
+              setFormOpened(true);
+            }}
+          >
+            <Bilingual label={ui.employees.addEmployee} />
+          </Button>
+        </Group>
 
-      {employees.length === 0 ? (
-        <Text c="dimmed">
-          <Bilingual label={ui.employees.empty} />
-        </Text>
-      ) : (
-        <>
-          <EmployeeTable
-            employees={employees}
-            onEdit={(employee) => {
-              setEditingEmployee(employee);
-              setFormOpened(true);
-            }}
-            onDelete={setDeletingEmployee}
-          />
-          <EmployeeCards
-            employees={employees}
-            onEdit={(employee) => {
-              setEditingEmployee(employee);
-              setFormOpened(true);
-            }}
-            onDelete={setDeletingEmployee}
-          />
-        </>
-      )}
+        {employees.length === 0 ? (
+          <Text c="dimmed">
+            <Bilingual label={ui.employees.empty} />
+          </Text>
+        ) : (
+          <>
+            <EmployeeTable
+              employees={employees}
+              onEdit={(employee) => {
+                setEditingEmployee(employee);
+                setFormOpened(true);
+              }}
+              onDelete={setDeletingEmployee}
+            />
+            <EmployeeCards
+              employees={employees}
+              onEdit={(employee) => {
+                setEditingEmployee(employee);
+                setFormOpened(true);
+              }}
+              onDelete={setDeletingEmployee}
+            />
+          </>
+        )}
+      </div>
 
       <EmployeeFormModal opened={formOpened} employee={editingEmployee} onClose={() => setFormOpened(false)} />
 
@@ -83,7 +85,7 @@ export function EmployeesManager() {
               <Bilingual label={ui.common.cancel} />
             </Button>
             <Button
-              color="red"
+              color="kumkum"
               onClick={() => {
                 if (deletingEmployee) deleteEmployee(deletingEmployee.id);
                 setDeletingEmployee(null);
@@ -94,6 +96,6 @@ export function EmployeesManager() {
           </Group>
         </Stack>
       </Modal>
-    </>
+    </div>
   );
 }

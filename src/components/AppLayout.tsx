@@ -25,8 +25,8 @@ import {
 } from "lucide-react";
 
 import { Bilingual } from "@/components/Bilingual";
-import { LanguageIndicator } from "@/components/LanguageIndicator";
 import { MobileBottomNav } from "@/components/MobileBottomNav";
+import { NotificationCenter } from "@/components/NotificationCenter";
 import { ShellSearch } from "@/components/ShellSearch";
 import { ThemeControl } from "@/components/ThemeControl";
 import { ui, type Label } from "@/lib/i18n";
@@ -81,7 +81,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
             <ShellSearch />
           </Box>
           <Group justify="flex-end" wrap="nowrap">
-            <LanguageIndicator />
+            <NotificationCenter />
           </Group>
         </Group>
       </AppShell.Header>

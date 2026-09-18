@@ -45,8 +45,8 @@ export function PaymentStatusWidget() {
           <Bilingual label={ui.dashboard.paymentEmpty} />
         </Text>
       ) : (
-        <Stack gap="md" style={{ flex: 1 }}>
-          <Stack gap={10}>
+        <Stack gap="lg" style={{ flex: 1 }}>
+          <Stack gap={12}>
             <Group justify="space-between" wrap="nowrap" gap="sm">
               <Text size="sm" c="dimmed">
                 <Bilingual label={ui.dashboard.clientPending} />
@@ -64,9 +64,9 @@ export function PaymentStatusWidget() {
               </span>
             </Group>
           </Stack>
-          <Stack gap="md" style={{ borderTop: "1px solid var(--border)", paddingTop: 16 }}>
+          <Stack gap="lg" style={{ borderTop: "1px solid var(--border)", paddingTop: 16 }}>
             {withPending.map(({ event, clientPending, employeePending }) => (
-              <Stack key={event.id} gap={6}>
+              <Stack key={event.id} gap={8}>
                 <Anchor
                   component={Link}
                   href={`/events/${event.id}`}
@@ -77,7 +77,7 @@ export function PaymentStatusWidget() {
                 >
                   {event.name}
                 </Anchor>
-                <Stack gap={0}>
+                <Stack gap={4}>
                   {clientPending > 0 ? (
                     <Group gap="xs" wrap="nowrap">
                       <Text size="xs" c="dimmed" component="span">

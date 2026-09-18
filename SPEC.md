@@ -365,7 +365,7 @@ This section records what has been implemented on top of §§1–11 so a new age
 
 ### 12.4 Dashboard: decluttered (supersedes §11.2 widget list)
 
-- `/` shows exactly three widgets in a 3-column grid (stacked full-width on mobile): **Upcoming Events** (next 3 open events), **Total Earnings**, **Payment Status Overview** — plus a single full-width **Quick Event** button on top that opens the quick-add modal. Generous spacing (40px stack gap, `xl` grid gaps, 24px in-card gaps).
+- `/` shows exactly three widgets stacked in a single full-width column on all screens: **Upcoming Events** (next 3 open events), **Total Earnings**, **Payment Status Overview**. Generous spacing (56px stack gap, 40px vertical gap between widget cards, 24px in-card gaps). New events are created from the sidebar **New Event** button (desktop, above the Dark-mode toggle) or the center **Plus** button in the mobile bottom bar — both open the full event form; there is no quick-add button on the dashboard (the old `QuickAddEventModal` is deleted, see §13.10).
 - Relocated widgets: **Utensils Not Yet Returned** now renders at the top of the **Utensils page**; **Inventory Alerts** at the top of the **Inventory page**. The old `QuickAddWidget` card is deleted.
 - **Total Earnings formula (corrects §11.1/§11.2):** cash-collected basis, identical to the Finance page — a `paid` event contributes its full `totalAmount`, otherwise only `advancePaid`. Shared helper `eventCollected()` in `src/lib/financeReport.ts`. Month filter = current `YYYY-MM` date prefix; All-time = no filter. (The old `totalQuoted − costs` formula is **not** used; there is no `totalQuoted` field — the event amount fields are `ratePerPerson`, `totalAmount`, `totalAmountOverridden`, `advancePaid`.)
 
@@ -412,3 +412,66 @@ This section records what has been implemented on top of §§1–11 so a new age
 ### 12.9 Demo-data route
 
 - `/dev-seed` loads representative sample data (events across statuses, inventory incl. low-stock items, employees, utensils, template, expenses, other income, reminder) via the stores' own add-actions, and can wipe everything again. Committed deliberately so the client can self-onboard; safe to delete later without affecting the app.
+
+---
+
+## 13. V4 Addendum — implemented state since §12 (what changed after the V3 addendum)
+
+This section records only what was built **after** §12 was written. §§1–12 stay as-is. Where §13 conflicts with §12 on UI details, §13 wins. **Phase 2 (Supabase/Postgres swap, §1 + §8) is unchanged and still pending — nothing in §13 alters the Phase 2 plan.**
+
+### 13.1 Responsive modal sheets (`useMobileSheet`, supersedes §12 mobile-modal notes)
+
+- New shared hook `src/hooks/useMobileSheet.ts` with two variants, applied to **all** form modals (event, quick-add event, employee, event-employee, event-utensil, ingredient, purchase, template, expense, other-income, utensil, rent-in, assign-to-event):
+  - `"full"` — large forms (event, template): edge-to-edge full-screen sheet on phones (`≤639px`), centered desktop modal with preserved desktop size (`lg` / `xl`).
+  - `"sheet"` — small forms (everything else): bottom sheet on phones (slide-up 250ms, 16px top radius, `max-height: 92dvh`, 8px side/bottom gutters, `overflow-x: clip`), centered desktop modal.
+- Supporting CSS in `src/app/globals.css`: `.mobile-sheet` content/body rules, 16px body padding + `safe-area-inset-bottom` inside sheets, touch momentum scroll (`-webkit-overflow-scrolling: touch`, `overscroll-behavior: contain`), `max-width: 100%` guards on inputs/selects/textareas inside modals.
+
+### 13.2 Mobile "More" navigation is a right-side drawer (corrects §12/DESIGN mobile notes)
+
+- `MobileBottomNav` bottom bar is unchanged (Dashboard, Events, Rental, Calculator + More, leaf active state).
+- The **More** panel changed from a bottom sheet to a **right-side `Drawer` (`size={300}`)**, with `mobile-more-drawer` class handling full `100dvh` height plus top/bottom safe-area padding, and a bordered header. Panel title and More-button `aria-label` are localized (`ui.nav.more` = More / மேலும்).
+- More-sheet contents unchanged: Templates, Inventory, Employees, Follow-up, Finance, Settings (active-route highlighted, closes on navigate).
+
+### 13.3 Theme control placement (extends §12.7)
+
+- Desktop sidebar keeps the animated Dark-mode toggle row + Settings nav button, but the toggle is now wrapped in `visibleFrom="sm"` so it only renders on desktop.
+- Mobile gets its own Dark-mode card at the top of **Settings** (`hiddenFrom="sm"`, `dash-card` styled, label via `ui.settings.dark`), rendering the same `ThemeControl`. No behavior change — still `light | dark` only, persisted `catering-theme`.
+
+### 13.4 Notification center behavior (extends §12.8 header bell)
+
+- Bell (`NotificationCenter`) aggregates, newest-first: active reminders → pending client/employee payments (skips `paid` events) → unreturned event utensils (skips `completed`/`paid` events, keyed by stable `line.id`) → low ingredient stock → low vessel stock. Kumkum dot + count badge; empty state = "All clear."
+- Reminder rows deep-link to **`/follow-ups`** (not `/`); per-row dismiss is session-hide for data items vs persistent `dismissReminder` for reminder items.
+- "Clear reminders" button (old "Clear all") renders **only when reminders exist** and calls the persistent `dismissAllReminders()` store action (dismisses all non-dismissed reminders at once) — data/low-stock items are unaffected.
+- Header search icon + bell are now `ActionIcon` buttons with localized `aria-label`s instead of plain clickable boxes.
+
+### 13.5 Global search + mobile search overlay (extends §12.2 header)
+
+- Desktop (`sm`+): centered `ShellSearch` combobox searching events, templates, ingredients (English + Tamil name), employees, utensils (max 6 per type), navigating to the owning page on select; localized placeholder / type labels / empty state.
+- Mobile: search-icon opens a full-screen `MobileSearchOverlay` (`role="dialog"`, `aria-modal`, localized `aria-label`, Escape-to-close) with the same result sources.
+
+### 13.6 Viewport / zoom accessibility
+
+- `src/app/layout.tsx` viewport no longer pins `maximumScale: 1 / userScalable: false` — pinch-zoom is allowed. Only `width=device-width, initial-scale=1, viewport-fit=cover` remain, plus the existing dynamic `theme-color` status-bar handling.
+
+### 13.7 i18n additions (extends §12.1)
+
+- New `ui.nav.more` key (More / மேலும்) used by the bottom nav + More drawer title.
+- Reminder widget `Select` options (30 min / 1 hr / custom) and per-row dismiss `aria-label`s now go through `preferredText(..., uiLanguage)` instead of hardcoded English.
+
+### 13.8 Form / layout hardening (mobile + safe-area)
+
+- `.form-actions` bar is now sticky-bottom with `flex-wrap: wrap` and `safe-area-inset-bottom` padding so Save/Cancel stay reachable on phones with gesture bars.
+- `.form-two-col` grid/columns and children got `min-width: 0; max-width: 100%` guards so long Tamil strings / wide inputs cannot push horizontal overflow on narrow screens.
+- AppShell mobile rules: header respects `safe-area-inset-top`; main content reserves `64px + safe-area-inset-bottom` so the bottom nav never covers actions.
+
+### 13.9 Dev-seed safety + seed fixes, prod dep
+
+- `/dev-seed` "Clear all data" now requires a **confirm modal** ("Are you sure? This cannot be undone." + Cancel / kumkum confirm); clearing also removes `stock-ledger` entries per ingredient and `vessel-stock-ledger` entries per utensil so no orphan ledger rows survive a wipe.
+- Seed template lookup uses the **last** template in the store (not index 0), so the seeded events reliably link to the just-created "Wedding lunch" template even when seed is run on a non-empty store.
+- `sharp` added to production dependencies (required by Next.js image optimization in prod builds; was missing and flagged in review).
+
+### 13.10 Event creation entry points (supersedes the dashboard Quick Event button in §12.4)
+
+- Desktop sidebar has a full-width **New Event** button directly **above** the Dark-mode toggle row (below the nav list, above theme + Settings). It opens the full event form (`EventFormModal` in create mode, `event={null}`) — the same form used on `/events`. State lives in `AppLayout` (`newEventOpened`).
+- Dashboard (`/`) no longer has a top quick-add button — it is just the three stacked widgets. `QuickAddEventModal` is deleted.
+- Mobile bottom bar is now Dashboard, Events, **center Plus FAB** (raised 52px leaf circle, localized `aria-label`, opens the same full event form via `MobileBottomNav onAddEvent`), Calculator, More. **Rental moved into the More drawer** (now: Rental, Templates, Inventory, Employees, Follow-up, Finance, Settings). Desktop sidebar keeps Rental in the main nav list.

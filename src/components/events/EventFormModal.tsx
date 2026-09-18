@@ -19,7 +19,8 @@ import { useEffect, useState } from "react";
 import { useTemplatesStore } from "@/store/templates";
 import { useIngredientsStore } from "@/store/ingredients";
 import { validatePhone, formatPhone } from "@/lib/phone";
-import { ui, labelText, type Label } from "@/lib/i18n";
+import { ui, preferredText, type Label } from "@/lib/i18n";
+import { useSettingsStore } from "@/store/settings";
 import { todayLocalISO as todayISO } from "@/lib/date";
 import { formatINR } from "@/lib/format";
 import { Bilingual } from "@/components/Bilingual";
@@ -89,11 +90,6 @@ function buildEventSchema(isNew: boolean, currentDate?: string) {
   });
 }
 
-const STATUS_DATA = EVENT_STATUS_OPTIONS.map((o) => ({
-  value: o.value,
-  label: labelText(o.label),
-}));
-
 type EventFormValues = {
   name: string;
   phone: string;
@@ -117,6 +113,11 @@ type EventFormModalProps = {
 };
 
 export function EventFormModal({ opened, event, onClose, createPrefill }: EventFormModalProps) {
+  const uiLanguage = useSettingsStore((state) => state.uiLanguage);
+  const statusData = EVENT_STATUS_OPTIONS.map((o) => ({
+    value: o.value,
+    label: preferredText(o.label, uiLanguage),
+  }));
   const addEvent = useEventsStore((state) => state.addEvent);
   const updateEvent = useEventsStore((state) => state.updateEvent);
   const templates = useTemplatesStore((state) => state.templates);
@@ -237,8 +238,8 @@ export function EventFormModal({ opened, event, onClose, createPrefill }: EventF
       centered
       size="lg"
       styles={{
-        body: { padding: 0 },
-        content: { overflow: "hidden" },
+        body: { padding: 0, overflowY: "auto" },
+        content: { overflow: "auto" },
       }}
     >
       <form onSubmit={handleSubmit(onSubmit)}>
@@ -251,7 +252,7 @@ export function EventFormModal({ opened, event, onClose, createPrefill }: EventF
               <div className="form-two-col__grid">
                 <TextInput
                   label={<Bilingual label={ui.common.name} />}
-                  placeholder={labelText(ui.events.namePlaceholder)}
+                  placeholder={preferredText(ui.events.namePlaceholder, uiLanguage)}
                   withAsterisk
                   {...register("name")}
                   error={errors.name?.message}
@@ -262,10 +263,10 @@ export function EventFormModal({ opened, event, onClose, createPrefill }: EventF
                   render={({ field }) => (
                     <Autocomplete
                       label={<Bilingual label={ui.events.functionType} />}
-                      placeholder={labelText({
+                      placeholder={preferredText({
                         en: "e.g. Wedding",
                         ta: "எ.கா. திருமணம்",
-                      })}
+                      }, uiLanguage)}
                       data={FUNCTION_TYPE_OPTIONS}
                       {...field}
                       value={field.value ?? ""}
@@ -287,7 +288,7 @@ export function EventFormModal({ opened, event, onClose, createPrefill }: EventF
                   render={({ field }) => (
                     <Select
                       label={<Bilingual label={ui.common.status} />}
-                      data={STATUS_DATA}
+                      data={statusData}
                       withAsterisk
                       {...field}
                     />
@@ -299,7 +300,7 @@ export function EventFormModal({ opened, event, onClose, createPrefill }: EventF
                   render={({ field }) => (
                     <Select
                       label={<Bilingual label={ui.common.template} />}
-                      placeholder={labelText(ui.events.selectTemplate)}
+                      placeholder={preferredText(ui.events.selectTemplate, uiLanguage)}
                       data={templateOptions}
                       searchable
                       clearable
@@ -315,7 +316,7 @@ export function EventFormModal({ opened, event, onClose, createPrefill }: EventF
                   render={({ field }) => (
                     <NumberInput
                       label={<Bilingual label={ui.common.headcount} />}
-                      placeholder={labelText(ui.events.headcountPlaceholder)}
+                      placeholder={preferredText(ui.events.headcountPlaceholder, uiLanguage)}
                       min={1}
                       allowNegative={false}
                       withAsterisk
@@ -337,19 +338,19 @@ export function EventFormModal({ opened, event, onClose, createPrefill }: EventF
               <div className="form-two-col__grid">
                 <TextInput
                   label={<Bilingual label={ui.common.phone} />}
-                  placeholder={labelText(ui.events.phonePlaceholder)}
+                  placeholder={preferredText(ui.events.phonePlaceholder, uiLanguage)}
                   {...register("phone")}
                   error={errors.phone?.message}
                 />
                 <TextInput
                   label={<Bilingual label={ui.events.venue} />}
-                  placeholder={labelText(ui.events.venuePlaceholder)}
+                  placeholder={preferredText(ui.events.venuePlaceholder, uiLanguage)}
                   {...register("venue")}
                   error={errors.venue?.message}
                 />
                 <TextInput
                   label={<Bilingual label={ui.events.address} />}
-                  placeholder={labelText(ui.events.addressPlaceholder)}
+                  placeholder={preferredText(ui.events.addressPlaceholder, uiLanguage)}
                   style={{ gridColumn: "1 / -1" }}
                   {...register("address")}
                   error={errors.address?.message}
@@ -441,7 +442,7 @@ export function EventFormModal({ opened, event, onClose, createPrefill }: EventF
           <Button variant="default" onClick={onClose}>
             <Bilingual label={ui.common.cancel} />
           </Button>
-          <Button type="submit" color="turmeric">
+          <Button type="submit">
             {event ? (
               <Bilingual label={ui.common.save} />
             ) : (

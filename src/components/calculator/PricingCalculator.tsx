@@ -17,7 +17,8 @@ import { z } from "zod";
 
 import { Bilingual } from "@/components/Bilingual";
 import { formatINR } from "@/lib/format";
-import { ui, labelText } from "@/lib/i18n";
+import { ui, preferredText } from "@/lib/i18n";
+import { useSettingsStore } from "@/store/settings";
 import { useTemplatesStore } from "@/store/templates";
 import { useIngredientsStore } from "@/store/ingredients";
 import { buildScaledIngredients } from "@/store/events";
@@ -32,6 +33,7 @@ const calculatorSchema = z.object({
 type CalculatorValues = z.infer<typeof calculatorSchema>;
 
 export function PricingCalculator() {
+  const uiLanguage = useSettingsStore((state) => state.uiLanguage);
   const router = useRouter();
   const templates = useTemplatesStore((state) => state.templates);
   const ingredients = useIngredientsStore((state) => state.ingredients);
@@ -84,7 +86,7 @@ export function PricingCalculator() {
             render={({ field }) => (
               <Select
                 label={<Bilingual label={ui.common.template} />}
-                placeholder={labelText(ui.events.selectTemplate)}
+                placeholder={preferredText(ui.events.selectTemplate, uiLanguage)}
                 data={templateOptions}
                 searchable
                 clearable
@@ -101,7 +103,7 @@ export function PricingCalculator() {
             render={({ field }) => (
               <NumberInput
                 label={<Bilingual label={ui.common.headcount} />}
-                placeholder={labelText(ui.events.headcountPlaceholder)}
+                placeholder={preferredText(ui.events.headcountPlaceholder, uiLanguage)}
                 min={1}
                 allowNegative={false}
                 withAsterisk
@@ -163,7 +165,7 @@ export function PricingCalculator() {
             <Text size="xs" c="dimmed">
               <Bilingual label={ui.calculator.convertNote} />
             </Text>
-            <Button fullWidth h={44} onClick={convertToEvent} color="turmeric">
+            <Button fullWidth h={44} onClick={convertToEvent}>
               <Bilingual label={ui.calculator.convertToEvent} />
             </Button>
           </Stack>

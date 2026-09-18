@@ -44,7 +44,7 @@ export function EmployeeTable({ employees, onEdit, onDelete }: EmployeeTableProp
                   </ActionIcon>
                   <ActionIcon
                     variant="subtle"
-                    color="red"
+                    color="kumkum"
                     aria-label={`Delete ${employee.name}`}
                     onClick={() => onDelete(employee)}
                   >

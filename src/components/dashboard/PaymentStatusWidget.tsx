@@ -26,7 +26,7 @@ export function PaymentStatusWidget() {
   const totalEmployeePending = withPending.reduce((sum, row) => sum + row.employeePending, 0);
 
   return (
-    <div className="dash-card" style={{ display: "flex", flexDirection: "column", gap: 12, height: "100%" }}>
+    <div className="dash-card" style={{ display: "flex", flexDirection: "column", gap: 24, height: "100%" }}>
       <Group gap="xs" justify="space-between">
         <Group gap="xs">
           <CreditCard size={18} style={{ color: "var(--ink-muted)" }} />
@@ -45,8 +45,8 @@ export function PaymentStatusWidget() {
           <Bilingual label={ui.dashboard.paymentEmpty} />
         </Text>
       ) : (
-        <Stack gap="sm" style={{ flex: 1 }}>
-          <Stack gap={6}>
+        <Stack gap="md" style={{ flex: 1 }}>
+          <Stack gap={10}>
             <Group justify="space-between" wrap="nowrap" gap="sm">
               <Text size="sm" c="dimmed">
                 <Bilingual label={ui.dashboard.clientPending} />
@@ -64,9 +64,9 @@ export function PaymentStatusWidget() {
               </span>
             </Group>
           </Stack>
-          <Stack gap="sm" style={{ borderTop: "1px solid var(--border)", paddingTop: 12 }}>
+          <Stack gap="md" style={{ borderTop: "1px solid var(--border)", paddingTop: 16 }}>
             {withPending.map(({ event, clientPending, employeePending }) => (
-              <Stack key={event.id} gap={2}>
+              <Stack key={event.id} gap={6}>
                 <Anchor
                   component={Link}
                   href={`/events/${event.id}`}

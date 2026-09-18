@@ -42,7 +42,7 @@ export function EmployeeCards({ employees, onEdit, onDelete }: EmployeeCardsProp
               </ActionIcon>
               <ActionIcon
                 variant="subtle"
-                color="red"
+                color="kumkum"
                 aria-label={`Delete ${employee.name}`}
                 onClick={() => onDelete(employee)}
               >

@@ -7,7 +7,8 @@ import { z } from "zod";
 import { useEffect } from "react";
 
 import { Bilingual } from "@/components/Bilingual";
-import { ui, labelText } from "@/lib/i18n";
+import { ui, preferredText } from "@/lib/i18n";
+import { useSettingsStore } from "@/store/settings";
 import { validatePhone, formatPhone } from "@/lib/phone";
 import { todayLocalISO as todayISO } from "@/lib/date";
 import { useEventsStore, type CateringEventInput } from "@/store/events";
@@ -32,6 +33,7 @@ type QuickAddEventModalProps = {
 };
 
 export function QuickAddEventModal({ opened, onClose }: QuickAddEventModalProps) {
+  const uiLanguage = useSettingsStore((state) => state.uiLanguage);
   const addEvent = useEventsStore((state) => state.addEvent);
 
   const {
@@ -81,7 +83,7 @@ export function QuickAddEventModal({ opened, onClose }: QuickAddEventModalProps)
         <Stack gap="md">
           <TextInput
             label={<Bilingual label={ui.common.name} />}
-            placeholder={labelText(ui.events.namePlaceholder)}
+            placeholder={preferredText(ui.events.namePlaceholder, uiLanguage)}
             withAsterisk
             autoFocus
             {...register("name")}
@@ -89,7 +91,7 @@ export function QuickAddEventModal({ opened, onClose }: QuickAddEventModalProps)
           />
           <TextInput
             label={<Bilingual label={ui.common.phone} />}
-            placeholder={labelText(ui.events.phonePlaceholder)}
+            placeholder={preferredText(ui.events.phonePlaceholder, uiLanguage)}
             {...register("phone")}
             error={errors.phone?.message}
           />

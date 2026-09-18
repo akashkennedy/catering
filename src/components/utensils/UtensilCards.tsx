@@ -50,7 +50,7 @@ export function UtensilCards({
                       <Bilingual label={ui.utensils.available} /> {available}
                     </Text>
                     {low && (
-                      <Badge color="red" variant="light" size="sm">
+                      <Badge color="kumkum" variant="light" size="sm">
                         <Bilingual label={ui.utensils.lowStock} />
                       </Badge>
                     )}
@@ -66,7 +66,7 @@ export function UtensilCards({
                   </ActionIcon>
                   <ActionIcon
                     variant="subtle"
-                    color="red"
+                    color="kumkum"
                     aria-label={`Delete ${utensil.name}`}
                     onClick={() => onDelete(utensil)}
                   >
@@ -85,7 +85,6 @@ export function UtensilCards({
               <Button
                 variant="subtle"
                 size="xs"
-                color="leaf"
                 leftSection={<CalendarClock size={16} />}
                 onClick={() => onAssign(utensil)}
               >

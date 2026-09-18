@@ -22,6 +22,7 @@ import {
   UserRound,
   Wallet,
   Settings,
+  PhoneCall,
 } from "lucide-react";
 
 import { Bilingual } from "@/components/Bilingual";
@@ -42,8 +43,9 @@ const PRIMARY_TABS: MobileNavItem[] = [
 
 const MORE_ITEMS: MobileNavItem[] = [
   { label: ui.nav.templates, href: "/templates", icon: ClipboardList },
-  { label: ui.nav.ingredients, href: "/ingredients", icon: ShoppingBasket },
+  { label: ui.nav.ingredients, href: "/inventory", icon: ShoppingBasket },
   { label: ui.nav.employees, href: "/employees", icon: UserRound },
+  { label: ui.dashboard.customerFollowUp, href: "/follow-ups", icon: PhoneCall },
   { label: ui.nav.finance, href: "/finance", icon: Wallet },
   { label: ui.nav.settings, href: "/settings", icon: Settings },
 ];

@@ -74,7 +74,7 @@ export function EventEmployeeTable({ lines, onLineChange, onRemove }: EventEmplo
               <Table.Td>
                 <ActionIcon
                   variant="subtle"
-                  color="red"
+                  color="kumkum"
                   aria-label={`Remove ${line.name}`}
                   onClick={() => onRemove(line.id)}
                 >

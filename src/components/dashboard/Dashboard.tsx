@@ -1,37 +1,37 @@
 "use client";
 
-import { SimpleGrid, Stack } from "@mantine/core";
+import { useState } from "react";
+import { Button, SimpleGrid, Stack } from "@mantine/core";
+import { CalendarPlus } from "lucide-react";
 
 import { UpcomingEventsWidget } from "./UpcomingEventsWidget";
 import { EarningsWidget } from "./EarningsWidget";
 import { PaymentStatusWidget } from "./PaymentStatusWidget";
-import { InventoryAlertsWidget } from "./InventoryAlertsWidget";
-import { UtensilsNotReturnedWidget } from "./UtensilsNotReturnedWidget";
-import { RemindersWidget } from "./RemindersWidget";
-import { QuickAddWidget } from "./QuickAddWidget";
+import { QuickAddEventModal } from "./QuickAddEventModal";
+import { Bilingual } from "@/components/Bilingual";
+import { ui } from "@/lib/i18n";
 
 export function Dashboard() {
+  const [eventOpened, setEventOpened] = useState(false);
+
   return (
-    <Stack gap="lg">
+    <Stack gap={40}>
+      <Button
+        leftSection={<CalendarPlus size={18} />}
+        onClick={() => setEventOpened(true)}
+      >
+        <Bilingual label={ui.events.addEvent} />
+      </Button>
       <SimpleGrid
         cols={{ base: 1, sm: 2, lg: 3 }}
-        spacing="md"
-        verticalSpacing="md"
+        spacing="xl"
+        verticalSpacing="xl"
       >
         <UpcomingEventsWidget />
         <EarningsWidget />
         <PaymentStatusWidget />
       </SimpleGrid>
-      <SimpleGrid
-        cols={{ base: 1, sm: 2, lg: 3 }}
-        spacing="md"
-        verticalSpacing="md"
-      >
-        <InventoryAlertsWidget />
-        <UtensilsNotReturnedWidget />
-        <RemindersWidget />
-        <QuickAddWidget />
-      </SimpleGrid>
+      <QuickAddEventModal opened={eventOpened} onClose={() => setEventOpened(false)} />
     </Stack>
   );
 }

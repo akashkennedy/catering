@@ -5,7 +5,6 @@ import type { ComponentType } from "react";
 import {
   AppShell,
   Box,
-  Burger,
   Group,
   Stack,
   Text,
@@ -18,15 +17,18 @@ import {
   ClipboardList,
   CookingPot,
   LayoutDashboard,
+  Search,
   Settings,
   ShoppingBasket,
+  PhoneCall,
   UserRound,
   Wallet,
 } from "lucide-react";
 
 import { Bilingual } from "@/components/Bilingual";
-import { LanguageIndicator } from "@/components/LanguageIndicator";
 import { MobileBottomNav } from "@/components/MobileBottomNav";
+import { MobileSearchOverlay } from "@/components/MobileSearchOverlay";
+import { NotificationCenter } from "@/components/NotificationCenter";
 import { ShellSearch } from "@/components/ShellSearch";
 import { ThemeControl } from "@/components/ThemeControl";
 import { ui, type Label } from "@/lib/i18n";
@@ -40,13 +42,13 @@ type NavItem = {
 const NAV_ITEMS: NavItem[] = [
   { label: ui.nav.dashboard, href: "/", icon: LayoutDashboard },
   { label: ui.nav.events, href: "/events", icon: CalendarDays },
+  { label: ui.dashboard.customerFollowUp, href: "/follow-ups", icon: PhoneCall },
   { label: ui.nav.templates, href: "/templates", icon: ClipboardList },
-  { label: ui.nav.ingredients, href: "/ingredients", icon: ShoppingBasket },
+  { label: ui.nav.ingredients, href: "/inventory", icon: ShoppingBasket },
   { label: ui.nav.employees, href: "/employees", icon: UserRound },
   { label: ui.nav.rental, href: "/utensils", icon: CookingPot },
   { label: ui.nav.calculator, href: "/calculator", icon: Calculator },
   { label: ui.nav.finance, href: "/finance", icon: Wallet },
-  { label: ui.nav.settings, href: "/settings", icon: Settings },
 ];
 
 function isActive(pathname: string, href: string): boolean {
@@ -56,6 +58,7 @@ function isActive(pathname: string, href: string): boolean {
 
 export default function AppLayout({ children }: { children: React.ReactNode }) {
   const [opened, setOpened] = useState(false);
+  const [searchOpened, setSearchOpened] = useState(false);
   const pathname = usePathname();
 
   return (
@@ -65,23 +68,22 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
       padding="md"
     >
       <AppShell.Header style={{ background: "var(--surface)", borderColor: "var(--border)" }}>
-        <Group h="100%" px="md" wrap="nowrap" style={{ display: "grid", gridTemplateColumns: "1fr auto 1fr", alignItems: "center" }}>
-          <Group gap="md" wrap="nowrap" justify="flex-start">
-            <Burger
-              opened={opened}
-              onClick={() => setOpened((o) => !o)}
-              hiddenFrom="sm"
-              size="sm"
-            />
-            <Text fw={700} size="lg" truncate>
-              <Bilingual label={ui.appName} />
-            </Text>
-          </Group>
-          <Box visibleFrom="sm">
+        <Group h="100%" px="md" wrap="nowrap" gap="xs" style={{ alignItems: "center" }}>
+          <Text fw={700} size="lg" truncate style={{ flexShrink: 0 }}>
+            Catering
+          </Text>
+          <Box visibleFrom="sm" style={{ flex: 1, minWidth: 0, display: "flex", justifyContent: "center" }}>
             <ShellSearch />
           </Box>
-          <Group justify="flex-end" wrap="nowrap">
-            <LanguageIndicator />
+          <Group gap="xs" wrap="nowrap" ml="auto" style={{ flexShrink: 0 }}>
+            <Box
+              hiddenFrom="sm"
+              onClick={() => setSearchOpened(true)}
+              style={{ cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", width: 40, height: 40, WebkitTapHighlightColor: "transparent" }}
+            >
+              <Search size={20} style={{ color: "var(--ink-muted)" }} />
+            </Box>
+            <NotificationCenter />
           </Group>
         </Group>
       </AppShell.Header>
@@ -113,10 +115,22 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
             </Stack>
           </Stack>
           <ThemeControl />
+          <Link
+            href="/settings"
+            onClick={() => setOpened(false)}
+            className={`app-nav-item${isActive(pathname, "/settings") ? " app-nav-item--active" : ""}`}
+            aria-current={isActive(pathname, "/settings") ? "page" : undefined}
+          >
+            <Settings size={18} aria-hidden />
+            <span className="app-nav-item__label">
+              <Bilingual label={ui.nav.settings} />
+            </span>
+          </Link>
         </Stack>
       </AppShell.Navbar>
       <AppShell.Main>{children}</AppShell.Main>
       <MobileBottomNav />
+      <MobileSearchOverlay opened={searchOpened} onClose={() => setSearchOpened(false)} />
     </AppShell>
   );
 }

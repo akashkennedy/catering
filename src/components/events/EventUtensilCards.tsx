@@ -47,7 +47,7 @@ export function EventUtensilCards({
               </Stack>
               <ActionIcon
                 variant="subtle"
-                color="red"
+                color="kumkum"
                 aria-label={`Remove ${line.utensilName}`}
                 onClick={() => onRemove(line.id)}
               >

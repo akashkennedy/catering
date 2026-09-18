@@ -1,88 +1,90 @@
-# Design.md — Catering CRM Visual Direction
+# DESIGN.md — Catering CRM Design System (as built)
 
-Status: **Approved — this is the shared design system for both the Catering CRM and the Mampalli Catering landing page.** Ready to build.
+Status: **Living document — describes the design actually implemented in code.** It replaces all earlier visual direction (turmeric-primary, side-by-side bilingual, auto theme). If this file conflicts with SPEC.md §§1–11, this file wins on visual matters; SPEC.md §12 records the functional history.
 
 ---
 
-## Design Plan
+## 1. Color
 
-### Color (Light Mode)
-Grounded in South Indian catering (turmeric, banana leaf, kumkum) but kept restrained — minimal, not festive/loud.
+Single primary accent + single danger color. No decorative reds, no competing accents.
+
+### Light mode
 
 | Token | Hex | Role |
 |---|---|---|
-| `--bg-paper` | `#F8F5EF` | Warm paper background |
-| `--surface` | `#FFFFFF` | Card/widget surface, sits on top of bg-paper |
-| `--ink` | `#2B2420` | Primary text (warm near-black, not pure black) |
+| `--bg-paper` | `#F8F5EF` | Warm paper app background |
+| `--surface` | `#FFFFFF` | Cards, header, sidebar, sheets |
+| `--ink` | `#2B2420` | Primary text (warm near-black) |
 | `--ink-muted` | `#6B5F52` | Secondary text, labels, timestamps |
-| `--accent-turmeric` | `#C68A2E` | Primary accent — CTAs, active states, primary buttons, Golden Yellow |
-| `--accent-leaf` | `#33513B` | Secondary accent — success, "paid"/"returned" states, Green |
-| `--accent-kumkum` | `#8B2E2E` | Reserved ONLY for pending/alerts/overdue — never decorative |
-| `--border` | `#E8E1D3` | Dividers, card borders |
+| `--accent-leaf` | `#97A54B` | **Primary accent** — active nav, primary buttons, positive pills, dark-mode toggle fill |
+| `--accent-kumkum` | `#8B2E2E` | **Danger only** — delete confirms, delete icons, pending/negative pills, low-stock badges |
+| `--border` | `#E8E1D3` | Card borders, dividers |
+| `--pill-leaf-fg` | `#5A6B2A` | Text on leaf pills |
+| `--pill-kumkum-fg` | `#6E2424` | Text on kumkum pills |
 
-### Color (Dark Mode)
-Same hues, shifted for contrast — not a simple invert. Accents get slightly brighter/lighter so they still read clearly on a dark surface.
+### Dark mode
 
-| Token | Hex | Role |
-|---|---|---|
-| `--bg-paper` | `#1C1A16` | Warm near-black background (not pure black) |
-| `--surface` | `#26221C` | Card/widget surface, sits on top of bg-paper |
-| `--ink` | `#F0EBE0` | Primary text (warm off-white) |
-| `--ink-muted` | `#A79A87` | Secondary text, labels, timestamps |
-| `--accent-turmeric` | `#D9A544` | Primary accent — brighter for dark-bg contrast |
-| `--accent-leaf` | `#4C7A5A` | Secondary accent — brighter for dark-bg contrast |
-| `--accent-kumkum` | `#C24949` | Alerts — brighter for dark-bg contrast |
-| `--border` | `#3A352C` | Dividers, card borders |
+Same roles, shifted for contrast on dark surfaces:
 
-**Rule:** Kumkum red is earned, not decorative — it only appears where something needs the user's attention (pending payment, overdue return, unbought ingredient, low stock). This is what makes a glance at the dashboard tell you what needs action. This rule applies identically in both modes.
+| Token | Hex |
+|---|---|
+| `--bg-paper` | `#1C1A16` |
+| `--surface` | `#26221C` |
+| `--ink` | `#F0EBE0` |
+| `--ink-muted` | `#A79A87` |
+| `--accent-leaf` | `#5B6F33` |
+| `--accent-kumkum` | `#C24949` |
+| `--border` | `#3A352C` |
+| `--pill-leaf-fg` | `#8AAB5E` |
+| `--pill-kumkum-fg` | `#E08080` |
 
-### Typography
-- **Catamaran** — one family for everything, English and Tamil both. Originally developed for Tamil Nadu government use, so it handles both scripts at matching weight/rhythm instead of pairing two mismatched fonts.
-- Weights: 400 (body), 600 (subheadings/labels), 700 (headings/emphasis)
-- Tamil and English text render at **equal visual weight** beside each other — never one styled as smaller/secondary. This was an explicit client requirement (§10.4 of SPEC.md).
+**Rules:**
+1. Kumkum is earned, not decorative — only where something needs attention (pending payment, overdue return, low stock, delete actions). Applies identically in both modes.
+2. Primary buttons never carry a color prop — they inherit the theme default (`primaryColor: "leaf"`, `autoContrast: true` in `src/theme.ts`).
+3. No other hues in app UI. (PDF export uses its own print palette; unrelated.)
 
-### Layout — Desktop
-Reference: sidebar-shell template (dashboard.webp) — adapted to this palette, not copied literally (drop its teal/coral gradient background, gold "Hot" pill styling, and generic card-shadow treatment).
-- Left sidebar: nav items (Dashboard, Events, Templates, Ingredients, Employees, Rental, Finance, Settings), `--surface` background, active item gets `--accent-turmeric` background with `--ink` text (not the template's green — turmeric is this app's primary accent)
-- Top bar: search field + language indicator (Tamil/English, always both visible per §10.4) — no user-avatar-and-bell cluster unless there's a real notifications feature to back it
-- Main content: widget cards on `--surface`, separated by `--border` and spacing, not heavy shadows (per existing Principles below)
-- Stat callouts (e.g. Total Earnings, pending amounts) use the reference template's card structure — label, big number, small delta/status pill — but the pill uses `--accent-leaf` for positive/paid and `--accent-kumkum` for pending/negative, never the template's arbitrary green/red
+## 2. Typography
 
-### Layout — Mobile
-- **Bottom tab bar**, fixed, `--surface` background, `--border` top hairline
-- **4 primary tabs:** Dashboard, Events, Rental, Calculator — chosen as the screens most used on-the-go at a venue. **More tab** (5th, always last) opens a sheet/list for everything else: Templates, Ingredients, Employees, Finance, Settings. *(Flag if you want different tabs in the primary 4 — easy to swap before implementation.)*
-- Active tab: icon + label in `--accent-turmeric`; inactive: `--ink-muted`
-- Dashboard widgets stack single-column, full-width, as already specified below
-- Detailed forms (New/Edit Event) open as a **full-screen sheet** on mobile, not a centered modal (a centered modal at mobile width just becomes the full screen anyway — build it as a sheet from the start rather than a modal that happens to fill the screen)
+- **Catamaran** for everything (Google Font, `latin` + `tamil` subsets, weights 400/600/700). One family covers both scripts.
+- Stat values: 1.5rem / 700. Card labels: 0.75rem / 600 / muted. Nav items: 600.
+- Tamil and English are never shown together — the UI is monolingual per the selected language (see §3).
 
-### Layout — Forms (New Event / Edit Event)
-Reference: two-column modal form template (the "Update Organization Details" screenshot) — adapted:
-- Two-column field grid on desktop (label above input, per the reference), collapsing to single column on mobile
-- Section headers (e.g. "Personal Information" / "Business Information" in the reference) map to this app's own sections — e.g. "Event Details" / "Customer Details" / "Pricing"
-- Bottom action bar: secondary action (e.g. "Save as Draft") + primary action (e.g. "Save Event") — primary button uses `--accent-turmeric`, not the reference's black
-- Dropdowns, date pickers, and text areas follow the reference's clean bordered-input style (thin `--border` outline, no heavy box-shadow)
-- This same form treatment applies everywhere a detailed multi-field form exists (New Event, Edit Event, and by extension Templates/Ingredients master-data forms for consistency)
+## 3. Language display
 
-### Principles
-1. Red is earned, not decorative — the single most important rule for this design
-2. No template chrome — no ALL-CAPS eyebrow labels, no icon-in-a-circle above every widget title, no arrow-suffixed button text
-3. Tamil and English at equal visual weight, always shown together (not a language toggle)
-4. Spend boldness in one place (the turmeric accent) — everything else stays quiet and disciplined
-5. Dark mode is not an afterthought — every component must be built against both token sets from the start, not patched in later
+- Strictly monolingual: Tamil setting → Tamil everywhere; English setting → English everywhere (labels, buttons, placeholders, headings). Missing Tamil falls back to English.
+- Settings offers Tamil / English only. No "Both" mode.
 
----
+## 4. Layout — Desktop shell
 
-## Explicitly Avoided (AI-generated design tells)
-- The generic warm-cream (`#F4F1EA`) + terracotta (`#D97757`) combo — picked a distinct palette instead
-- SaaS-card kit: identical border-radius + soft shadow on every card, regardless of hierarchy
-- ALL-CAPS tracked-out eyebrow labels above headings
-- Center-aligned marketing-page layout for what is a functional CRM
-- The reference template's teal/coral gradient background and mismatched accent colors — this app uses only the turmeric/leaf/kumkum system
+- **Header (60px, `--surface`):** "Catering" wordmark left → search bar centered (`sm`+) → search icon (mobile only) + notification bell right.
+- **Sidebar (260px, `--surface`):** nav items — Dashboard, Events, Customer Follow-up, Templates, Inventory, Employees, Rental, Calculator, Finance. Active item: leaf background + ink text; hover: 12% leaf wash. Bottom section: Dark-mode toggle row, then Settings button (Settings lives here, not in the nav list).
+- **Dark-mode toggle:** full nav-item row (moon icon + "Dark" label) with an animated sliding sun/moon pill at the right edge; the whole row is clickable (`role="switch"`).
+- **Main:** `md` page padding; dashboard cards on `--surface` with `--border`, 10px radius, separated by spacing — no heavy shadows.
 
----
+## 5. Layout — Mobile
 
-## Open / To Revisit
-- Confirm the 4 primary mobile tabs (Dashboard, Events, Rental, Calculator proposed above)
-- Icon set styling (Lucide React is already chosen — confirm stroke width/style fits the palette)
-- Exact spacing scale / type scale (px or rem values) — define during implementation, suggest a standard 4px base scale unless there's a reason not to
-- Dark mode toggle placement (settings screen vs. quick-access in top bar/nav) — not yet decided
+- **Bottom tab bar** (fixed, `--surface`, border hairline, ≤639px): Dashboard, Events, Rental, Calculator + **More** (5th) opening a bottom sheet with Templates, Inventory, Employees, Follow-up, Finance, Settings. Active tab: leaf icon + label; inactive: muted.
+- Dashboard widgets stack single-column, full-width.
+- Detail forms open as full-screen sheets on mobile.
+- Master lists render as tables on desktop, stacked cards on mobile.
+
+## 6. Dashboard
+
+- Exactly three widget cards (Upcoming Events, Total Earnings, Payment Status) in a 3-col grid → stacked on mobile, plus one full-width **Quick Event** button on top.
+- Rhythm: 40px section gap, `xl` grid gaps, 20px card padding, 24px header-to-content gap in the three main cards.
+- Stat pattern: small muted label → big value → status pill (leaf = positive/paid, kumkum = pending/negative).
+
+## 7. Forms & inputs
+
+- Two-column field grid on desktop, single column on mobile; label-above-input; thin `--border` inputs, no heavy shadows.
+- All money in INR (₹), no number-input spinners, Indian-mobile phone validation, standardized units (`gm / kg / litre / piece`).
+- Bottom action bar: `default`-variant secondary + filled primary (leaf) actions; destructive confirms in kumkum.
+
+## 8. Principles
+
+1. One accent (leaf), one danger (kumkum) — everything else quiet.
+2. Red is earned, not decorative.
+3. Monolingual UI — the selected language owns the whole screen.
+4. Boldness in one place; disciplined spacing everywhere else (4px-base scale, section gaps ≥ card gaps ≥ content gaps).
+5. Dark mode is a first-class token set, not a patch — every component reads CSS vars, never hardcoded colors.
+6. No template chrome — no ALL-CAPS eyebrows, no icon-in-circle headers, no arrow-suffixed buttons.

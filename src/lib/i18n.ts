@@ -59,7 +59,7 @@ export const ui = {
     dashboard: lab("Dashboard", "டாஷ்போர்டு"),
     events: lab("Events", "நிகழ்வுகள்"),
     templates: lab("Templates", "டெம்ப்ளேட்டுகள்"),
-    ingredients: lab("Ingredients", "பொருட்கள்"),
+    ingredients: lab("Inventory", "சரக்கிருப்பு"),
     employees: lab("Employees", "ஊழியர்கள்"),
     rental: lab("Rental", "வாடகை"),
     calculator: lab("Calculator", "கணக்கீட்டாளர்"),
@@ -364,7 +364,6 @@ export const ui = {
     ),
     english: lab("English", "ஆங்கிலம்"),
     tamil: lab("Tamil", "தமிழ்"),
-    both: lab("Both", "இரண்டும்"),
     defaultLanguage: lab("Document language", "ஆவண மொழி"),
     defaultLanguageNote: lab(
       "Used for exported PDF documents.",
@@ -376,18 +375,10 @@ export const ui = {
       "நிகழ்வு திட்டமிடும்போது இயல்பாகப் பயன்படும் உலகளாவிய விலையைத் திருத்தவும்."
     ),
     noIngredients: lab(
-      "No ingredients yet. Add them from the Ingredients page.",
-      "இன்னும் பொருட்கள் இல்லை. பொருட்கள் பக்கத்திலிருந்து சேர்க்கவும்."
+      "No ingredients yet. Add them from the Inventory page.",
+      "இன்னும் பொருட்கள் இல்லை. சரக்கிருப்பு பக்கத்திலிருந்து சேர்க்கவும்."
     ),
-    theme: lab("Theme", "தீம்"),
-    themeNote: lab(
-      "Choose between light, dark, or automatic (follows your device setting).",
-      "வெளிச்சம், இருள், அல்லது தானியங்கி (உங்கள் சாதன அமைப்பைப் பின்பற்றுகிறது) என தேர்வு செய்யவும்."
-    ),
-    light: lab("Light", "வெளிச்சம்"),
     dark: lab("Dark", "இருள்"),
-    auto: lab("Auto", "தானியங்கி"),
-    toggleTheme: lab("Toggle theme", "தீம் மாற்று"),
   },
   finance: {
     income: lab("Income", "வருமானம்"),
@@ -463,10 +454,6 @@ export const ui = {
     ta: `உணவு ${n}`,
   }),
 } as const;
-
-export function labelText(label: Label): string {
-  return `${label.en} · ${label.ta}`;
-}
 
 export function preferredText(label: Label, preference: "en" | "ta"): string {
   return preference === "ta" ? (label.ta || label.en) : label.en;

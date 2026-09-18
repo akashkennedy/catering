@@ -339,3 +339,76 @@ Event "earnings/profit" = `totalQuoted − (sum of ingredient costs + employee p
 ### 11.5 Deferred
 
 - Notification reliability/polish and further dashboard UI styling — parked for later, same as §10.6.
+
+---
+
+## 12. V3 Addendum — implemented state (what is actually built)
+
+This section records what has been implemented on top of §§1–11 so a new agent (or the client) sees the real current state. Where it conflicts with earlier sections, this addendum wins. **Phase 2 (Supabase/Postgres swap, §1 + §8) is unchanged and still pending.**
+
+### 12.1 UI language: monolingual selection (supersedes §10.4)
+
+- The side-by-side bilingual display ("English · தமிழ்") is **removed**. The whole UI is monolingual, driven by a UI-language setting (`en | ta`, default `en`, persisted as `catering-settings` in localStorage).
+- Tamil selected → Tamil everywhere (labels, buttons, placeholders, headings); English selected → English everywhere. Missing Tamil falls back to English, never blank.
+- All input placeholders and `Select` option labels go through `preferredText(label, uiLanguage)` (`src/lib/i18n.ts`); every component rendering one subscribes to the settings store so it re-renders on language switch. The old `labelText()` bilingual joiner is deleted.
+- Settings → language card offers only Tamil / English (the old "Both" mode is gone; stored `"both"` values migrate to `"en"`). A separate document-language setting (`en | ta`) still controls PDF export only.
+
+### 12.2 Header layout
+
+- App header (60px): **"Catering" title pinned left** (all breakpoints), **search bar centered** on desktop (`sm`+), search-icon + notification bell right. On mobile the search becomes a full-screen overlay (`MobileSearchOverlay`).
+
+### 12.3 Color system (resolves the deferred palette, §10.6)
+
+- Accent is **leaf green** (`#97A54B` light / `#5B6F33` dark, Mantine `primaryColor: "leaf"`). All primary buttons use the theme default — no per-button color props.
+- Destructive actions (delete confirms, delete icons, low-stock badges) are uniformly **kumkum dark-red** (`#8B2E2E` / `#C24949`). The old turmeric palette and Mantine `red` are fully removed from UI code.
+- Sidebar/nav active states, mobile bottom-nav active states, count pills, and reminder notification dots all use leaf.
+
+### 12.4 Dashboard: decluttered (supersedes §11.2 widget list)
+
+- `/` shows exactly three widgets in a 3-column grid (stacked full-width on mobile): **Upcoming Events** (next 3 open events), **Total Earnings**, **Payment Status Overview** — plus a single full-width **Quick Event** button on top that opens the quick-add modal. Generous spacing (40px stack gap, `xl` grid gaps, 24px in-card gaps).
+- Relocated widgets: **Utensils Not Yet Returned** now renders at the top of the **Utensils page**; **Inventory Alerts** at the top of the **Inventory page**. The old `QuickAddWidget` card is deleted.
+- **Total Earnings formula (corrects §11.1/§11.2):** cash-collected basis, identical to the Finance page — a `paid` event contributes its full `totalAmount`, otherwise only `advancePaid`. Shared helper `eventCollected()` in `src/lib/financeReport.ts`. Month filter = current `YYYY-MM` date prefix; All-time = no filter. (The old `totalQuoted − costs` formula is **not** used; there is no `totalQuoted` field — the event amount fields are `ratePerPerson`, `totalAmount`, `totalAmountOverridden`, `advancePaid`.)
+
+### 12.5 Ingredients → Inventory rename (full, not labels-only)
+
+- Route is now **`/inventory`** (old `/ingredients` route deleted). All hrefs (sidebar, mobile More sheet, global search, notification links) point to `/inventory`.
+- Display name is **Inventory / சரக்கிருப்பு** everywhere (nav, page title, search labels, settings copy). Internal code names (`useIngredientsStore`, `Ingredient*` components, `Ingredient` type) intentionally unchanged.
+
+### 12.6 Customer Follow-up is a full page
+
+- New route **`/follow-ups`** rendering the reminders widget (phone + note + remind-in 30min/1hr/custom, active list sorted by time, dismiss action, browser-Notification permission prompt).
+- Reachable from the desktop sidebar (after Events, `PhoneCall` icon) and the mobile More sheet. Reminder entity matches §11.1 (`customerName` nullable, `notified` flag included).
+
+### 12.7 Theme system (no Auto)
+
+- Theme mode is **`light | dark` only** (persisted `catering-theme`; stored `"auto"` migrates to `"light"`). No OS-follows-device behavior; bootstrap/sync scripts are light/dark only.
+- Sidebar bottom = animated **Dark-mode toggle row** styled exactly like a nav item (moon icon + label + sliding sun/moon pill, whole row clickable, `role="switch"`), followed by the **Settings** nav button (moved out of the nav list).
+- Settings page has **no theme section** (removed entirely); it keeps language, document-language, and ingredient-price cards.
+
+### 12.8 Actual navigation map (supersedes §5)
+
+```
+/                     → Dashboard (3 widgets + Quick Event button)
+/events               → Event list (search, date filter, status filter, delete confirm)
+/events/[id]          → Event detail (ingredients / employees / utensils sections, PDF export)
+/templates            → Food template master list
+/inventory            → Inventory page (low-stock alerts widget + ingredient master list)
+/employees            → Employee master list
+/utensils             → Utensils page (not-returned widget + utensil master list)
+/calculator           → Pricing calculator (template + headcount → cost/quote, Convert to Event)
+/finance              → Income & Expense (summary cards, category pills, expense + other-income lists)
+/follow-ups           → Customer follow-up reminders
+/settings             → Language, document language, ingredient prices (no theme control)
+/dev-seed             → Demo-data generator for client onboarding (load/clear sample data)
+```
+
+- No `/vendors` screen (per §10.3, vendor is a free-text + autosuggest field on rental lines; recent values suggested, no master entity).
+- No `/events/new` or `/events/[id]/edit` routes — create/edit happens in modals (`EventFormModal`, `QuickAddEventModal`).
+- Event status pipeline (actual): `enquiry → confirmed → preparing → completed → paid`.
+- Expense categories (actual): `food materials | other expenses | electricity | transport | gas | custom`. Staff salary is deliberately **not** an expense category (labour is tracked per-event via employee toPay/paid).
+- Ingredient units (actual): `gm | kg | litre | piece` (`src/lib/units.ts`).
+- Mobile nav: bottom bar (Dashboard, Events, Rental, Calculator + More drawer holding Templates, Inventory, Employees, Follow-up, Finance, Settings).
+
+### 12.9 Demo-data route
+
+- `/dev-seed` loads representative sample data (events across statuses, inventory incl. low-stock items, employees, utensils, template, expenses, other income, reminder) via the stores' own add-actions, and can wipe everything again. Committed deliberately so the client can self-onboard; safe to delete later without affecting the app.

@@ -8,9 +8,15 @@ export default function manifest(): MetadataRoute.Manifest {
     start_url: "/",
     display: "standalone",
     background_color: "#ffffff",
-    theme_color: "#1971c2",
+    theme_color: "#ffffff",
     orientation: "portrait",
+    categories: ["business", "productivity"],
     icons: [
+      {
+        src: "/icons/icon.svg",
+        sizes: "any",
+        type: "image/svg+xml",
+      },
       {
         src: "/icons/icon-192x192.png",
         sizes: "192x192",
@@ -21,6 +27,7 @@ export default function manifest(): MetadataRoute.Manifest {
         src: "/icons/icon-512x512.png",
         sizes: "512x512",
         type: "image/png",
+        purpose: "any",
       },
     ],
   };

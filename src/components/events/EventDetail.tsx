@@ -28,7 +28,7 @@ import { EventUtensilCards } from "./EventUtensilCards";
 import { EventUtensilFormModal } from "./EventUtensilFormModal";
 import { EventUtensilTable } from "./EventUtensilTable";
 import { Bilingual } from "@/components/Bilingual";
-import { ui, labelText } from "@/lib/i18n";
+import { ui, preferredText } from "@/lib/i18n";
 import { formatIndianDate } from "@/lib/date";
 import { formatINR } from "@/lib/format";
 import { formatPhone } from "@/lib/phone";
@@ -62,6 +62,7 @@ export function EventDetail() {
   const vendorSuggestions = useVendorSuggestionsStore((state) => state.vendorSuggestions);
   const addVendorSuggestion = useVendorSuggestionsStore((state) => state.addVendorSuggestion);
   const defaultLanguage = useSettingsStore((state) => state.defaultLanguage);
+  const uiLanguage = useSettingsStore((state) => state.uiLanguage);
   const addUsedEntry = useStockLedgerStore((state) => state.addUsedEntry);
   const ledgerEntries = useStockLedgerStore((state) => state.entries);
   const [employeeFormOpened, setEmployeeFormOpened] = useState(false);
@@ -359,7 +360,7 @@ export function EventDetail() {
               value={event.headcount}
               min={1}
               allowNegative={false}
-              w={160}
+              w={{ base: "100%", sm: 160 }}
               onKeyDown={(e) => {
                 if (e.key === "ArrowUp" || e.key === "ArrowDown") e.preventDefault();
               }}
@@ -367,11 +368,11 @@ export function EventDetail() {
             />
             <Select
               label={<Bilingual label={ui.common.template} />}
-              placeholder={labelText(ui.events.selectTemplate)}
+              placeholder={preferredText(ui.events.selectTemplate, uiLanguage)}
               data={templateOptions}
               searchable
               clearable
-              w={260}
+              w={{ base: "100%", sm: 260 }}
               value={event.templateId ?? null}
               onChange={(value) => handleTemplateChange(value ?? null)}
             />
@@ -379,9 +380,9 @@ export function EventDetail() {
               label={<Bilingual label={ui.common.status} />}
               data={EVENT_STATUS_OPTIONS.map((option) => ({
                 value: option.value,
-                label: labelText(option.label),
+                label: preferredText(option.label, uiLanguage),
               }))}
-              w={180}
+              w={{ base: "100%", sm: 180 }}
               value={event.status}
               onChange={(value) => handleStatusChange((value ?? "enquiry") as CateringEventInput["status"])}
             />
@@ -397,7 +398,7 @@ export function EventDetail() {
               allowNegative={false}
               decimalScale={2}
               leftSection="₹"
-              w={160}
+              w={{ base: "100%", sm: 160 }}
               onKeyDown={(e) => {
                 if (e.key === "ArrowUp" || e.key === "ArrowDown") e.preventDefault();
               }}
@@ -410,7 +411,7 @@ export function EventDetail() {
               allowNegative={false}
               decimalScale={2}
               leftSection="₹"
-              w={180}
+              w={{ base: "100%", sm: 180 }}
               onKeyDown={(e) => {
                 if (e.key === "ArrowUp" || e.key === "ArrowDown") e.preventDefault();
               }}
@@ -423,7 +424,7 @@ export function EventDetail() {
               allowNegative={false}
               decimalScale={2}
               leftSection="₹"
-              w={180}
+              w={{ base: "100%", sm: 180 }}
               onKeyDown={(e) => {
                 if (e.key === "ArrowUp" || e.key === "ArrowDown") e.preventDefault();
               }}
@@ -495,7 +496,7 @@ export function EventDetail() {
             <Group gap="md" align="flex-end" wrap="wrap">
               <Select
                 label={<Bilingual label={ui.events.assignExistingEmployee} />}
-                placeholder={labelText(ui.events.pickEmployee)}
+                placeholder={preferredText(ui.events.pickEmployee, uiLanguage)}
                 data={assignableEmployees.map((employee) => ({
                   value: employee.id,
                   label: employee.phone
@@ -504,7 +505,7 @@ export function EventDetail() {
                 }))}
                 searchable
                 clearable
-                w={280}
+                w={{ base: "100%", sm: 280 }}
                 value={assignValue}
                 onChange={(value) => {
                   setAssignValue(null);
@@ -577,9 +578,9 @@ export function EventDetail() {
             <Group gap="md" align="flex-end" wrap="wrap">
               <Autocomplete
                 label={<Bilingual label={ui.events.vendor} />}
-                placeholder={labelText(ui.events.vendorPlaceholder)}
+                placeholder={preferredText(ui.events.vendorPlaceholder, uiLanguage)}
                 data={vendorSuggestions}
-                w={280}
+                w={{ base: "100%", sm: 280 }}
                 value={utensilVendorName}
                 onChange={(value) => setUtensilVendorName(value)}
               />

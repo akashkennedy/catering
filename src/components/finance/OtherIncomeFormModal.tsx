@@ -7,7 +7,8 @@ import { z } from "zod";
 import { useEffect } from "react";
 
 import { Bilingual } from "@/components/Bilingual";
-import { ui, labelText } from "@/lib/i18n";
+import { ui, preferredText } from "@/lib/i18n";
+import { useSettingsStore } from "@/store/settings";
 import { todayLocalISO } from "@/lib/date";
 import { useFinanceStore } from "@/store/finance";
 
@@ -25,6 +26,7 @@ type OtherIncomeFormModalProps = {
 };
 
 export function OtherIncomeFormModal({ opened, onClose }: OtherIncomeFormModalProps) {
+  const uiLanguage = useSettingsStore((state) => state.uiLanguage);
   const addOtherIncome = useFinanceStore((state) => state.addOtherIncome);
 
   const {
@@ -71,7 +73,7 @@ export function OtherIncomeFormModal({ opened, onClose }: OtherIncomeFormModalPr
             render={({ field }) => (
               <NumberInput
                 label={<Bilingual label={ui.finance.amount} />}
-                placeholder={labelText(ui.finance.amountPlaceholder)}
+                placeholder={preferredText(ui.finance.amountPlaceholder, uiLanguage)}
                 min={0}
                 allowNegative={false}
                 decimalScale={2}
@@ -94,7 +96,7 @@ export function OtherIncomeFormModal({ opened, onClose }: OtherIncomeFormModalPr
           />
           <TextInput
             label={<Bilingual label={ui.finance.note} />}
-            placeholder={labelText(ui.finance.notePlaceholder)}
+            placeholder={preferredText(ui.finance.notePlaceholder, uiLanguage)}
             {...register("note")}
             error={errors.note?.message}
           />

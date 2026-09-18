@@ -3,7 +3,6 @@
 import { Group, NumberInput, SegmentedControl, Stack, Text, Title } from "@mantine/core";
 
 import { Bilingual } from "@/components/Bilingual";
-import { ThemeControl } from "@/components/ThemeControl";
 import { ui } from "@/lib/i18n";
 import { useIngredientsStore } from "@/store/ingredients";
 import {
@@ -29,18 +28,6 @@ export function SettingsPanel() {
       <div className="dash-card">
         <Stack gap="sm">
           <Text fw={600} size="sm">
-            <Bilingual label={ui.settings.theme} />
-          </Text>
-          <Text size="xs" c="dimmed">
-            <Bilingual label={ui.settings.themeNote} />
-          </Text>
-          <ThemeControl />
-        </Stack>
-      </div>
-
-      <div className="dash-card">
-        <Stack gap="sm">
-          <Text fw={600} size="sm">
             <Bilingual label={ui.settings.uiLanguage} />
           </Text>
           <Text size="xs" c="dimmed">
@@ -52,7 +39,6 @@ export function SettingsPanel() {
             data={[
               { label: <Bilingual label={ui.settings.tamil} />, value: "ta" },
               { label: <Bilingual label={ui.settings.english} />, value: "en" },
-              { label: <Bilingual label={ui.settings.both} />, value: "both" },
             ]}
           />
         </Stack>

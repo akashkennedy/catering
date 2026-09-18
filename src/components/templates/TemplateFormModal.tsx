@@ -26,7 +26,8 @@ import { z } from "zod";
 import { useEffect } from "react";
 
 import { Bilingual } from "@/components/Bilingual";
-import { ui, labelText } from "@/lib/i18n";
+import { ui, preferredText } from "@/lib/i18n";
+import { useSettingsStore } from "@/store/settings";
 import { useIngredientsStore } from "@/store/ingredients";
 import { normalizeUnit } from "@/lib/units";
 import {
@@ -89,6 +90,7 @@ function DishIngredientFields({
   dishIndex,
   ingredients,
 }: DishIngredientFieldsProps) {
+  const uiLanguage = useSettingsStore((state) => state.uiLanguage);
   const { fields, append, remove } = useFieldArray({
     control,
     name: `dishes.${dishIndex}.ingredients`,
@@ -112,18 +114,18 @@ function DishIngredientFields({
         ) as { message?: string } | undefined;
 
         return (
-          <Group key={field.id} align="flex-end" gap="xs" wrap="nowrap">
+          <Group key={field.id} align="flex-end" gap="xs" wrap="wrap">
             <Controller
               name={`dishes.${dishIndex}.ingredients.${fieldIndex}.ingredientId`}
               control={control}
               render={({ field: selectField }) => (
                 <Select
                   label={fieldIndex === 0 ? <Bilingual label={ui.templates.ingredient} /> : undefined}
-                  placeholder={labelText(ui.templates.selectIngredient)}
+                  placeholder={preferredText(ui.templates.selectIngredient, uiLanguage)}
                   data={ingredients}
                   searchable
                   clearable
-                  style={{ flex: 1, minWidth: 160 }}
+                  style={{ flex: 1, minWidth: 140 }}
                   {...selectField}
                   error={ingredientError?.message}
                 />
@@ -135,10 +137,10 @@ function DishIngredientFields({
               render={({ field: qtyField }) => (
                 <NumberInput
                   label={fieldIndex === 0 ? <Bilingual label={ui.templates.qtyPer100} /> : undefined}
-                  placeholder={labelText(ui.templates.qtyPlaceholder)}
+                  placeholder={preferredText(ui.templates.qtyPlaceholder, uiLanguage)}
                   min={0}
                   allowNegative={false}
-                  style={{ width: 110 }}
+                  style={{ width: "100%", maxWidth: 110 }}
                   {...qtyField}
                   onKeyDown={(e) => {
                     if (e.key === "ArrowUp" || e.key === "ArrowDown") e.preventDefault();
@@ -149,7 +151,7 @@ function DishIngredientFields({
             />
             <ActionIcon
               variant="subtle"
-              color="red"
+              color="kumkum"
               aria-label="Remove ingredient"
               onClick={() => remove(fieldIndex)}
             >
@@ -171,6 +173,7 @@ function DishIngredientFields({
 }
 
 export function TemplateFormModal({ opened, template, onClose }: TemplateFormModalProps) {
+  const uiLanguage = useSettingsStore((state) => state.uiLanguage);
   const addTemplate = useTemplatesStore((state) => state.addTemplate);
   const updateTemplate = useTemplatesStore((state) => state.updateTemplate);
   const ingredients = useIngredientsStore((state) => state.ingredients);
@@ -242,7 +245,7 @@ export function TemplateFormModal({ opened, template, onClose }: TemplateFormMod
         <Stack gap="md">
           <TextInput
             label={<Bilingual label={ui.common.name} />}
-            placeholder={labelText(ui.templates.namePlaceholder)}
+            placeholder={preferredText(ui.templates.namePlaceholder, uiLanguage)}
             withAsterisk
             {...register("name")}
             error={errors.name?.message}
@@ -263,7 +266,7 @@ export function TemplateFormModal({ opened, template, onClose }: TemplateFormMod
                   </Text>
                   <ActionIcon
                     variant="subtle"
-                    color="red"
+                    color="kumkum"
                     aria-label="Remove dish"
                     onClick={() => removeDish(dishIndex)}
                   >
@@ -272,7 +275,7 @@ export function TemplateFormModal({ opened, template, onClose }: TemplateFormMod
                 </Group>
                 <TextInput
                   label={<Bilingual label={ui.templates.dishName} />}
-                  placeholder={labelText(ui.templates.dishNamePlaceholder)}
+                  placeholder={preferredText(ui.templates.dishNamePlaceholder, uiLanguage)}
                   withAsterisk
                   {...register(`dishes.${dishIndex}.name`)}
                   error={dishNameError(dishIndex)}

@@ -4,7 +4,8 @@ import { ActionIcon, Badge, Card, Group, Stack, Table, Text } from "@mantine/cor
 import { Trash } from "lucide-react";
 
 import { Bilingual } from "@/components/Bilingual";
-import { ui, labelText } from "@/lib/i18n";
+import { ui, preferredText } from "@/lib/i18n";
+import { useSettingsStore } from "@/store/settings";
 import { formatINR } from "@/lib/format";
 import { formatIndianDate } from "@/lib/date";
 import type { Expense } from "@/store/finance";
@@ -15,6 +16,7 @@ type ExpenseListProps = {
 };
 
 export function ExpenseList({ expenses, onDelete }: ExpenseListProps) {
+  const uiLanguage = useSettingsStore((state) => state.uiLanguage);
   return (
     <>
       <div className="hidden sm:block">
@@ -34,7 +36,7 @@ export function ExpenseList({ expenses, onDelete }: ExpenseListProps) {
                 <Table.Td>{formatIndianDate(expense.date)}</Table.Td>
                 <Table.Td>
                   <Badge variant="light" size="sm">
-                    {labelText(ui.finance.categories[expense.category])}
+                    {preferredText(ui.finance.categories[expense.category], uiLanguage)}
                   </Badge>
                 </Table.Td>
                 <Table.Td>
@@ -46,7 +48,7 @@ export function ExpenseList({ expenses, onDelete }: ExpenseListProps) {
                 <Table.Td>
                   <ActionIcon
                     variant="subtle"
-                    color="red"
+                    color="kumkum"
                     aria-label={`Delete expense on ${expense.date}`}
                     onClick={() => onDelete(expense)}
                   >
@@ -60,11 +62,11 @@ export function ExpenseList({ expenses, onDelete }: ExpenseListProps) {
       </div>
       <Stack gap="sm" className="sm:hidden">
         {expenses.map((expense) => (
-          <Card key={expense.id} withBorder padding="sm">
+          <Card key={expense.id} withBorder padding="md">
             <Group justify="space-between" align="flex-start" wrap="nowrap">
-              <Stack gap={2}>
+              <Stack gap={6}>
                 <Badge variant="light" size="sm" style={{ alignSelf: "flex-start" }}>
-                  {labelText(ui.finance.categories[expense.category])}
+                  {preferredText(ui.finance.categories[expense.category], uiLanguage)}
                 </Badge>
                 <Text size="sm" c="dimmed">
                   {formatIndianDate(expense.date)}
@@ -75,11 +77,11 @@ export function ExpenseList({ expenses, onDelete }: ExpenseListProps) {
                   </Text>
                 ) : null}
               </Stack>
-              <Group gap="xs" align="flex-start" wrap="nowrap">
+              <Group gap="sm" align="flex-start" wrap="nowrap">
                 <Text fw={600}>{formatINR(expense.amount)}</Text>
                 <ActionIcon
                   variant="subtle"
-                  color="red"
+                  color="kumkum"
                   aria-label={`Delete expense on ${expense.date}`}
                   onClick={() => onDelete(expense)}
                 >

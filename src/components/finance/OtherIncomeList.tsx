@@ -40,7 +40,7 @@ export function OtherIncomeList({ otherIncomes, onDelete }: OtherIncomeListProps
                 <Table.Td>
                   <ActionIcon
                     variant="subtle"
-                    color="red"
+                    color="kumkum"
                     aria-label={`Delete other income on ${income.date}`}
                     onClick={() => onDelete(income)}
                   >
@@ -54,9 +54,9 @@ export function OtherIncomeList({ otherIncomes, onDelete }: OtherIncomeListProps
       </div>
       <Stack gap="sm" className="sm:hidden">
         {otherIncomes.map((income) => (
-          <Card key={income.id} withBorder padding="sm">
+          <Card key={income.id} withBorder padding="md">
             <Group justify="space-between" align="flex-start" wrap="nowrap">
-              <Stack gap={2}>
+              <Stack gap={6}>
                 <Text size="sm" c="dimmed">
                   {formatIndianDate(income.date)}
                 </Text>
@@ -66,11 +66,11 @@ export function OtherIncomeList({ otherIncomes, onDelete }: OtherIncomeListProps
                   </Text>
                 ) : null}
               </Stack>
-              <Group gap="xs" align="flex-start" wrap="nowrap">
+              <Group gap="sm" align="flex-start" wrap="nowrap">
                 <Text fw={600}>{formatINR(income.amount)}</Text>
                 <ActionIcon
                   variant="subtle"
-                  color="red"
+                  color="kumkum"
                   aria-label={`Delete other income on ${income.date}`}
                   onClick={() => onDelete(income)}
                 >

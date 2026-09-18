@@ -18,6 +18,7 @@ type RemindersState = {
   reminders: Reminder[];
   addReminder: (input: ReminderInput) => string;
   dismissReminder: (id: string) => void;
+  dismissAll: () => void;
   markNotified: (id: string) => void;
   removeReminder: (id: string) => void;
 };
@@ -37,6 +38,12 @@ export const useRemindersStore = create<RemindersState>()(
         set((state) => ({
           reminders: state.reminders.map((reminder) =>
             reminder.id === id ? { ...reminder, dismissed: true } : reminder
+          ),
+        })),
+      dismissAll: () =>
+        set((state) => ({
+          reminders: state.reminders.map((reminder) =>
+            reminder.dismissed ? reminder : { ...reminder, dismissed: true }
           ),
         })),
       markNotified: (id) =>

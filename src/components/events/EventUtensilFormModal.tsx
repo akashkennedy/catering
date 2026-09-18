@@ -16,7 +16,8 @@ import { z } from "zod";
 import { useEffect } from "react";
 
 import { Bilingual } from "@/components/Bilingual";
-import { ui, labelText } from "@/lib/i18n";
+import { ui, preferredText } from "@/lib/i18n";
+import { useSettingsStore } from "@/store/settings";
 import { useUtensilsStore } from "@/store/utensils";
 import { formatINR } from "@/lib/format";
 
@@ -50,6 +51,7 @@ export function EventUtensilFormModal({
   onClose,
   onAdd,
 }: EventUtensilFormModalProps) {
+  const uiLanguage = useSettingsStore((state) => state.uiLanguage);
   const masterUtensils = useUtensilsStore((state) => state.utensils);
   const addUtensil = useUtensilsStore((state) => state.addUtensil);
 
@@ -138,7 +140,7 @@ export function EventUtensilFormModal({
             render={({ field }) => (
               <Select
                 label={<Bilingual label={ui.events.selectUtensil} />}
-                placeholder={labelText(ui.events.pickFromMaster)}
+                placeholder={preferredText(ui.events.pickFromMaster, uiLanguage)}
                 data={utensilOptions}
                 searchable
                 clearable
@@ -156,7 +158,7 @@ export function EventUtensilFormModal({
           />
           <TextInput
             label={<Bilingual label={ui.events.utensilName} />}
-            placeholder={labelText(ui.events.utensilNamePlaceholder)}
+            placeholder={preferredText(ui.events.utensilNamePlaceholder, uiLanguage)}
             withAsterisk
             {...register("utensilName")}
             error={errors.utensilName?.message}
@@ -167,7 +169,7 @@ export function EventUtensilFormModal({
             render={({ field }) => (
               <NumberInput
                 label={<Bilingual label={{ en: "Quantity", ta: "அளவு" }} />}
-                placeholder={labelText(ui.events.quantityPlaceholder)}
+                placeholder={preferredText(ui.events.quantityPlaceholder, uiLanguage)}
                 min={1}
                 allowNegative={false}
                 {...field}
@@ -184,7 +186,7 @@ export function EventUtensilFormModal({
             render={({ field }) => (
               <NumberInput
                 label={<Bilingual label={ui.events.rentalPrice} />}
-                placeholder={labelText(ui.events.rentalPricePlaceholder)}
+                placeholder={preferredText(ui.events.rentalPricePlaceholder, uiLanguage)}
                 min={0}
                 allowNegative={false}
                 decimalScale={2}

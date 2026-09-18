@@ -16,7 +16,8 @@ import {
 import { IndianRupee, Plus, TrendingDown, TrendingUp } from "lucide-react";
 
 import { Bilingual } from "@/components/Bilingual";
-import { ui, labelText } from "@/lib/i18n";
+import { ui, preferredText } from "@/lib/i18n";
+import { useSettingsStore } from "@/store/settings";
 import { formatINR } from "@/lib/format";
 import { formatIndianDate } from "@/lib/date";
 import {
@@ -41,6 +42,7 @@ type DeleteTarget = {
 };
 
 export function FinanceReport() {
+  const uiLanguage = useSettingsStore((state) => state.uiLanguage);
   const events = useEventsStore((state) => state.events);
   const expenses = useFinanceStore((state) => state.expenses);
   const otherIncomes = useFinanceStore((state) => state.otherIncomes);
@@ -112,7 +114,7 @@ export function FinanceReport() {
         {filter === "month" ? (
           <TextInput
             type="month"
-            aria-label={labelText(ui.finance.month)}
+            aria-label={preferredText(ui.finance.month, uiLanguage)}
             label={<Bilingual label={ui.finance.month} />}
             value={monthKey}
             onChange={(event) => setMonthKey(event.currentTarget.value)}
@@ -122,8 +124,8 @@ export function FinanceReport() {
         ) : null}
       </Group>
 
-      <SimpleGrid cols={{ base: 1, sm: 3 }} spacing="md">
-        <div className="dash-card" style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+      <SimpleGrid cols={{ base: 1, sm: 3 }} spacing="lg">
+        <div className="dash-card" style={{ display: "flex", flexDirection: "column", gap: 16 }}>
           <Group gap="xs" justify="space-between">
             <Group gap="xs">
               <IndianRupee size={18} style={{ color: "var(--ink-muted)" }} />
@@ -142,7 +144,7 @@ export function FinanceReport() {
             </span>
           </div>
         </div>
-        <div className="dash-card" style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+        <div className="dash-card" style={{ display: "flex", flexDirection: "column", gap: 16 }}>
           <Group gap="xs" justify="space-between">
             <Group gap="xs">
               <TrendingDown size={18} style={{ color: "var(--ink-muted)" }} />
@@ -158,7 +160,7 @@ export function FinanceReport() {
             </span>
           </div>
         </div>
-        <div className="dash-card" style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+        <div className="dash-card" style={{ display: "flex", flexDirection: "column", gap: 16 }}>
           <Group gap="xs" justify="space-between">
             <Group gap="xs">
               <TrendingUp size={18} style={{ color: "var(--ink-muted)" }} />
@@ -176,7 +178,7 @@ export function FinanceReport() {
         </div>
       </SimpleGrid>
 
-      <Stack gap="sm">
+      <Stack gap="md">
         <Group justify="space-between" wrap="wrap" gap="sm">
           <Title order={2} size="h4">
             <Bilingual label={ui.finance.expenses} />
@@ -199,10 +201,10 @@ export function FinanceReport() {
         ) : (
           <>
             {categoryTotals.length > 0 ? (
-              <Group gap="xs" wrap="wrap">
+              <Group gap="sm" wrap="wrap">
                 {categoryTotals.map((row) => (
                   <Badge key={row.category} variant="light" size="lg" radius="sm">
-                    {labelText(ui.finance.categories[row.category])}: {formatINR(row.total)}
+                    {preferredText(ui.finance.categories[row.category], uiLanguage)}: {formatINR(row.total)}
                   </Badge>
                 ))}
               </Group>
@@ -213,7 +215,7 @@ export function FinanceReport() {
                 setDeleteTarget({
                   kind: "expense",
                   id: expense.id,
-                  descriptor: `${labelText(ui.finance.categories[expense.category])} · ${formatIndianDate(expense.date)}`,
+                  descriptor: `${preferredText(ui.finance.categories[expense.category], uiLanguage)} · ${formatIndianDate(expense.date)}`,
                 })
               }
             />
@@ -221,7 +223,7 @@ export function FinanceReport() {
         )}
       </Stack>
 
-      <Stack gap="sm">
+      <Stack gap="md">
         <Group justify="space-between" wrap="wrap" gap="sm">
           <Title order={2} size="h4">
             <Bilingual label={ui.finance.otherIncome} />

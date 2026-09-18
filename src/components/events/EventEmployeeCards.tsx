@@ -32,7 +32,7 @@ export function EventEmployeeCards({ lines, onLineChange, onRemove }: EventEmplo
               </Stack>
               <ActionIcon
                 variant="subtle"
-                color="red"
+                color="kumkum"
                 aria-label={`Remove ${line.name}`}
                 onClick={() => onRemove(line.id)}
               >

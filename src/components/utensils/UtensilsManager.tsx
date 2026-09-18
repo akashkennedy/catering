@@ -10,6 +10,7 @@ import { UtensilTable } from "./UtensilTable";
 import { RentInModal } from "./RentInModal";
 import { AssignToEventModal } from "./AssignToEventModal";
 import { Bilingual } from "@/components/Bilingual";
+import { UtensilsNotReturnedWidget } from "@/components/dashboard/UtensilsNotReturnedWidget";
 import { ui } from "@/lib/i18n";
 import { useUtensilsStore, type Utensil } from "@/store/utensils";
 import { useVesselStockLedgerStore } from "@/store/vesselStockLedger";
@@ -27,7 +28,9 @@ export function UtensilsManager() {
   const [assignUtensil, setAssignUtensil] = useState<Utensil | null>(null);
 
   return (
-    <div className="dash-card" style={{ padding: 0 }}>
+    <Stack gap="lg">
+      <UtensilsNotReturnedWidget />
+      <div className="dash-card" style={{ padding: 0 }}>
       <div style={{ padding: 16 }}>
         <Group justify="space-between" mb="md">
           <Title order={2}>
@@ -72,6 +75,7 @@ export function UtensilsManager() {
             />
           </>
         )}
+      </div>
       </div>
 
       <UtensilFormModal opened={formOpened} utensil={editingUtensil} onClose={() => setFormOpened(false)} />
@@ -123,6 +127,6 @@ export function UtensilsManager() {
           </Group>
         </Stack>
       </Modal>
-    </div>
+    </Stack>
   );
 }

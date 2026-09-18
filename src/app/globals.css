@@ -327,6 +327,10 @@ body {
   .mantine-Modal-content.mobile-sheet {
     height: auto;
     max-height: 92dvh;
+    width: calc(100% - 16px);
+    margin-left: 8px;
+    margin-right: 8px;
+    margin-bottom: 8px;
     border-radius: 16px 16px 0 0;
   }
 
@@ -336,9 +340,8 @@ body {
 
   .mantine-Modal-body {
     overflow-y: auto;
-    overflow-x: hidden;
+    overflow-x: clip;
     padding: 0;
-    overscroll-behavior: contain;
     -webkit-overflow-scrolling: touch;
   }
 

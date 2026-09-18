@@ -35,12 +35,13 @@ export function useMobileSheet(
         content: {
           borderRadius: "16px 16px 0 0",
           maxHeight: "92dvh",
-          width: "100%",
-          marginLeft: 0,
-          marginRight: 0,
-          overflowX: "hidden",
+          width: "calc(100% - 16px)",
+          marginLeft: 8,
+          marginRight: 8,
+          marginBottom: 8,
+          overflowX: "clip",
         },
-        body: { overflowY: "auto", overflowX: "hidden" },
+        body: { overflowY: "auto", overflowX: "clip" },
       },
     };
   }

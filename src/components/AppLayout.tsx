@@ -3,6 +3,7 @@
 import { useState } from "react";
 import type { ComponentType } from "react";
 import {
+  ActionIcon,
   AppShell,
   Box,
   Group,
@@ -31,7 +32,8 @@ import { MobileSearchOverlay } from "@/components/MobileSearchOverlay";
 import { NotificationCenter } from "@/components/NotificationCenter";
 import { ShellSearch } from "@/components/ShellSearch";
 import { ThemeControl } from "@/components/ThemeControl";
-import { ui, type Label } from "@/lib/i18n";
+import { preferredText, ui, type Label } from "@/lib/i18n";
+import { useSettingsStore } from "@/store/settings";
 
 type NavItem = {
   label: Label;
@@ -60,6 +62,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
   const [opened, setOpened] = useState(false);
   const [searchOpened, setSearchOpened] = useState(false);
   const pathname = usePathname();
+  const uiLanguage = useSettingsStore((state) => state.uiLanguage);
 
   return (
     <AppShell
@@ -76,13 +79,16 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
             <ShellSearch />
           </Box>
           <Group gap="xs" wrap="nowrap" ml="auto" style={{ flexShrink: 0 }}>
-            <Box
+            <ActionIcon
               hiddenFrom="sm"
+              variant="subtle"
+              size="lg"
               onClick={() => setSearchOpened(true)}
-              style={{ cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", width: 40, height: 40, WebkitTapHighlightColor: "transparent" }}
+              aria-label={preferredText(ui.search.placeholder, uiLanguage)}
+              style={{ width: 40, height: 40, color: "var(--ink-muted)" }}
             >
-              <Search size={20} style={{ color: "var(--ink-muted)" }} />
-            </Box>
+              <Search size={20} aria-hidden />
+            </ActionIcon>
             <NotificationCenter />
           </Group>
         </Group>
@@ -114,7 +120,9 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
               })}
             </Stack>
           </Stack>
-          <ThemeControl />
+          <Box visibleFrom="sm">
+            <ThemeControl />
+          </Box>
           <Link
             href="/settings"
             onClick={() => setOpened(false)}

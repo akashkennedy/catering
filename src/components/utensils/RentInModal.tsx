@@ -9,6 +9,7 @@ import { useEffect } from "react";
 import { Bilingual } from "@/components/Bilingual";
 import { ui, preferredText } from "@/lib/i18n";
 import { useSettingsStore } from "@/store/settings";
+import { useMobileSheet } from "@/hooks/useMobileSheet";
 import { todayLocalISO } from "@/lib/date";
 import { vesselStockSummary } from "@/lib/vesselStock";
 import {
@@ -35,6 +36,7 @@ type RentInModalProps = {
 
 export function RentInModal({ opened, utensil, onClose }: RentInModalProps) {
   const uiLanguage = useSettingsStore((state) => state.uiLanguage);
+  const sheet = useMobileSheet("sheet");
   const addRentInEntry = useVesselStockLedgerStore((state) => state.addRentInEntry);
   const ledgerEntries = useVesselStockLedgerStore((state) => state.entries);
   const utensils = useUtensilsStore((state) => state.utensils);
@@ -96,7 +98,7 @@ export function RentInModal({ opened, utensil, onClose }: RentInModalProps) {
       opened={opened}
       onClose={onClose}
       title={<Bilingual label={ui.utensils.rentInTitle} />}
-      centered
+      {...sheet}
     >
       {currentUtensil ? (
         <form onSubmit={handleSubmit(onSubmit)}>

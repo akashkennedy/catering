@@ -9,6 +9,7 @@ import { useEffect } from "react";
 import { Bilingual } from "@/components/Bilingual";
 import { ui, preferredText } from "@/lib/i18n";
 import { useSettingsStore } from "@/store/settings";
+import { useMobileSheet } from "@/hooks/useMobileSheet";
 import { todayLocalISO } from "@/lib/date";
 import { vesselStockSummary } from "@/lib/vesselStock";
 import {
@@ -35,6 +36,7 @@ type AssignToEventModalProps = {
 
 export function AssignToEventModal({ opened, utensil, onClose }: AssignToEventModalProps) {
   const uiLanguage = useSettingsStore((state) => state.uiLanguage);
+  const sheet = useMobileSheet("sheet");
   const addAssignedEntry = useVesselStockLedgerStore((state) => state.addAssignedEntry);
   const ledgerEntries = useVesselStockLedgerStore((state) => state.entries);
   const utensils = useUtensilsStore((state) => state.utensils);
@@ -96,7 +98,7 @@ export function AssignToEventModal({ opened, utensil, onClose }: AssignToEventMo
       opened={opened}
       onClose={onClose}
       title={<Bilingual label={ui.utensils.assignTitle} />}
-      centered
+      {...sheet}
     >
       {currentUtensil ? (
         <form onSubmit={handleSubmit(onSubmit)}>

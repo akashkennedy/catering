@@ -65,6 +65,7 @@ export const ui = {
     calculator: lab("Calculator", "கணக்கீட்டாளர்"),
     finance: lab("Income & Expense", "வருமானம் & செலவு"),
     settings: lab("Settings", "அமைப்புகள்"),
+    more: lab("More", "மேலும்"),
   },
   common: {
     add: lab("Add", "சேர்க்க"),

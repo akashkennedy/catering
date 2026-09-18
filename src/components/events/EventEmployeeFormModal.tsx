@@ -17,6 +17,7 @@ import { useEffect } from "react";
 import { Bilingual } from "@/components/Bilingual";
 import { ui, preferredText } from "@/lib/i18n";
 import { useSettingsStore } from "@/store/settings";
+import { useMobileSheet } from "@/hooks/useMobileSheet";
 import { useEmployeesStore } from "@/store/employees";
 import { validatePhone, formatPhone } from "@/lib/phone";
 
@@ -40,6 +41,7 @@ type EventEmployeeFormModalProps = {
 
 export function EventEmployeeFormModal({ opened, onClose, onAdd }: EventEmployeeFormModalProps) {
   const uiLanguage = useSettingsStore((state) => state.uiLanguage);
+  const sheet = useMobileSheet("sheet");
   const addEmployee = useEmployeesStore((state) => state.addEmployee);
 
   const {
@@ -91,7 +93,7 @@ export function EventEmployeeFormModal({ opened, onClose, onAdd }: EventEmployee
       opened={opened}
       onClose={onClose}
       title={<Bilingual label={ui.events.addOneOffEmployee} />}
-      centered
+      {...sheet}
     >
       <form onSubmit={handleSubmit(onSubmit)}>
         <Stack gap="md">

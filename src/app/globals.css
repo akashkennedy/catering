@@ -160,11 +160,15 @@ body {
   display: flex;
   flex-direction: column;
   gap: 0;
+  min-width: 0;
+  max-width: 100%;
 }
 
 .form-two-col__left,
 .form-two-col__right {
   padding: 16px;
+  min-width: 0;
+  max-width: 100%;
 }
 
 .form-two-col__right {
@@ -175,6 +179,13 @@ body {
   display: grid;
   grid-template-columns: 1fr 1fr;
   gap: 12px;
+  min-width: 0;
+  max-width: 100%;
+}
+
+.form-two-col__grid > * {
+  min-width: 0;
+  max-width: 100%;
 }
 
 .form-section {
@@ -207,9 +218,15 @@ body {
 .form-actions {
   display: flex;
   justify-content: flex-end;
+  flex-wrap: wrap;
   gap: 8px;
   padding: 12px 16px;
+  padding-bottom: calc(12px + env(safe-area-inset-bottom, 0px));
   border-top: 1px solid var(--border);
+  position: sticky;
+  bottom: 0;
+  background: var(--surface);
+  z-index: 1;
 }
 
 @media (min-width: 640px) {
@@ -307,9 +324,45 @@ body {
     border-radius: 0;
   }
 
+  .mantine-Modal-content.mobile-sheet {
+    height: auto;
+    max-height: 92dvh;
+    flex: 0 0 auto;
+    width: calc(100% - 16px);
+    margin-left: 8px;
+    margin-right: 8px;
+    margin-bottom: 8px;
+    border-radius: 16px 16px 0 0;
+  }
+
+  .mantine-Modal-content.mobile-sheet .mantine-Modal-body {
+    padding: 16px;
+    padding-bottom: calc(16px + env(safe-area-inset-bottom, 0px));
+  }
+
+  .mantine-Modal-inner {
+    padding: 0;
+  }
+
   .mantine-Modal-body {
     overflow-y: auto;
+    overflow-x: clip;
     padding: 0;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .mantine-Modal-body input,
+  .mantine-Modal-body select,
+  .mantine-Modal-body textarea {
+    max-width: 100%;
+  }
+
+  .mobile-more-drawer {
+    display: flex;
+    flex-direction: column;
+    height: 100dvh;
+    padding-top: env(safe-area-inset-top, 0px);
+    padding-bottom: env(safe-area-inset-bottom, 0px);
   }
 }
 

@@ -70,11 +70,8 @@ export function NotificationCenter() {
   }, [dismissReminder]);
 
   const dismissAll = useCallback(() => {
-    for (const r of reminders) {
-      if (!r.dismissed) dismissReminder(r.id);
-    }
-    setHidden(new Set());
-  }, [reminders, dismissReminder]);
+    dismissAllReminders();
+  }, [dismissAllReminders]);
 
   const notifications = useMemo<NotificationItem[]>(() => {
     const items: NotificationItem[] = [];
@@ -90,7 +87,7 @@ export function NotificationCenter() {
         icon: <CalendarClock size={16} />,
         label: formatPhone(r.phone),
         detail: `${formatRemindAt(r.remindAt)}${r.note ? ` · ${r.note}` : ""}`,
-        href: "/",
+        href: "/follow-ups",
         accent: "leaf",
       });
     }
@@ -115,7 +112,7 @@ export function NotificationCenter() {
       for (const line of event.utensils ?? []) {
         if (line.returned) continue;
         items.push({
-          id: `utensil-${event.id}-${line.utensilId ?? line.utensilName}`,
+          id: `utensil-${event.id}-${line.id}`,
           type: "data",
           icon: <Truck size={16} />,
           label: line.utensilName,
@@ -222,7 +219,7 @@ export function NotificationCenter() {
                   onClick={dismissAll}
                   leftSection={<Check size={12} />}
                 >
-                  Clear all
+                  Clear reminders
                 </Button>
               ) : null}
             </Group>

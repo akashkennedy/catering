@@ -9,6 +9,7 @@ import { useEffect } from "react";
 import { Bilingual } from "@/components/Bilingual";
 import { ui, preferredText } from "@/lib/i18n";
 import { useSettingsStore } from "@/store/settings";
+import { useMobileSheet } from "@/hooks/useMobileSheet";
 import {
   useUtensilsStore,
   type Utensil,
@@ -32,6 +33,7 @@ type UtensilFormModalProps = {
 
 export function UtensilFormModal({ opened, utensil, onClose }: UtensilFormModalProps) {
   const uiLanguage = useSettingsStore((state) => state.uiLanguage);
+  const sheet = useMobileSheet("sheet");
   const addUtensil = useUtensilsStore((state) => state.addUtensil);
   const updateUtensil = useUtensilsStore((state) => state.updateUtensil);
 
@@ -76,7 +78,7 @@ export function UtensilFormModal({ opened, utensil, onClose }: UtensilFormModalP
       opened={opened}
       onClose={onClose}
       title={<Bilingual label={utensil ? ui.utensils.editTitle : ui.utensils.addUtensil} />}
-      centered
+      {...sheet}
     >
       <form onSubmit={handleSubmit(onSubmit)}>
         <Stack gap="md">

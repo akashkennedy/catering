@@ -9,6 +9,7 @@ import { useEffect } from "react";
 import { Bilingual } from "@/components/Bilingual";
 import { ui, preferredText } from "@/lib/i18n";
 import { useSettingsStore } from "@/store/settings";
+import { useMobileSheet } from "@/hooks/useMobileSheet";
 import { todayLocalISO } from "@/lib/date";
 import { useFinanceStore } from "@/store/finance";
 
@@ -27,6 +28,7 @@ type OtherIncomeFormModalProps = {
 
 export function OtherIncomeFormModal({ opened, onClose }: OtherIncomeFormModalProps) {
   const uiLanguage = useSettingsStore((state) => state.uiLanguage);
+  const sheet = useMobileSheet("sheet");
   const addOtherIncome = useFinanceStore((state) => state.addOtherIncome);
 
   const {
@@ -63,7 +65,7 @@ export function OtherIncomeFormModal({ opened, onClose }: OtherIncomeFormModalPr
       opened={opened}
       onClose={onClose}
       title={<Bilingual label={ui.finance.addOtherIncome} />}
-      centered
+      {...sheet}
     >
       <form onSubmit={handleSubmit(onSubmit)}>
         <Stack gap="md">

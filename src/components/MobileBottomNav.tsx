@@ -26,7 +26,8 @@ import {
 } from "lucide-react";
 
 import { Bilingual } from "@/components/Bilingual";
-import { ui, type Label } from "@/lib/i18n";
+import { preferredText, ui, type Label } from "@/lib/i18n";
+import { useSettingsStore } from "@/store/settings";
 
 type MobileNavItem = {
   label: Label;
@@ -58,6 +59,8 @@ function isActive(pathname: string, href: string): boolean {
 export function MobileBottomNav() {
   const pathname = usePathname();
   const [moreOpened, setMoreOpened] = useState(false);
+  const uiLanguage = useSettingsStore((state) => state.uiLanguage);
+  const moreLabel = preferredText(ui.nav.more, uiLanguage);
 
   const moreActive = MORE_ITEMS.some((item) => isActive(pathname, item.href));
 
@@ -85,21 +88,21 @@ export function MobileBottomNav() {
           type="button"
           className={`mobile-bottom-nav__item${moreActive ? " mobile-bottom-nav__item--active" : ""}`}
           onClick={() => setMoreOpened(true)}
-          aria-label="More"
+          aria-label={moreLabel}
         >
           <MoreHorizontal size={20} />
-          <span className="mobile-bottom-nav__label">More</span>
+          <span className="mobile-bottom-nav__label">{moreLabel}</span>
         </button>
       </nav>
 
       <Drawer
         opened={moreOpened}
         onClose={() => setMoreOpened(false)}
-        position="bottom"
-        size="auto"
-        title="More"
+        position="right"
+        size={300}
+        title={moreLabel}
+        classNames={{ content: "mobile-more-drawer" }}
         styles={{
-          content: { borderTopLeftRadius: 16, borderTopRightRadius: 16 },
           header: { borderBottom: "1px solid var(--border)" },
         }}
       >

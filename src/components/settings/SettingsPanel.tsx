@@ -1,8 +1,9 @@
 "use client";
 
-import { Group, NumberInput, SegmentedControl, Stack, Text, Title } from "@mantine/core";
+import { Box, Group, NumberInput, SegmentedControl, Stack, Text, Title } from "@mantine/core";
 
 import { Bilingual } from "@/components/Bilingual";
+import { ThemeControl } from "@/components/ThemeControl";
 import { ui } from "@/lib/i18n";
 import { useIngredientsStore } from "@/store/ingredients";
 import {
@@ -24,6 +25,15 @@ export function SettingsPanel() {
       <Title order={2}>
         <Bilingual label={ui.nav.settings} />
       </Title>
+
+      <Box hiddenFrom="sm" className="dash-card">
+        <Stack gap="sm">
+          <Text fw={600} size="sm">
+            <Bilingual label={ui.settings.dark} />
+          </Text>
+          <ThemeControl />
+        </Stack>
+      </Box>
 
       <div className="dash-card">
         <Stack gap="sm">

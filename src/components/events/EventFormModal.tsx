@@ -21,6 +21,7 @@ import { useIngredientsStore } from "@/store/ingredients";
 import { validatePhone, formatPhone } from "@/lib/phone";
 import { ui, preferredText, type Label } from "@/lib/i18n";
 import { useSettingsStore } from "@/store/settings";
+import { useMobileSheet } from "@/hooks/useMobileSheet";
 import { todayLocalISO as todayISO } from "@/lib/date";
 import { formatINR } from "@/lib/format";
 import { Bilingual } from "@/components/Bilingual";
@@ -114,6 +115,7 @@ type EventFormModalProps = {
 
 export function EventFormModal({ opened, event, onClose, createPrefill }: EventFormModalProps) {
   const uiLanguage = useSettingsStore((state) => state.uiLanguage);
+  const sheet = useMobileSheet("full", "lg");
   const statusData = EVENT_STATUS_OPTIONS.map((o) => ({
     value: o.value,
     label: preferredText(o.label, uiLanguage),
@@ -235,8 +237,7 @@ export function EventFormModal({ opened, event, onClose, createPrefill }: EventF
           <Bilingual label={ui.events.addEvent} />
         )
       }
-      centered
-      size="lg"
+      {...sheet}
       styles={{
         body: { padding: 0, overflowY: "auto" },
         content: { overflow: "auto" },

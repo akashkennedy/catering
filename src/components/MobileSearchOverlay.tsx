@@ -130,7 +130,17 @@ export function MobileSearchOverlay({ opened, onClose }: MobileSearchOverlayProp
   };
 
   return (
-    <div className="mobile-search-overlay">
+    <div
+      className="mobile-search-overlay"
+      role="dialog"
+      aria-modal="true"
+      aria-label={placeholder}
+      onKeyDown={(event) => {
+        if (event.key === "Escape") {
+          onClose();
+        }
+      }}
+    >
       <div className="mobile-search-overlay__header">
         <ActionIcon
           variant="subtle"

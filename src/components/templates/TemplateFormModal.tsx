@@ -28,6 +28,7 @@ import { useEffect } from "react";
 import { Bilingual } from "@/components/Bilingual";
 import { ui, preferredText } from "@/lib/i18n";
 import { useSettingsStore } from "@/store/settings";
+import { useMobileSheet } from "@/hooks/useMobileSheet";
 import { useIngredientsStore } from "@/store/ingredients";
 import { normalizeUnit } from "@/lib/units";
 import {
@@ -174,6 +175,7 @@ function DishIngredientFields({
 
 export function TemplateFormModal({ opened, template, onClose }: TemplateFormModalProps) {
   const uiLanguage = useSettingsStore((state) => state.uiLanguage);
+  const sheet = useMobileSheet("full", "xl");
   const addTemplate = useTemplatesStore((state) => state.addTemplate);
   const updateTemplate = useTemplatesStore((state) => state.updateTemplate);
   const ingredients = useIngredientsStore((state) => state.ingredients);
@@ -238,8 +240,7 @@ export function TemplateFormModal({ opened, template, onClose }: TemplateFormMod
       opened={opened}
       onClose={onClose}
       title={<Bilingual label={template ? ui.templates.editTitle : ui.templates.addTemplate} />}
-      centered
-      size="xl"
+      {...sheet}
     >
       <form onSubmit={handleSubmit(onSubmit)}>
         <Stack gap="md">

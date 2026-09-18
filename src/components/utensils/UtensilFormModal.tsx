@@ -42,7 +42,7 @@ export function UtensilFormModal({ opened, utensil, onClose }: UtensilFormModalP
     handleSubmit,
     reset,
     control,
-    formState: { errors },
+    formState: { errors, isSubmitting },
   } = useForm<UtensilFormValues>({
     resolver: zodResolver(utensilSchema),
     defaultValues: {
@@ -152,7 +152,7 @@ export function UtensilFormModal({ opened, utensil, onClose }: UtensilFormModalP
             <Button variant="default" onClick={onClose}>
               <Bilingual label={ui.common.cancel} />
             </Button>
-            <Button type="submit">
+            <Button type="submit" loading={isSubmitting}>
               <Bilingual label={utensil ? ui.common.save : ui.common.add} />
             </Button>
           </Group>

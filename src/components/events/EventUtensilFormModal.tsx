@@ -64,7 +64,7 @@ export function EventUtensilFormModal({
     control,
     watch,
     setValue,
-    formState: { errors },
+    formState: { errors, isSubmitting },
   } = useForm<EventUtensilFormValues>({
     resolver: zodResolver(eventUtensilSchema),
     defaultValues: {
@@ -224,7 +224,7 @@ export function EventUtensilFormModal({
             <Button variant="default" onClick={onClose}>
               <Bilingual label={ui.common.cancel} />
             </Button>
-            <Button type="submit">
+            <Button type="submit" loading={isSubmitting}>
               <Bilingual label={ui.common.add} />
             </Button>
           </Group>

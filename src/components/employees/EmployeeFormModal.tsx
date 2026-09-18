@@ -45,7 +45,7 @@ export function EmployeeFormModal({ opened, employee, onClose }: EmployeeFormMod
     handleSubmit,
     reset,
     control,
-    formState: { errors },
+    formState: { errors, isSubmitting },
   } = useForm<EmployeeFormValues>({
     resolver: zodResolver(employeeSchema),
     defaultValues: {
@@ -119,7 +119,7 @@ export function EmployeeFormModal({ opened, employee, onClose }: EmployeeFormMod
             <Button variant="default" onClick={onClose}>
               <Bilingual label={ui.common.cancel} />
             </Button>
-            <Button type="submit">
+            <Button type="submit" loading={isSubmitting}>
               <Bilingual label={employee ? ui.common.save : ui.common.add} />
             </Button>
           </Group>

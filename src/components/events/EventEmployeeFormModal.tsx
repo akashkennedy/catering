@@ -49,7 +49,7 @@ export function EventEmployeeFormModal({ opened, onClose, onAdd }: EventEmployee
     handleSubmit,
     reset,
     control,
-    formState: { errors },
+    formState: { errors, isSubmitting },
   } = useForm<EventEmployeeFormValues>({
     resolver: zodResolver(eventEmployeeSchema),
     defaultValues: {
@@ -138,7 +138,7 @@ export function EventEmployeeFormModal({ opened, onClose, onAdd }: EventEmployee
             <Button variant="default" onClick={onClose}>
               <Bilingual label={ui.common.cancel} />
             </Button>
-            <Button type="submit">
+            <Button type="submit" loading={isSubmitting}>
               <Bilingual label={ui.common.add} />
             </Button>
           </Group>

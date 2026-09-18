@@ -47,7 +47,7 @@ export function RentInModal({ opened, utensil, onClose }: RentInModalProps) {
     handleSubmit,
     reset,
     control,
-    formState: { errors },
+    formState: { errors, isSubmitting },
   } = useForm<RentInFormValues>({
     resolver: zodResolver(rentInSchema),
     defaultValues: {
@@ -169,7 +169,7 @@ export function RentInModal({ opened, utensil, onClose }: RentInModalProps) {
               <Button variant="default" onClick={onClose}>
                 <Bilingual label={ui.common.cancel} />
               </Button>
-              <Button type="submit">
+              <Button type="submit" loading={isSubmitting}>
                 <Bilingual label={ui.utensils.logRentIn} />
               </Button>
             </Group>

@@ -36,7 +36,7 @@ export function OtherIncomeFormModal({ opened, onClose }: OtherIncomeFormModalPr
     handleSubmit,
     reset,
     control,
-    formState: { errors },
+    formState: { errors, isSubmitting },
   } = useForm<OtherIncomeFormValues>({
     resolver: zodResolver(otherIncomeSchema),
     defaultValues: {
@@ -106,7 +106,7 @@ export function OtherIncomeFormModal({ opened, onClose }: OtherIncomeFormModalPr
             <Button variant="default" onClick={onClose}>
               <Bilingual label={ui.common.cancel} />
             </Button>
-            <Button type="submit">
+            <Button type="submit" loading={isSubmitting}>
               <Bilingual label={ui.finance.addOtherIncome} />
             </Button>
           </Group>

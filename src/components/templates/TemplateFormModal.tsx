@@ -185,7 +185,7 @@ export function TemplateFormModal({ opened, template, onClose }: TemplateFormMod
     handleSubmit,
     reset,
     control,
-    formState: { errors },
+    formState: { errors, isSubmitting },
   } = useForm<TemplateFormValues>({
     resolver: zodResolver(templateSchema),
     defaultValues: toFormValues(null),
@@ -305,7 +305,7 @@ export function TemplateFormModal({ opened, template, onClose }: TemplateFormMod
             <Button variant="default" onClick={onClose}>
               <Bilingual label={ui.common.cancel} />
             </Button>
-            <Button type="submit">
+            <Button type="submit" loading={isSubmitting}>
               <Bilingual label={template ? ui.common.save : ui.common.add} />
             </Button>
           </Group>

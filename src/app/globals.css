@@ -390,7 +390,7 @@ body {
     display: flex;
     flex-direction: column;
     height: 100dvh;
-    padding-top: env(safe-area-inset-top, 0px);
+    padding-top: var(--apk-sat, env(safe-area-inset-top, 0px));
     padding-bottom: env(safe-area-inset-bottom, 0px);
   }
 }
@@ -522,7 +522,7 @@ input[type="number"] {
     align-items: center;
     gap: 4px;
     padding: 8px 12px;
-    padding-top: calc(8px + env(safe-area-inset-top, 0px));
+    padding-top: calc(8px + var(--apk-sat, env(safe-area-inset-top, 0px)));
     border-bottom: 1px solid var(--border);
     background: var(--surface);
   }
@@ -562,8 +562,20 @@ body {
 }
 
 @media (max-width: 639px) {
+  :root {
+    /* Top inset above the app header. Real browsers/WebViews report the
+       actual notch/status-bar height; AppsGeyser-style WebViews report 0,
+       so fall back to the standard 24px Android status bar. */
+    --apk-sat: env(safe-area-inset-top, 24px);
+  }
+
+  .mantine-AppShell-root {
+    --app-shell-header-height: calc(60px + var(--apk-sat)) !important;
+    --app-shell-header-offset: calc(60px + var(--apk-sat)) !important;
+  }
+
   .mantine-AppShell-header {
-    padding-top: env(safe-area-inset-top, 0px);
+    padding-top: var(--apk-sat) !important;
     background: var(--surface) !important;
   }
 

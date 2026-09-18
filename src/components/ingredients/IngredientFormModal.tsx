@@ -48,7 +48,7 @@ export function IngredientFormModal({ opened, ingredient, onClose }: IngredientF
     reset,
     control,
     setValue,
-    formState: { errors, dirtyFields },
+    formState: { errors, dirtyFields, isSubmitting },
   } = useForm<IngredientFormValues>({
     resolver: zodResolver(ingredientSchema),
     defaultValues: {
@@ -222,7 +222,7 @@ export function IngredientFormModal({ opened, ingredient, onClose }: IngredientF
             <Button variant="default" onClick={onClose}>
               <Bilingual label={ui.common.cancel} />
             </Button>
-            <Button type="submit">
+            <Button type="submit" loading={isSubmitting}>
               <Bilingual label={ingredient ? ui.common.save : ui.common.add} />
             </Button>
           </Group>

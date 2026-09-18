@@ -475,3 +475,9 @@ This section records only what was built **after** §12 was written. §§1–12 
 - Desktop sidebar has a full-width **New Event** button directly **above** the Dark-mode toggle row (below the nav list, above theme + Settings). It opens the full event form (`EventFormModal` in create mode, `event={null}`) — the same form used on `/events`. State lives in `AppLayout` (`newEventOpened`).
 - Dashboard (`/`) no longer has a top quick-add button — it is just the three stacked widgets. `QuickAddEventModal` is deleted.
 - Mobile bottom bar is now Dashboard, Events, **center Plus FAB** (raised 52px leaf circle, localized `aria-label`, opens the same full event form via `MobileBottomNav onAddEvent`), Calculator, More. **Rental moved into the More drawer** (now: Rental, Templates, Inventory, Employees, Follow-up, Finance, Settings). Desktop sidebar keeps Rental in the main nav list.
+
+### 13.11 PWA manifest link fix (APK showed Chrome URL bar)
+
+- Root cause: `src/app/manifest.ts` is served by Next.js at **`/manifest.webmanifest`**, but `layout.tsx` linked **`/manifest.json`** (404) — so browsers/APK wrappers found no manifest and fell back to a regular Chrome tab with the URL bar. Fixed the link to `/manifest.webmanifest` (verified 200 + `display: standalone` + correct `<link rel="manifest">` on `/`).
+- Hardened `manifest.ts`: added `id` + `scope` (`/`), and the 192px icon now has a `purpose: "any"` entry alongside `maskable` (Chrome installability requires an `any` icon ≥144px).
+- Note for APK rebuilds via PWABuilder/Bubblewrap (TWA): after redeploying, if the URL bar still appears inside the APK, the remaining step is outside this repo — publish `/.well-known/assetlinks.json` with the signing cert's SHA-256 fingerprint so Chrome trusts the APK as the site owner.

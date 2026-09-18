@@ -41,7 +41,7 @@ export const metadata: Metadata = {
   title: APP_NAME,
   description: "Catering event management and costing app",
   applicationName: APP_NAME,
-  manifest: "/manifest.json",
+  manifest: "/manifest.webmanifest",
   appleWebApp: {
     capable: true,
     statusBarStyle: "black-translucent",

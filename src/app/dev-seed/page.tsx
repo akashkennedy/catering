@@ -1,15 +1,17 @@
 "use client";
 
 import { useState } from "react";
-import { Button, Group, Stack, Text, Title } from "@mantine/core";
+import { Button, Group, Modal, Stack, Text, Title } from "@mantine/core";
 
 import { useEmployeesStore } from "@/store/employees";
 import { useEventsStore } from "@/store/events";
 import { useFinanceStore } from "@/store/finance";
 import { useIngredientsStore } from "@/store/ingredients";
 import { useRemindersStore } from "@/store/reminders";
+import { useStockLedgerStore } from "@/store/stockLedger";
 import { useTemplatesStore } from "@/store/templates";
 import { useUtensilsStore } from "@/store/utensils";
+import { useVesselStockLedgerStore } from "@/store/vesselStockLedger";
 
 function isoPlusDays(days: number): string {
   const d = new Date();
@@ -23,6 +25,7 @@ function isoTimePlusMinutes(minutes: number): string {
 
 export default function DevSeedPage() {
   const [status, setStatus] = useState("");
+  const [confirmClearOpened, setConfirmClearOpened] = useState(false);
 
   const loadMockData = () => {
     // Ingredients
@@ -57,7 +60,8 @@ export default function DevSeedPage() {
         },
       ],
     });
-    const templateId = useTemplatesStore.getState().templates[0]?.id ?? null;
+    const templatesAfterAdd = useTemplatesStore.getState().templates;
+    const templateId = templatesAfterAdd[templatesAfterAdd.length - 1]?.id ?? null;
 
     // Employees
     const addEmployee = useEmployeesStore.getState().addEmployee;
@@ -158,13 +162,21 @@ export default function DevSeedPage() {
     const events = useEventsStore.getState();
     events.events.forEach((e) => events.deleteEvent(e.id));
     const ingredients = useIngredientsStore.getState();
-    ingredients.ingredients.forEach((i) => ingredients.deleteIngredient(i.id));
+    const removeIngredientEntries = useStockLedgerStore.getState().removeEntriesForIngredient;
+    ingredients.ingredients.forEach((i) => {
+      removeIngredientEntries(i.id);
+      ingredients.deleteIngredient(i.id);
+    });
     const templates = useTemplatesStore.getState();
     templates.templates.forEach((t) => templates.deleteTemplate(t.id));
     const employees = useEmployeesStore.getState();
     employees.employees.forEach((e) => employees.deleteEmployee(e.id));
     const utensils = useUtensilsStore.getState();
-    utensils.utensils.forEach((u) => utensils.deleteUtensil(u.id));
+    const removeUtensilEntries = useVesselStockLedgerStore.getState().removeEntriesForUtensil;
+    utensils.utensils.forEach((u) => {
+      removeUtensilEntries(u.id);
+      utensils.deleteUtensil(u.id);
+    });
     const finance = useFinanceStore.getState();
     finance.expenses.forEach((e) => finance.deleteExpense(e.id));
     finance.otherIncomes.forEach((o) => finance.deleteOtherIncome(o.id));
@@ -181,8 +193,32 @@ export default function DevSeedPage() {
       </Text>
       <Group>
         <Button onClick={loadMockData}>Load demo data</Button>
-        <Button variant="default" onClick={clearAllData}>Clear all data</Button>
+        <Button variant="default" onClick={() => setConfirmClearOpened(true)}>Clear all data</Button>
       </Group>
+      <Modal
+        opened={confirmClearOpened}
+        onClose={() => setConfirmClearOpened(false)}
+        title="Clear all data"
+        centered
+      >
+        <Stack gap="md">
+          <Text size="sm">Are you sure you want to clear all data? This cannot be undone.</Text>
+          <Group justify="flex-end">
+            <Button variant="default" onClick={() => setConfirmClearOpened(false)}>
+              Cancel
+            </Button>
+            <Button
+              color="red"
+              onClick={() => {
+                clearAllData();
+                setConfirmClearOpened(false);
+              }}
+            >
+              Clear all data
+            </Button>
+          </Group>
+        </Stack>
+      </Modal>
       {status ? <Text size="sm">{status}</Text> : null}
     </Stack>
   );

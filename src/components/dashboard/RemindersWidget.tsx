@@ -133,9 +133,9 @@ export function RemindersWidget() {
           <Select
             label={<Bilingual label={ui.reminders.remindIn} />}
             data={[
-              { label: ui.reminders.in30min.en, value: "30min" },
-              { label: ui.reminders.in1hr.en, value: "1hr" },
-              { label: ui.reminders.customTime.en, value: "custom" },
+              { label: preferredText(ui.reminders.in30min, uiLanguage), value: "30min" },
+              { label: preferredText(ui.reminders.in1hr, uiLanguage), value: "1hr" },
+              { label: preferredText(ui.reminders.customTime, uiLanguage), value: "custom" },
             ]}
             value={remindIn}
             onChange={(value) => setRemindIn((value as RemindIn) ?? "30min")}
@@ -180,7 +180,7 @@ export function RemindersWidget() {
               <ActionIcon
                 variant="subtle"
                 color="leaf"
-                aria-label={ui.reminders.dismiss.en}
+                aria-label={preferredText(ui.reminders.dismiss, uiLanguage)}
                 onClick={() => dismissReminder(reminder.id)}
               >
                 <Check size={16} />

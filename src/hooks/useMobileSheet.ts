@@ -35,6 +35,7 @@ export function useMobileSheet(
         content: {
           borderRadius: "16px 16px 0 0",
           maxHeight: "92dvh",
+          flex: "0 0 auto",
           width: "calc(100% - 16px)",
           marginLeft: 8,
           marginRight: 8,

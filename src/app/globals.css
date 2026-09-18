@@ -327,11 +327,17 @@ body {
   .mantine-Modal-content.mobile-sheet {
     height: auto;
     max-height: 92dvh;
+    flex: 0 0 auto;
     width: calc(100% - 16px);
     margin-left: 8px;
     margin-right: 8px;
     margin-bottom: 8px;
     border-radius: 16px 16px 0 0;
+  }
+
+  .mantine-Modal-content.mobile-sheet .mantine-Modal-body {
+    padding: 16px;
+    padding-bottom: calc(16px + env(safe-area-inset-bottom, 0px));
   }
 
   .mantine-Modal-inner {

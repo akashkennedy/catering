@@ -32,8 +32,8 @@ export function LoginForm() {
     defaultValues: { username: "", password: "" },
   });
 
-  const onSubmit = (values: LoginValues) => {
-    const ok = login(values.username, values.password);
+  const onSubmit = async (values: LoginValues) => {
+    const ok = await login(values.username, values.password);
     setInvalid(!ok);
   };
 

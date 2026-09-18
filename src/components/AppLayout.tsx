@@ -154,7 +154,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
             style={{ width: "100%", cursor: "pointer", background: "none", border: "none" }}
             onClick={() => {
               setOpened(false);
-              logout();
+              void logout();
             }}
           >
             <LogOut size={18} aria-hidden />

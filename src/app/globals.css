@@ -563,10 +563,16 @@ body {
 
 @media (max-width: 639px) {
   :root {
-    /* Top inset above the app header. Real browsers/WebViews report the
-       actual notch/status-bar height; AppsGeyser-style WebViews report 0,
-       so fall back to the standard 24px Android status bar. */
-    --apk-sat: env(safe-area-inset-top, 24px);
+    /* Top inset above the app header. Preserve the browser/WebView-provided
+       safe-area value (env() fallback only applies when the variable is
+       undefined, not when a WebView reports 0). The 24px Android status-bar
+       fallback is applied only via the AppsGeyser class or a native-provided
+       --appsgeyser-sat variable. */
+    --apk-sat: var(--appsgeyser-sat, env(safe-area-inset-top, 0px));
+  }
+
+  html.appsgeyser-apk {
+    --apk-sat: 24px;
   }
 
   .mantine-AppShell-root {

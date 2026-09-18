@@ -166,7 +166,7 @@ export function MobileBottomNav({ onAddEvent }: { onAddEvent: () => void }) {
             style={{ width: "100%", background: "none", border: "none", cursor: "pointer" }}
             onClick={() => {
               setMoreOpened(false);
-              logout();
+              void logout();
             }}
           >
             <LogOut size={20} />

@@ -120,7 +120,9 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
               })}
             </Stack>
           </Stack>
-          <ThemeControl />
+          <Box visibleFrom="sm">
+            <ThemeControl />
+          </Box>
           <Link
             href="/settings"
             onClick={() => setOpened(false)}

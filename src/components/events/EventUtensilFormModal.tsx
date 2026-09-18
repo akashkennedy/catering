@@ -18,6 +18,7 @@ import { useEffect } from "react";
 import { Bilingual } from "@/components/Bilingual";
 import { ui, preferredText } from "@/lib/i18n";
 import { useSettingsStore } from "@/store/settings";
+import { useMobileSheet } from "@/hooks/useMobileSheet";
 import { useUtensilsStore } from "@/store/utensils";
 import { formatINR } from "@/lib/format";
 
@@ -52,6 +53,7 @@ export function EventUtensilFormModal({
   onAdd,
 }: EventUtensilFormModalProps) {
   const uiLanguage = useSettingsStore((state) => state.uiLanguage);
+  const sheet = useMobileSheet("sheet");
   const masterUtensils = useUtensilsStore((state) => state.utensils);
   const addUtensil = useUtensilsStore((state) => state.addUtensil);
 
@@ -130,7 +132,7 @@ export function EventUtensilFormModal({
       opened={opened}
       onClose={onClose}
       title={<Bilingual label={ui.events.addUtensil} />}
-      centered
+      {...sheet}
     >
       <form onSubmit={handleSubmit(onSubmit)}>
         <Stack gap="md">

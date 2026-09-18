@@ -9,6 +9,7 @@ import { useEffect } from "react";
 import { Bilingual } from "@/components/Bilingual";
 import { ui, preferredText } from "@/lib/i18n";
 import { useSettingsStore } from "@/store/settings";
+import { useMobileSheet } from "@/hooks/useMobileSheet";
 import { validatePhone, formatPhone } from "@/lib/phone";
 import { todayLocalISO as todayISO } from "@/lib/date";
 import { useEventsStore, type CateringEventInput } from "@/store/events";
@@ -34,6 +35,7 @@ type QuickAddEventModalProps = {
 
 export function QuickAddEventModal({ opened, onClose }: QuickAddEventModalProps) {
   const uiLanguage = useSettingsStore((state) => state.uiLanguage);
+  const sheet = useMobileSheet("sheet");
   const addEvent = useEventsStore((state) => state.addEvent);
 
   const {
@@ -77,7 +79,7 @@ export function QuickAddEventModal({ opened, onClose }: QuickAddEventModalProps)
       opened={opened}
       onClose={onClose}
       title={<Bilingual label={ui.events.addEvent} />}
-      centered
+      {...sheet}
     >
       <form onSubmit={handleSubmit(onSubmit)}>
         <Stack gap="md">

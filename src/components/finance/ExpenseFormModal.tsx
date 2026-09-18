@@ -9,6 +9,7 @@ import { useEffect } from "react";
 import { Bilingual } from "@/components/Bilingual";
 import { ui, preferredText } from "@/lib/i18n";
 import { useSettingsStore } from "@/store/settings";
+import { useMobileSheet } from "@/hooks/useMobileSheet";
 import { todayLocalISO } from "@/lib/date";
 import { EXPENSE_CATEGORIES, useFinanceStore } from "@/store/finance";
 
@@ -28,6 +29,7 @@ type ExpenseFormModalProps = {
 
 export function ExpenseFormModal({ opened, onClose }: ExpenseFormModalProps) {
   const uiLanguage = useSettingsStore((state) => state.uiLanguage);
+  const sheet = useMobileSheet("sheet");
   const addExpense = useFinanceStore((state) => state.addExpense);
 
   const {
@@ -66,7 +68,7 @@ export function ExpenseFormModal({ opened, onClose }: ExpenseFormModalProps) {
       opened={opened}
       onClose={onClose}
       title={<Bilingual label={ui.finance.addExpense} />}
-      centered
+      {...sheet}
     >
       <form onSubmit={handleSubmit(onSubmit)}>
         <Stack gap="md">

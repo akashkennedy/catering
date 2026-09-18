@@ -9,6 +9,7 @@ import { useEffect } from "react";
 import { Bilingual } from "@/components/Bilingual";
 import { ui, preferredText } from "@/lib/i18n";
 import { useSettingsStore } from "@/store/settings";
+import { useMobileSheet } from "@/hooks/useMobileSheet";
 import { todayLocalISO } from "@/lib/date";
 import { formatStock, remainingStock } from "@/lib/stock";
 import {
@@ -33,6 +34,7 @@ type PurchaseModalProps = {
 
 export function PurchaseModal({ opened, ingredient, onClose }: PurchaseModalProps) {
   const uiLanguage = useSettingsStore((state) => state.uiLanguage);
+  const sheet = useMobileSheet("sheet");
   const addPurchaseEntry = useStockLedgerStore((state) => state.addPurchaseEntry);
   const ledgerEntries = useStockLedgerStore((state) => state.entries);
   const ingredients = useIngredientsStore((state) => state.ingredients);
@@ -85,7 +87,7 @@ export function PurchaseModal({ opened, ingredient, onClose }: PurchaseModalProp
       opened={opened}
       onClose={onClose}
       title={<Bilingual label={ui.ingredients.purchaseTitle} />}
-      centered
+      {...sheet}
     >
       {currentIngredient ? (
         <form onSubmit={handleSubmit(onSubmit)}>

@@ -9,6 +9,7 @@ import { useEffect } from "react";
 import { Bilingual } from "@/components/Bilingual";
 import { ui, preferredText } from "@/lib/i18n";
 import { useSettingsStore } from "@/store/settings";
+import { useMobileSheet } from "@/hooks/useMobileSheet";
 import { lookupTamilName } from "@/lib/ingredientTranslations";
 import { UNITS, normalizeUnit } from "@/lib/units";
 import {
@@ -37,6 +38,7 @@ type IngredientFormModalProps = {
 
 export function IngredientFormModal({ opened, ingredient, onClose }: IngredientFormModalProps) {
   const uiLanguage = useSettingsStore((state) => state.uiLanguage);
+  const sheet = useMobileSheet("sheet");
   const addIngredient = useIngredientsStore((state) => state.addIngredient);
   const updateIngredient = useIngredientsStore((state) => state.updateIngredient);
 
@@ -103,7 +105,7 @@ export function IngredientFormModal({ opened, ingredient, onClose }: IngredientF
       opened={opened}
       onClose={onClose}
       title={<Bilingual label={ingredient ? ui.ingredients.editTitle : ui.ingredients.addIngredient} />}
-      centered
+      {...sheet}
     >
       <form onSubmit={handleSubmit(onSubmit)}>
         <Stack gap="md">

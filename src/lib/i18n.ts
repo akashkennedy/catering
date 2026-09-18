@@ -430,6 +430,21 @@ export const ui = {
     ),
     line2: lab("Reconnect to the network to load all features.", "அனைத்து அம்சங்களுக்கும் நெட்வொர்க்குடன் மீண்டும் இணையவும்."),
   },
+  auth: {
+    title: lab("Sign in", "உள்நுழைக"),
+    subtitle: lab(
+      "Sign in to manage your catering events.",
+      "உங்கள் கேட்டரிங் நிகழ்வுகளை நிர்வகிக்க உள்நுழையவும்."
+    ),
+    username: lab("Username", "பயனர் பெயர்"),
+    password: lab("Password", "கடவுச்சொல்"),
+    signIn: lab("Sign in", "உள்நுழைக"),
+    invalidCredentials: lab(
+      "Invalid username or password.",
+      "தவறான பயனர் பெயர் அல்லது கடவுச்சொல்."
+    ),
+    logout: lab("Log out", "வெளியேறு"),
+  },
   deleteConfirm: (name: string): Label => ({
     en: `Are you sure you want to delete "${name}"?`,
     ta: `"${name}"-ஐ நீக்க விரும்புகிறீர்களா?`,

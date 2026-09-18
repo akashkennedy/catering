@@ -19,6 +19,7 @@ import {
   ClipboardList,
   CookingPot,
   LayoutDashboard,
+  LogOut,
   Plus,
   Search,
   Settings,
@@ -36,6 +37,7 @@ import { ShellSearch } from "@/components/ShellSearch";
 import { ThemeControl } from "@/components/ThemeControl";
 import { EventFormModal } from "@/components/events/EventFormModal";
 import { preferredText, ui, type Label } from "@/lib/i18n";
+import { useAuthStore } from "@/store/auth";
 import { useSettingsStore } from "@/store/settings";
 
 type NavItem = {
@@ -65,6 +67,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
   const [opened, setOpened] = useState(false);
   const [searchOpened, setSearchOpened] = useState(false);
   const [newEventOpened, setNewEventOpened] = useState(false);
+  const logout = useAuthStore((state) => state.logout);
   const pathname = usePathname();
   const uiLanguage = useSettingsStore((state) => state.uiLanguage);
 
@@ -145,6 +148,20 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
               <Bilingual label={ui.nav.settings} />
             </span>
           </Link>
+          <button
+            type="button"
+            className="app-nav-item"
+            style={{ width: "100%", cursor: "pointer", background: "none", border: "none" }}
+            onClick={() => {
+              setOpened(false);
+              logout();
+            }}
+          >
+            <LogOut size={18} aria-hidden />
+            <span className="app-nav-item__label">
+              <Bilingual label={ui.auth.logout} />
+            </span>
+          </button>
         </Stack>
       </AppShell.Navbar>
       <AppShell.Main>{children}</AppShell.Main>

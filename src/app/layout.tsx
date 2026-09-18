@@ -5,6 +5,7 @@ import { Catamaran } from "next/font/google";
 import AppLayout from "@/components/AppLayout";
 import { ReminderNotifier } from "@/components/ReminderNotifier";
 import { ThemeProvider } from "@/components/ThemeProvider";
+import { AuthGate } from "@/components/auth/AuthGate";
 import "./globals.css";
 
 const catamaran = Catamaran({
@@ -79,8 +80,10 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
       </head>
       <body>
         <ThemeProvider>
-          <AppLayout>{children}</AppLayout>
-          <ReminderNotifier />
+          <AuthGate>
+            <AppLayout>{children}</AppLayout>
+            <ReminderNotifier />
+          </AuthGate>
         </ThemeProvider>
       </body>
     </html>

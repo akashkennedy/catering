@@ -20,6 +20,7 @@ import {
   ClipboardList,
   ShoppingBasket,
   CookingPot,
+  LogOut,
   UserRound,
   Wallet,
   Settings,
@@ -28,6 +29,7 @@ import {
 
 import { Bilingual } from "@/components/Bilingual";
 import { preferredText, ui, type Label } from "@/lib/i18n";
+import { useAuthStore } from "@/store/auth";
 import { useSettingsStore } from "@/store/settings";
 
 type MobileNavItem = {
@@ -65,6 +67,7 @@ export function MobileBottomNav({ onAddEvent }: { onAddEvent: () => void }) {
   const [moreOpened, setMoreOpened] = useState(false);
   const uiLanguage = useSettingsStore((state) => state.uiLanguage);
   const moreLabel = preferredText(ui.nav.more, uiLanguage);
+  const logout = useAuthStore((state) => state.logout);
   const addEventLabel = preferredText(ui.events.addEvent, uiLanguage);
 
   const moreActive = MORE_ITEMS.some((item) => isActive(pathname, item.href));
@@ -157,6 +160,20 @@ export function MobileBottomNav({ onAddEvent }: { onAddEvent: () => void }) {
               </Link>
             );
           })}
+          <button
+            type="button"
+            className="mobile-more-item"
+            style={{ width: "100%", background: "none", border: "none", cursor: "pointer" }}
+            onClick={() => {
+              setMoreOpened(false);
+              logout();
+            }}
+          >
+            <LogOut size={20} />
+            <span>
+              <Bilingual label={ui.auth.logout} />
+            </span>
+          </button>
         </Stack>
       </Drawer>
     </>

@@ -3,6 +3,7 @@
 import { zodResolver } from "@hookform/resolvers/zod";
 import {
   Button,
+  Checkbox,
   Group,
   NumberInput,
   Select,
@@ -12,6 +13,7 @@ import {
 } from "@mantine/core";
 import { Controller, useForm, useWatch } from "react-hook-form";
 import { useRouter } from "next/navigation";
+import { useState } from "react";
 import { Calculator } from "lucide-react";
 import { z } from "zod";
 
@@ -19,9 +21,9 @@ import { Bilingual } from "@/components/Bilingual";
 import { formatINR } from "@/lib/format";
 import { ui, preferredText } from "@/lib/i18n";
 import { useSettingsStore } from "@/store/settings";
-import { useTemplatesStore } from "@/store/templates";
+import { dishDisplayName, templateDisplayName, useTemplatesStore } from "@/store/templates";
 import { useIngredientsStore } from "@/store/ingredients";
-import { buildScaledIngredients } from "@/store/events";
+import { buildScaledIngredients, resolveGroupDishes } from "@/store/events";
 import { useEventDraftStore } from "@/store/eventDraft";
 
 const calculatorSchema = z.object({
@@ -49,21 +51,36 @@ export function PricingCalculator() {
   const markup = useWatch({ control, name: "markup" }) as number;
 
   const template = templates.find((t) => t.id === templateId) ?? null;
-  const scaledLines = buildScaledIngredients(template, ingredients, headcount || 0);
+  const [selectedDishIds, setSelectedDishIds] = useState<string[]>([]);
+  const effectiveTemplate = template
+    ? { ...template, dishes: resolveGroupDishes(template, selectedDishIds) }
+    : null;
+  const allDishIds = (template?.dishes ?? []).map((dish) => dish.id);
+  const checkedDishIds = selectedDishIds.length > 0 ? selectedDishIds : allDishIds;
+  const scaledLines = buildScaledIngredients(effectiveTemplate, ingredients, headcount || 0);
   const rawCost = scaledLines.reduce((sum, line) => sum + line.price, 0);
   const suggestedQuote = Math.round(rawCost * (1 + (markup || 0) / 100) * 100) / 100;
 
-  const templateOptions = templates.map((template) => ({
-    value: template.id,
-    label: template.name,
+  const templateOptions = templates.map((item) => ({
+    value: item.id,
+    label: templateDisplayName(item, uiLanguage),
   }));
 
   const convertToEvent = handleSubmit((values) => {
     if (!template) return;
-    const scaled = buildScaledIngredients(template, ingredients, values.headcount);
+    const filtered = {
+      ...template,
+      dishes: resolveGroupDishes(template, selectedDishIds),
+    };
+    const scaled = buildScaledIngredients(filtered, ingredients, values.headcount);
     const cost = scaled.reduce((sum, line) => sum + line.price, 0);
     const quote = Math.round(cost * (1 + (values.markup || 0) / 100) * 100) / 100;
-    setPrefill({ headcount: values.headcount, templateId: template.id, totalAmount: quote });
+    setPrefill({
+      headcount: values.headcount,
+      templateId: template.id,
+      totalAmount: quote,
+      selectedDishIds,
+    });
     router.push("/events");
   });
 
@@ -93,7 +110,10 @@ export function PricingCalculator() {
                 withAsterisk
                 {...field}
                 value={field.value ?? null}
-                onChange={(value) => field.onChange(value ?? null)}
+                onChange={(value) => {
+                  setSelectedDishIds([]);
+                  field.onChange(value ?? null);
+                }}
               />
             )}
           />
@@ -114,6 +134,29 @@ export function PricingCalculator() {
               />
             )}
           />
+          {template && template.dishes.length > 0 && (
+            <div>
+              <Text size="sm" fw={500} mb={4}>
+                <Bilingual label={ui.events.includeCourses} />
+              </Text>
+              <Checkbox.Group
+                value={checkedDishIds}
+                onChange={(value) =>
+                  setSelectedDishIds(value.length === allDishIds.length ? [] : value)
+                }
+              >
+                <Stack gap={4}>
+                  {template.dishes.map((dish) => (
+                    <Checkbox
+                      key={dish.id}
+                      value={dish.id}
+                      label={`${dishDisplayName(dish, uiLanguage)} (${dish.ingredients.length})`}
+                    />
+                  ))}
+                </Stack>
+              </Checkbox.Group>
+            </div>
+          )}
           <Controller
             name="markup"
             control={control}

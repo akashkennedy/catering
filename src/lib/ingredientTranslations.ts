@@ -282,6 +282,33 @@ function normalizedKey(value: string): string {
     .trim();
 }
 
+const DISH_TAMIL_MAP: Record<string, string> = {
+  saapadu: "சாப்பாடு",
+  sambar: "சாம்பார்",
+  rasam: "ரசம்",
+  moru: "மோர்",
+  "moru curry": "மோர் குழம்பு",
+  poriyal: "பொரியல்",
+  pachadi: "பச்சடி",
+  avial: "அவியல்",
+  payasam: "பாயசம்",
+  biryani: "பிரியாணி",
+  "chicken biryani": "சிக்கன் பிரியாணி",
+  meals: "சாப்பாடு",
+};
+
+/**
+ * Best-effort Tamil suggestion for template / course (dish) names.
+ * Reuses the ingredient dictionary, plus a small dish map. Offline-safe.
+ */
+export function suggestTamilName(englishName: string): string {
+  const key = normalizedKey(englishName);
+  if (!key) return "";
+  const dishHit = DISH_TAMIL_MAP[key];
+  if (dishHit) return dishHit;
+  return lookupIngredient(englishName)?.tamilName ?? "";
+}
+
 /**
  * Best-effort lookup for an English or Tanglish ingredient name.
  * Returns the Tamil name (and matching category tag) when found.

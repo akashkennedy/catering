@@ -1,8 +1,9 @@
 import React from "react";
 import { pdf, Font, Document, Page, Text, View, StyleSheet } from "@react-pdf/renderer";
 import type { DocumentProps } from "@react-pdf/renderer";
-import type { CateringEvent, EventStatus } from "@/store/events";
+import { resolveGroupDishes, type CateringEvent, type EventStatus } from "@/store/events";
 import type { Ingredient } from "@/store/ingredients";
+import type { FoodTemplate } from "@/store/templates";
 import type { DefaultLanguage } from "@/store/settings";
 import { formatINR } from "@/lib/format";
 import { normalizeUnit } from "@/lib/units";
@@ -121,15 +122,39 @@ const styles = StyleSheet.create({
   rowEven: { backgroundColor: "#f9f9f9" },
 });
 
+function templateNameForDoc(template: FoodTemplate, lang: DefaultLanguage): string {
+  return lang === "ta" ? template.nameTa.trim() || template.nameEn : template.nameEn;
+}
+
+function dishNameForDoc(
+  dish: FoodTemplate["dishes"][number],
+  lang: DefaultLanguage
+): string {
+  return lang === "ta" ? dish.nameTa.trim() || dish.nameEn : dish.nameEn;
+}
+
 function buildDocument(
   event: CateringEvent,
   ingredients: Ingredient[],
-  lang: DefaultLanguage
+  lang: DefaultLanguage,
+  templates: FoodTemplate[] = []
 ): React.ReactElement {
   ensureFont();
   const l = labels[lang];
   const ff = fontFamilyForLang(lang);
   const ingredientTotal = event.ingredients.reduce((sum, line) => sum + line.price, 0);
+  const templatesById = new Map(templates.map((template) => [template.id, template]));
+  const mealSections = (event.mealGroups ?? [])
+    .map((group) => {
+      const template = group.templateId ? templatesById.get(group.templateId) : undefined;
+      if (!template) return null;
+      const dishes = resolveGroupDishes(template, group.selectedDishIds);
+      return {
+        heading: `${templateNameForDoc(template, lang)} — ${group.headcount}`,
+        items: dishes.map((dish) => dishNameForDoc(dish, lang)),
+      };
+    })
+    .filter((section): section is { heading: string; items: string[] } => section !== null);
 
   return (
     <Document>
@@ -153,6 +178,21 @@ function buildDocument(
         <Text style={[styles.detail, { fontFamily: ff }]}>
           {l.balance}: {formatINR(eventBalance(event))}
         </Text>
+
+        {mealSections.length > 0 && (
+          <>
+            {mealSections.map((section, sectionIdx) => (
+              <View key={`${section.heading}-${sectionIdx}`}>
+                <Text style={[styles.sectionTitle, { fontFamily: ff }]}>{section.heading}</Text>
+                {section.items.map((item, itemIdx) => (
+                  <Text key={`${section.heading}-${itemIdx}`} style={[styles.detail, { fontFamily: ff }]}>
+                    • {item}
+                  </Text>
+                ))}
+              </View>
+            ))}
+          </>
+        )}
 
         <Text style={[styles.sectionTitle, { fontFamily: ff }]}>{l.ingredientList}</Text>
 
@@ -200,9 +240,10 @@ function buildDocument(
 export async function generateEventPdf(
   event: CateringEvent,
   ingredients: Ingredient[],
-  lang: DefaultLanguage
+  lang: DefaultLanguage,
+  templates: FoodTemplate[] = []
 ): Promise<void> {
-  const element = buildDocument(event, ingredients, lang) as React.ReactElement<DocumentProps>;
+  const element = buildDocument(event, ingredients, lang, templates) as React.ReactElement<DocumentProps>;
   const blob = await pdf(element).toBlob();
   const url = URL.createObjectURL(blob);
   const link = document.createElement("a");

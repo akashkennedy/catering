@@ -4,6 +4,7 @@ export type EventDraftPrefill = {
   headcount: number;
   templateId: string | null;
   totalAmount: number;
+  selectedDishIds?: string[];
 };
 
 type EventDraftState = {

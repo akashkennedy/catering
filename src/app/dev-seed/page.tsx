@@ -42,11 +42,13 @@ export default function DevSeedPage() {
 
     // Template
     useTemplatesStore.getState().addTemplate({
-      name: "Wedding lunch",
+      nameEn: "Wedding lunch",
+      nameTa: "திருமண மதிய உணவு",
       dishes: [
         {
           id: crypto.randomUUID(),
-          name: "Chicken biryani",
+          nameEn: "Chicken biryani",
+          nameTa: "சிக்கன் பிரியாணி",
           ingredients: [
             { ingredientId: riceId, qtyPer100: 12 },
             { ingredientId: chickenId, qtyPer100: 10 },
@@ -55,7 +57,8 @@ export default function DevSeedPage() {
         },
         {
           id: crypto.randomUUID(),
-          name: "Payasam",
+          nameEn: "Payasam",
+          nameTa: "பாயசம்",
           ingredients: [{ ingredientId: byName.get("Milk") ?? "", qtyPer100: 5 }],
         },
       ],
@@ -85,6 +88,9 @@ export default function DevSeedPage() {
       date: isoPlusDays(5),
       status: "confirmed",
       templateId,
+      mealGroups: templateId
+        ? [{ id: crypto.randomUUID(), templateId, headcount: 300, selectedDishIds: [] }]
+        : [],
       ratePerPerson: 250,
       totalAmount: 75000,
       totalAmountOverridden: false,
@@ -111,6 +117,7 @@ export default function DevSeedPage() {
       date: isoPlusDays(12),
       status: "enquiry",
       templateId: null,
+      mealGroups: [],
       ratePerPerson: 150,
       totalAmount: 12000,
       totalAmountOverridden: false,
@@ -129,6 +136,9 @@ export default function DevSeedPage() {
       date: isoPlusDays(-10),
       status: "paid",
       templateId,
+      mealGroups: templateId
+        ? [{ id: crypto.randomUUID(), templateId, headcount: 150, selectedDishIds: [] }]
+        : [],
       ratePerPerson: 200,
       totalAmount: 30000,
       totalAmountOverridden: false,

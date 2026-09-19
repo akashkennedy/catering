@@ -32,7 +32,14 @@ import { ui, preferredText } from "@/lib/i18n";
 import { formatIndianDate } from "@/lib/date";
 import { formatINR } from "@/lib/format";
 import { formatPhone } from "@/lib/phone";
-import { useEventsStore, buildScaledIngredients, type CateringEventInput } from "@/store/events";
+import {
+  useEventsStore,
+  buildScaledIngredients,
+  buildScaledIngredientsForGroups,
+  type CateringEventInput,
+  type EventMealGroup,
+} from "@/store/events";
+import { MealGroupsEditor } from "./MealGroupsEditor";
 import { useEmployeesStore } from "@/store/employees";
 import { useIngredientsStore } from "@/store/ingredients";
 import { useSettingsStore } from "@/store/settings";
@@ -84,14 +91,10 @@ export function EventDetail() {
     );
   }
 
-  const templateOptions = templates.map((template) => ({
-    value: template.id,
-    label: template.name,
-  }));
-
   const eventIngredients = event.ingredients ?? [];
   const eventEmployees = event.employees ?? [];
   const eventUtensils = event.utensils ?? [];
+  const mealGroups = event.mealGroups ?? [];
 
   const update = (patch: Partial<CateringEventInput>) => {
     updateEvent(event.id, {
@@ -104,6 +107,7 @@ export function EventDetail() {
       date: event.date,
       status: event.status,
       templateId: event.templateId,
+      mealGroups,
       ratePerPerson: event.ratePerPerson,
       totalAmount: event.totalAmount,
       totalAmountOverridden: event.totalAmountOverridden,
@@ -117,23 +121,26 @@ export function EventDetail() {
 
   const roundMoney = (value: number) => Math.round(value * 100) / 100;
 
+  const rescaleForGroups = (groups: EventMealGroup[]) =>
+    buildScaledIngredientsForGroups(groups, templates, ingredients);
+
   const handleHeadcountChange = (headcount: number) => {
-    const template = templates.find((item) => item.id === event.templateId) ?? null;
-    const patch: Partial<CateringEventInput> = {
-      headcount,
-      ingredients: buildScaledIngredients(template, ingredients, headcount),
-    };
+    const patch: Partial<CateringEventInput> = { headcount };
+    if (mealGroups.length === 0) {
+      const template = templates.find((item) => item.id === event.templateId) ?? null;
+      patch.ingredients = buildScaledIngredients(template, ingredients, headcount);
+    }
     if (!event.totalAmountOverridden) {
       patch.totalAmount = roundMoney(event.ratePerPerson * headcount);
     }
     update(patch);
   };
 
-  const handleTemplateChange = (templateId: string | null) => {
-    const template = templates.find((item) => item.id === templateId) ?? null;
+  const handleGroupsChange = (groups: EventMealGroup[]) => {
     update({
-      templateId,
-      ingredients: buildScaledIngredients(template, ingredients, event.headcount),
+      mealGroups: groups,
+      templateId: groups[0]?.templateId ?? null,
+      ingredients: rescaleForGroups(groups),
     });
   };
 
@@ -300,7 +307,7 @@ export function EventDetail() {
   const handleGeneratePdf = async () => {
     setGeneratingPdf(true);
     try {
-      await generateEventPdf(event, ingredients, pdfLang);
+      await generateEventPdf(event, ingredients, pdfLang, templates);
     } finally {
       setGeneratingPdf(false);
     }
@@ -366,16 +373,17 @@ export function EventDetail() {
               }}
               onChange={(value) => handleHeadcountChange(typeof value === "number" ? value : 1)}
             />
-            <Select
-              label={<Bilingual label={ui.common.template} />}
-              placeholder={preferredText(ui.events.selectTemplate, uiLanguage)}
-              data={templateOptions}
-              searchable
-              clearable
-              w={{ base: "100%", sm: 260 }}
-              value={event.templateId ?? null}
-              onChange={(value) => handleTemplateChange(value ?? null)}
-            />
+            <div style={{ flex: "1 1 100%" }}>
+              <Text fw={500} size="sm" mb={4}>
+                <Bilingual label={ui.events.meals} />
+              </Text>
+              <MealGroupsEditor
+                groups={mealGroups}
+                templates={templates}
+                defaultHeadcount={event.headcount}
+                onChange={handleGroupsChange}
+              />
+            </div>
             <Select
               label={<Bilingual label={ui.common.status} />}
               data={EVENT_STATUS_OPTIONS.map((option) => ({

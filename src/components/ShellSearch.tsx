@@ -9,7 +9,7 @@ import { preferredText, ui, type Label } from "@/lib/i18n";
 import { useHydrated } from "@/hooks/useHydrated";
 import { useSettingsStore } from "@/store/settings";
 import { useEventsStore } from "@/store/events";
-import { useTemplatesStore } from "@/store/templates";
+import { templateDisplayName, templateMatchesQuery, useTemplatesStore } from "@/store/templates";
 import { useIngredientsStore } from "@/store/ingredients";
 import { useEmployeesStore } from "@/store/employees";
 import { useUtensilsStore } from "@/store/utensils";
@@ -59,11 +59,11 @@ export function ShellSearch() {
         href: `/events/${event.id}`,
       })),
     ...templates
-      .filter((template) => matches(template.name))
+      .filter((template) => query && templateMatchesQuery(template, deferredValue))
       .slice(0, MAX_PER_TYPE)
       .map((template) => ({
         key: `template:${template.id}`,
-        name: template.name,
+        name: templateDisplayName(template, uiLanguage),
         typeLabel: ui.nav.templates,
         href: "/templates",
       })),

@@ -172,6 +172,23 @@ export const ui = {
     tabIngredients: lab("Ingredients", "பொருட்கள்"),
     tabEmployees: lab("Employees", "ஊழியர்கள்"),
     tabRental: lab("Rental", "வாடகை"),
+    meals: lab("Meals", "உணவுகள்"),
+    mealNumber: (n: number): Label => ({
+      en: `Meal ${n}`,
+      ta: `உணவு ${n}`,
+    }),
+    addMeal: lab("Add meal", "உணவு சேர்க்க"),
+    removeMeal: lab("Remove meal", "உணவை நீக்கு"),
+    noMeals: lab(
+      "No meals yet. Add one to plan courses for this event.",
+      "இன்னும் உணவுகள் இல்லை. இந்த நிகழ்வுக்கு உணவுகளைத் திட்டமிட ஒன்றைச் சேர்க்கவும்."
+    ),
+    includeCourses: lab("Include courses", "சேர்க்க வேண்டிய உணவுகள்"),
+    searchCourses: lab("Search courses…", "உணவுகளைத் தேடு…"),
+    allCoursesIncluded: lab(
+      "All courses included.",
+      "அனைத்து உணவுகளும் சேர்க்கப்பட்டுள்ளன."
+    ),
     invoice: lab("Invoice", "விலைப்பட்டியல்"),
     editEvent: lab("Edit Event", "நிகழ்வைத் திருத்து"),
     nameRequired: lab("Name is required", "பெயர் தேவை"),
@@ -270,6 +287,25 @@ export const ui = {
     editTitle: lab("Edit Template", "டெம்ப்ளேட்டைத் திருத்து"),
     nameRequired: lab("Name is required", "பெயர் தேவை"),
     namePlaceholder: lab("e.g. Wedding lunch", "எ.கா. திருமண மதிய உணவு"),
+    englishName: lab("English name", "ஆங்கிலப் பெயர்"),
+    tamilName: lab("Tamil name", "தமிழ் பெயர்"),
+    englishNamePlaceholder: lab("e.g. Saapadu", "எ.கா. சாப்பாடு"),
+    tamilNamePlaceholder: lab("e.g. சாப்பாடு", "எ.கா. சாப்பாடு"),
+    dishEnglishPlaceholder: lab("e.g. Sambar", "எ.கா. சாம்பார்"),
+    dishTamilPlaceholder: lab("e.g. சாம்பார்", "எ.கா. சாம்பார்"),
+    searchTemplates: lab(
+      "Search templates or dishes inside them…",
+      "டெம்ப்ளேட் அல்லது அதிலுள்ள உணவுகளைத் தேடு…"
+    ),
+    noMatch: lab(
+      "No templates match your search.",
+      "உங்கள் தேடலுடன் எந்த டெம்ப்ளேட்டும் பொருந்தவில்லை."
+    ),
+    importLegacy: lab("Import old app", "பழைய செயலியிலிருந்து இறக்கு"),
+    importLegacyNote: lab(
+      "Adds every meal, course and ingredient from the old app. Existing entries are skipped, never duplicated.",
+      "பழைய செயலியிலிருந்து அனைத்து உணவு, வகை மற்றும் பொருட்களைச் சேர்க்கிறது. ஏற்கனவே உள்ளவை தவிர்க்கப்படும்."
+    ),
     dish: lab("Dish", "உணவு"),
     dishes: lab("Dishes", "உணவுகள்"),
     ingredients: lab("Ingredients", "பொருட்கள்"),

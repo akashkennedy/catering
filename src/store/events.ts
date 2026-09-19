@@ -195,33 +195,99 @@ export function buildScaledIngredientsForGroups(
 
 type EventsState = {
   events: CateringEvent[];
-  addEvent: (input: CateringEventInput) => void;
-  updateEvent: (id: string, input: CateringEventInput) => void;
-  deleteEvent: (id: string) => void;
+  loaded: boolean;
+  addEvent: (input: CateringEventInput) => Promise<void>;
+  updateEvent: (id: string, input: CateringEventInput) => Promise<void>;
+  deleteEvent: (id: string) => Promise<void>;
+  loadEvents: () => Promise<void>;
 };
+
+function newClientId(): string {
+  try {
+    return crypto.randomUUID();
+  } catch {
+    return `local-${Date.now()}-${Math.floor(Math.random() * 1e6)}`;
+  }
+}
+
+async function sendJson(path: string, method: "POST" | "PATCH", body: unknown): Promise<boolean> {
+  try {
+    const response = await fetch(path, {
+      method,
+      headers: { "Content-Type": "application/json" },
+      credentials: "same-origin",
+      body: JSON.stringify(body),
+    });
+    return response.ok;
+  } catch {
+    return false;
+  }
+}
+
+async function sendDelete(path: string): Promise<boolean> {
+  try {
+    const response = await fetch(path, { method: "DELETE", credentials: "same-origin" });
+    return response.ok;
+  } catch {
+    return false;
+  }
+}
 
 export const useEventsStore = create<EventsState>()(
   persist(
     (set) => ({
       events: [],
-      addEvent: (input) =>
-        set((state) => ({
-          events: [...state.events, { id: crypto.randomUUID(), ...input }],
-        })),
-      updateEvent: (id, input) =>
+      loaded: false,
+      addEvent: async (input) => {
+        const event: CateringEvent = { id: newClientId(), ...input };
+        set((state) => ({ events: [...state.events, event] }));
+        const ok = await sendJson("/api/events", "POST", event);
+        if (!ok) {
+          const { queueOp } = await import("@/lib/outbox");
+          queueOp({ method: "POST", path: "/api/events", body: event });
+        }
+      },
+      updateEvent: async (id, input) => {
         set((state) => ({
           events: state.events.map((event) =>
             event.id === id ? { ...event, ...input } : event
           ),
-        })),
-      deleteEvent: (id) =>
+        }));
+        const ok = await sendJson(`/api/events/${encodeURIComponent(id)}`, "PATCH", input);
+        if (!ok) {
+          const { queueOp } = await import("@/lib/outbox");
+          queueOp({ method: "PATCH", path: `/api/events/${encodeURIComponent(id)}`, body: input });
+        }
+      },
+      deleteEvent: async (id) => {
         set((state) => ({
           events: state.events.filter((event) => event.id !== id),
-        })),
+        }));
+        const ok = await sendDelete(`/api/events/${encodeURIComponent(id)}`);
+        if (!ok) {
+          const { queueOp } = await import("@/lib/outbox");
+          queueOp({ method: "DELETE", path: `/api/events/${encodeURIComponent(id)}` });
+        }
+      },
+      loadEvents: async () => {
+        const { flushOutbox } = await import("@/lib/outbox");
+        await flushOutbox();
+        try {
+          const response = await fetch("/api/events", { credentials: "same-origin" });
+          if (!response.ok) return;
+          const body = (await response.json()) as { events?: CateringEvent[] };
+          if (Array.isArray(body.events)) {
+            set({ events: body.events, loaded: true });
+          }
+        } catch {
+          // Offline: keep the localStorage cache as the read source.
+        }
+      },
     }),
     {
       name: "catering-events",
       storage: createJSONStorage(() => localStorage),
+      partialize: (state) => ({ events: state.events }),
       version: 6,
       migrate: (persistedState) => {
         const state = persistedState as {

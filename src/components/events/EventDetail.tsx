@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useParams } from "next/navigation";
 import Link from "next/link";
 import {
@@ -41,8 +41,10 @@ import {
 import { MealGroupsEditor } from "./MealGroupsEditor";
 import { useEmployeesStore } from "@/store/employees";
 import { useIngredientsStore } from "@/store/ingredients";
+import { useAuthStore } from "@/store/auth";
 import { useSettingsStore } from "@/store/settings";
 import { useStockLedgerStore } from "@/store/stockLedger";
+import { useVesselStockLedgerStore } from "@/store/vesselStockLedger";
 import { useTemplatesStore } from "@/store/templates";
 import { useVendorSuggestionsStore } from "@/store/vendorSuggestions";
 import { PrintPreviewModal } from "./PrintPreviewModal";
@@ -75,6 +77,30 @@ export function EventDetail() {
   const [assignValue, setAssignValue] = useState<string | null>(null);
   const [utensilVendorName, setUtensilVendorName] = useState("");
   const [printOpened, setPrintOpened] = useState(false);
+  const canViewAllPay = useAuthStore(
+    (state) => state.isAdmin || state.permissions.canViewOtherEmployeeRates
+  );
+  const ownEmployeeId = useAuthStore((state) => state.employeeId);
+  // Null = full pay visibility; otherwise only the viewer's own linked lines.
+  const visiblePayFor =
+    canViewAllPay || !ownEmployeeId ? null : new Set<string>([ownEmployeeId]);
+  const loadEvents = useEventsStore((state) => state.loadEvents);
+  const loadTemplates = useTemplatesStore((state) => state.loadTemplates);
+  const loadIngredients = useIngredientsStore((state) => state.loadIngredients);
+  const loadStockLedger = useStockLedgerStore((state) => state.loadStockLedger);
+  const loadVesselLedger = useVesselStockLedgerStore((state) => state.loadVesselLedger);
+  const loadVendorSuggestions = useVendorSuggestionsStore(
+    (state) => state.loadVendorSuggestions
+  );
+
+  useEffect(() => {
+    void loadEvents();
+    void loadTemplates();
+    void loadIngredients();
+    void loadStockLedger();
+    void loadVesselLedger();
+    void loadVendorSuggestions();
+  }, [loadEvents, loadTemplates, loadIngredients, loadStockLedger, loadVesselLedger, loadVendorSuggestions]);
 
   if (!event) {
     return (
@@ -528,12 +554,15 @@ export function EventDetail() {
                   lines={eventEmployees}
                   onLineChange={handleEmployeeLineChange}
                   onRemove={handleEmployeeRemove}
+                  visiblePayFor={visiblePayFor}
                 />
                 <EventEmployeeCards
                   lines={eventEmployees}
                   onLineChange={handleEmployeeLineChange}
                   onRemove={handleEmployeeRemove}
+                  visiblePayFor={visiblePayFor}
                 />
+                {canViewAllPay && (
                 <Paper withBorder p="md">
                   <Stack gap={6}>
                     <Group justify="space-between" wrap="nowrap">
@@ -556,6 +585,7 @@ export function EventDetail() {
                     </Group>
                   </Stack>
                 </Paper>
+                )}
               </Stack>
             )}
 

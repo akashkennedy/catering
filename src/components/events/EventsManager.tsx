@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import {
   Button,
   Group,
@@ -43,6 +43,11 @@ export function EventsManager() {
   const [searchQuery, setSearchQuery] = useState("");
   const [dateFilter, setDateFilter] = useState("");
   const [statusFilter, setStatusFilter] = useState<StatusFilter>("all");
+  const loadEvents = useEventsStore((state) => state.loadEvents);
+
+  useEffect(() => {
+    void loadEvents();
+  }, [loadEvents]);
 
   const formOpened = manualOpen;
 

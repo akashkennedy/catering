@@ -55,33 +55,103 @@ export type FoodTemplateInput = Omit<FoodTemplate, "id">;
 
 type TemplatesState = {
   templates: FoodTemplate[];
-  addTemplate: (input: FoodTemplateInput) => void;
-  updateTemplate: (id: string, input: FoodTemplateInput) => void;
-  deleteTemplate: (id: string) => void;
+  loaded: boolean;
+  addTemplate: (input: FoodTemplateInput) => Promise<void>;
+  updateTemplate: (id: string, input: FoodTemplateInput) => Promise<void>;
+  deleteTemplate: (id: string) => Promise<void>;
+  loadTemplates: () => Promise<void>;
 };
+
+function newClientId(): string {
+  try {
+    return crypto.randomUUID();
+  } catch {
+    return `local-${Date.now()}-${Math.floor(Math.random() * 1e6)}`;
+  }
+}
+
+async function sendJson(path: string, method: "POST" | "PATCH", body: unknown): Promise<boolean> {
+  try {
+    const response = await fetch(path, {
+      method,
+      headers: { "Content-Type": "application/json" },
+      credentials: "same-origin",
+      body: JSON.stringify(body),
+    });
+    return response.ok;
+  } catch {
+    return false;
+  }
+}
+
+async function sendDelete(path: string): Promise<boolean> {
+  try {
+    const response = await fetch(path, { method: "DELETE", credentials: "same-origin" });
+    return response.ok;
+  } catch {
+    return false;
+  }
+}
 
 export const useTemplatesStore = create<TemplatesState>()(
   persist(
     (set) => ({
       templates: [],
-      addTemplate: (input) =>
-        set((state) => ({
-          templates: [...state.templates, { id: crypto.randomUUID(), ...input }],
-        })),
-      updateTemplate: (id, input) =>
+      loaded: false,
+      addTemplate: async (input) => {
+        const template: FoodTemplate = {
+          id: newClientId(),
+          ...input,
+          dishes: input.dishes.map((dish) => ({ ...dish, id: dish.id || newClientId() })),
+        };
+        set((state) => ({ templates: [...state.templates, template] }));
+        const ok = await sendJson("/api/templates", "POST", template);
+        if (!ok) {
+          const { queueOp } = await import("@/lib/outbox");
+          queueOp({ method: "POST", path: "/api/templates", body: template });
+        }
+      },
+      updateTemplate: async (id, input) => {
         set((state) => ({
           templates: state.templates.map((template) =>
             template.id === id ? { ...template, ...input } : template
           ),
-        })),
-      deleteTemplate: (id) =>
+        }));
+        const ok = await sendJson(`/api/templates/${encodeURIComponent(id)}`, "PATCH", input);
+        if (!ok) {
+          const { queueOp } = await import("@/lib/outbox");
+          queueOp({ method: "PATCH", path: `/api/templates/${encodeURIComponent(id)}`, body: input });
+        }
+      },
+      deleteTemplate: async (id) => {
         set((state) => ({
           templates: state.templates.filter((template) => template.id !== id),
-        })),
+        }));
+        const ok = await sendDelete(`/api/templates/${encodeURIComponent(id)}`);
+        if (!ok) {
+          const { queueOp } = await import("@/lib/outbox");
+          queueOp({ method: "DELETE", path: `/api/templates/${encodeURIComponent(id)}` });
+        }
+      },
+      loadTemplates: async () => {
+        const { flushOutbox } = await import("@/lib/outbox");
+        await flushOutbox();
+        try {
+          const response = await fetch("/api/templates", { credentials: "same-origin" });
+          if (!response.ok) return;
+          const body = (await response.json()) as { templates?: FoodTemplate[] };
+          if (Array.isArray(body.templates)) {
+            set({ templates: body.templates, loaded: true });
+          }
+        } catch {
+          // Offline: keep the localStorage cache as the read source.
+        }
+      },
     }),
     {
       name: "catering-templates",
       storage: createJSONStorage(() => localStorage),
+      partialize: (state) => ({ templates: state.templates }),
       version: 1,
       migrate: (persistedState) => {
         const state = persistedState as {

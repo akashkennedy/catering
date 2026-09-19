@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import {
   Badge,
   Button,
@@ -54,6 +54,11 @@ export function FinanceReport() {
   const [expenseModalOpened, setExpenseModalOpened] = useState(false);
   const [otherIncomeModalOpened, setOtherIncomeModalOpened] = useState(false);
   const [deleteTarget, setDeleteTarget] = useState<DeleteTarget | null>(null);
+  const loadFinance = useFinanceStore((state) => state.loadFinance);
+
+  useEffect(() => {
+    void loadFinance();
+  }, [loadFinance]);
 
   const activeMonthKey = filter === "month" ? monthKey : null;
   const visibleExpenses = filteredExpenses(expenses, activeMonthKey);

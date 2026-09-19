@@ -5,6 +5,13 @@ import {
   getSessionCookieHeader,
   verifyCredentials,
 } from "@/lib/server-auth";
+import { DbNotConfiguredError } from "@/lib/db";
+import {
+  createSession as createDbSession,
+  getUserByEmail,
+  normalizeEmail,
+} from "@/lib/authDb";
+import { verifyPassword } from "@/lib/password";
 
 const RATE_LIMIT_MAX = 5;
 const RATE_LIMIT_WINDOW_MS = 15 * 60 * 1000;
@@ -47,16 +54,36 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "Username and password are required" }, { status: 400 });
   }
 
-  // Credentials are validated server-side only; never compare secrets on the client.
+  // Preferred path: database users (email + bcrypt hash).
+  try {
+    const user = await getUserByEmail(username);
+    if (!user || !(await verifyPassword(password, user.passwordHash))) {
+      return NextResponse.json({ error: "Invalid credentials" }, { status: 401 });
+    }
+    attempts.delete(ip);
+    const session = await createDbSession(user.id);
+    const response = NextResponse.json({ username: user.email, isAdmin: user.isAdmin });
+    response.headers.append("Set-Cookie", getSessionCookieHeader(session.id));
+    return response;
+  } catch (error) {
+    // No database configured yet: fall back to the legacy env-credential
+    // flow so the app keeps working pre-migration. Any other DB error is real.
+    if (!(error instanceof DbNotConfiguredError)) {
+      return NextResponse.json({ error: "Login failed. Please try again." }, { status: 500 });
+    }
+  }
+
+  // Legacy path: env credentials + stateless HMAC session. Removed once the
+  // database is the source of truth (see Step 7).
   if (!verifyCredentials(username, password)) {
     return NextResponse.json({ error: "Invalid credentials" }, { status: 401 });
   }
 
   attempts.delete(ip);
 
-  const normalized = username.trim();
+  const normalized = normalizeEmail(username);
   const { token } = createSessionToken(normalized);
-  const response = NextResponse.json({ username: normalized });
+  const response = NextResponse.json({ username: normalized, isAdmin: true });
   response.headers.append("Set-Cookie", getSessionCookieHeader(token));
   return response;
 }

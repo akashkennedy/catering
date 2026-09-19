@@ -15,7 +15,6 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import {
   CalendarDays,
-  Calculator,
   ClipboardList,
   CookingPot,
   LayoutDashboard,
@@ -54,7 +53,6 @@ const NAV_ITEMS: NavItem[] = [
   { label: ui.nav.ingredients, href: "/ingredients", icon: ShoppingBasket },
   { label: ui.nav.employees, href: "/employees", icon: UserRound },
   { label: ui.nav.rental, href: "/utensils", icon: CookingPot },
-  { label: ui.nav.calculator, href: "/calculator", icon: Calculator },
   { label: ui.nav.finance, href: "/finance", icon: Wallet },
 ];
 
@@ -106,6 +104,13 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
       >
         <Stack justify="space-between" gap="md" style={{ flex: 1, minHeight: 0 }}>
           <Stack gap="sm" style={{ flex: 1, minHeight: 0 }}>
+            <Button
+              fullWidth
+              leftSection={<Plus size={18} aria-hidden />}
+              onClick={() => setNewEventOpened(true)}
+            >
+              <Bilingual label={ui.events.addEvent} />
+            </Button>
             <Stack gap={4} style={{ flex: 1, minHeight: 0, overflowY: "auto" }}>
               {NAV_ITEMS.map((item) => {
                 const Icon = item.icon;
@@ -127,13 +132,6 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
               })}
             </Stack>
           </Stack>
-          <Button
-            fullWidth
-            leftSection={<Plus size={18} aria-hidden />}
-            onClick={() => setNewEventOpened(true)}
-          >
-            <Bilingual label={ui.events.addEvent} />
-          </Button>
           <Box visibleFrom="sm">
             <ThemeControl />
           </Box>

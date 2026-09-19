@@ -57,13 +57,13 @@ Same roles, shifted for contrast on dark surfaces:
 ## 4. Layout — Desktop shell
 
 - **Header (60px, `--surface`):** "Catering" wordmark left → search bar centered (`sm`+) → search icon (mobile only) + notification bell right.
-- **Sidebar (260px, `--surface`):** nav items — Dashboard, Events, Customer Follow-up, Templates, Inventory, Employees, Rental, Calculator, Finance. Active item: leaf background + ink text; hover: 12% leaf wash. Bottom section: full-width New Event button (filled leaf, opens the full event form), then Dark-mode toggle row, then Settings button (Settings lives here, not in the nav list).
+- **Sidebar (260px, `--surface`):** full-width New Event button pinned at the top, then nav items — Dashboard, Events, Customer Follow-up, Templates, Inventory, Employees, Rental, Finance. Active item: leaf background + ink text; hover: 12% leaf wash. Bottom section: Dark-mode toggle row, then Settings button (Settings lives here, not in the nav list).
 - **Dark-mode toggle:** full nav-item row (moon icon + "Dark" label) with an animated sliding sun/moon pill at the right edge; the whole row is clickable (`role="switch"`).
 - **Main:** `md` page padding; dashboard cards on `--surface` with `--border`, 10px radius, separated by spacing — no heavy shadows.
 
 ## 5. Layout — Mobile
 
-- **Bottom tab bar** (fixed, `--surface`, border hairline, ≤639px): Dashboard, Events, center Plus (raised leaf FAB opening the full event form), Calculator + **More** (5th) opening a right-side drawer with Rental, Templates, Inventory, Employees, Follow-up, Finance, Settings. Active tab: leaf icon + label; inactive: muted.
+- **Bottom tab bar** (fixed, `--surface`, border hairline, ≤639px): Dashboard, Events, center Plus (raised leaf FAB opening the full event form) + **More** (4th) opening a right-side drawer with Rental, Templates, Inventory, Employees, Follow-up, Finance, Settings. Active tab: leaf icon + label; inactive: muted.
 - Dashboard widgets stack single-column, full-width.
 - Detail forms open as full-screen sheets on mobile.
 - Master lists render as tables on desktop, stacked cards on mobile.

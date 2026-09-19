@@ -503,3 +503,11 @@ This section records only what was built **after** §12 was written. §§1–12 
 - **Layout:** `# | பொருள் | Ingredient | Qty | Unit | [Price ₹]`; rows grouped under bilingual category headings (`INGREDIENT_TAGS` order, sorted by English name); unknown-tag/unknown-ingredient lines fall under Grocery, never dropped.
 - **Pre-print step:** event detail's Invoice button opens `PrintPreviewModal` (full sheet) with category filter chips (tags present in the event, all-on), the existing editable qty/price line tables (edits save to the event via the normal store update), a live filtered subtotal, and the two download buttons. Detailed total = printed lines only; event total/advance/balance shown for context. No employees in either PDF (unchanged).
 - Settings → document-language card is retained but no longer consumed by event PDFs.
+
+---
+
+## 15. V6 Addendum — Calculator removed, New Event button on top
+
+- The **Pricing Calculator** (`/calculator`, `PricingCalculator.tsx`, §§11.3/12.8) is **deleted**: route, desktop sidebar entry, mobile bottom-bar tab, `ui.nav.calculator` + `ui.calculator` i18n keys, and the calculator→event prefill plumbing (`eventDraft.ts` store, `EventFormModal.createPrefill`, `EventsManager` draft wiring) are all gone.
+- Desktop sidebar order is now: **New Event button pinned at the top**, then Dashboard, Events, Customer Follow-up, Templates, Inventory, Employees, Rental, Finance. Mobile bottom bar is Dashboard, Events, center Plus FAB, More (Calculator tab removed).
+- The Templates-page **Import old app** button is removed (legacy seed/import libs remain in-tree but unreachable from the UI).

@@ -2,14 +2,13 @@
 
 import { useState } from "react";
 import { Button, Group, Modal, Stack, Text, TextInput, Title } from "@mantine/core";
-import { Download, Plus, Search } from "lucide-react";
+import { Plus, Search } from "lucide-react";
 
 import { TemplateCards } from "./TemplateCards";
 import { TemplateFormModal } from "./TemplateFormModal";
 import { TemplateTable } from "./TemplateTable";
 import { Bilingual } from "@/components/Bilingual";
 import { preferredText, ui } from "@/lib/i18n";
-import { importLegacyData, type LegacyImportResult } from "@/lib/legacyImport";
 import { useSettingsStore } from "@/store/settings";
 import { templateDisplayName, templateMatchesQuery, useTemplatesStore, type FoodTemplate } from "@/store/templates";
 
@@ -21,7 +20,6 @@ export function TemplatesManager() {
   const [editingTemplate, setEditingTemplate] = useState<FoodTemplate | null>(null);
   const [deletingTemplate, setDeletingTemplate] = useState<FoodTemplate | null>(null);
   const [query, setQuery] = useState("");
-  const [importResult, setImportResult] = useState<LegacyImportResult | null>(null);
   const filtered = query.trim()
     ? templates.filter((template) => templateMatchesQuery(template, query))
     : templates;
@@ -33,34 +31,16 @@ export function TemplatesManager() {
           <Title order={2}>
             <Bilingual label={ui.nav.templates} />
           </Title>
-          <Group gap="xs">
-            <Button
-              variant="light"
-              leftSection={<Download size={18} />}
-              onClick={() => setImportResult(importLegacyData())}
-              title={preferredText(ui.templates.importLegacyNote, uiLanguage)}
-            >
-              <Bilingual label={ui.templates.importLegacy} />
-            </Button>
-            <Button
-              leftSection={<Plus size={18} />}
-              onClick={() => {
-                setEditingTemplate(null);
-                setFormOpened(true);
-              }}
-            >
-              <Bilingual label={ui.templates.addTemplate} />
-            </Button>
-          </Group>
+          <Button
+            leftSection={<Plus size={18} />}
+            onClick={() => {
+              setEditingTemplate(null);
+              setFormOpened(true);
+            }}
+          >
+            <Bilingual label={ui.templates.addTemplate} />
+          </Button>
         </Group>
-
-        {importResult && (
-          <Text size="sm" c="dimmed" mb="md">
-            {uiLanguage === "ta"
-              ? `${importResult.templatesAdded} உணவுகள், ${importResult.ingredientsAdded} பொருட்கள் சேர்க்கப்பட்டன.`
-              : `Added ${importResult.templatesAdded} meals, ${importResult.ingredientsAdded} ingredients.`}
-          </Text>
-        )}
 
         {templates.length > 0 && (
           <TextInput

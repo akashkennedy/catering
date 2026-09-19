@@ -112,10 +112,9 @@ type EventFormModalProps = {
   opened: boolean;
   event: CateringEvent | null;
   onClose: () => void;
-  createPrefill?: Partial<EventFormValues> & { selectedDishIds?: string[] };
 };
 
-export function EventFormModal({ opened, event, onClose, createPrefill }: EventFormModalProps) {
+export function EventFormModal({ opened, event, onClose }: EventFormModalProps) {
   const uiLanguage = useSettingsStore((state) => state.uiLanguage);
   const sheet = useMobileSheet("full", "lg");
   const statusData = EVENT_STATUS_OPTIONS.map((o) => ({
@@ -171,11 +170,9 @@ export function EventFormModal({ opened, event, onClose, createPrefill }: EventF
 
   useEffect(() => {
     if (!opened) return;
-    setAmountOverridden(
-      event?.totalAmountOverridden ?? (createPrefill?.totalAmount ? true : false)
-    );
-    const initialHeadcount = event?.headcount ?? createPrefill?.headcount ?? 100;
-    const initialTemplateId = event?.templateId ?? createPrefill?.templateId ?? null;
+    setAmountOverridden(event?.totalAmountOverridden ?? false);
+    const initialHeadcount = event?.headcount ?? 100;
+    const initialTemplateId = event?.templateId ?? null;
     const initialGroups =
       event?.mealGroups && event.mealGroups.length > 0
         ? event.mealGroups
@@ -184,26 +181,26 @@ export function EventFormModal({ opened, event, onClose, createPrefill }: EventF
               {
                 ...emptyMealGroup(initialHeadcount),
                 templateId: initialTemplateId,
-                selectedDishIds: createPrefill?.selectedDishIds ?? [],
+                selectedDishIds: [],
               },
             ]
           : [{ ...emptyMealGroup(initialHeadcount), templateId: null }];
     setMealGroups(initialGroups);
     reset({
-      name: event?.name ?? createPrefill?.name ?? "",
-      phone: event?.phone ?? createPrefill?.phone ?? "",
-      venue: event?.venue ?? createPrefill?.venue ?? "",
-      address: event?.address ?? createPrefill?.address ?? "",
-      functionType: event?.functionType ?? createPrefill?.functionType ?? "",
+      name: event?.name ?? "",
+      phone: event?.phone ?? "",
+      venue: event?.venue ?? "",
+      address: event?.address ?? "",
+      functionType: event?.functionType ?? "",
       headcount: initialHeadcount,
-      date: event?.date ?? createPrefill?.date ?? "",
-      status: event?.status ?? createPrefill?.status ?? "enquiry",
+      date: event?.date ?? "",
+      status: event?.status ?? "enquiry",
       templateId: initialTemplateId,
-      ratePerPerson: event?.ratePerPerson ?? createPrefill?.ratePerPerson ?? 0,
-      totalAmount: event?.totalAmount ?? createPrefill?.totalAmount ?? 0,
-      advancePaid: event?.advancePaid ?? createPrefill?.advancePaid ?? 0,
+      ratePerPerson: event?.ratePerPerson ?? 0,
+      totalAmount: event?.totalAmount ?? 0,
+      advancePaid: event?.advancePaid ?? 0,
     });
-  }, [opened, event, createPrefill, reset]);
+  }, [opened, event, reset]);
 
   const handleGroupsChange = (groups: EventMealGroup[]) => {
     setMealGroups(groups);

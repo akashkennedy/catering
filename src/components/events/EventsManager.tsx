@@ -21,7 +21,6 @@ import { Bilingual } from "@/components/Bilingual";
 import { ui, preferredText } from "@/lib/i18n";
 import { useSettingsStore } from "@/store/settings";
 import { useEventsStore, type CateringEvent, type EventStatus } from "@/store/events";
-import { useEventDraftStore } from "@/store/eventDraft";
 
 type StatusFilter = "all" | EventStatus;
 
@@ -45,9 +44,7 @@ export function EventsManager() {
   const [dateFilter, setDateFilter] = useState("");
   const [statusFilter, setStatusFilter] = useState<StatusFilter>("all");
 
-  const draftPrefill = useEventDraftStore((state) => state.prefill);
-  const clearDraftPrefill = useEventDraftStore((state) => state.clearPrefill);
-  const formOpened = manualOpen || draftPrefill !== null;
+  const formOpened = manualOpen;
 
   const filteredEvents = events.filter((event) => {
     const matchesName = event.name.toLowerCase().includes(searchQuery.trim().toLowerCase());
@@ -67,7 +64,6 @@ export function EventsManager() {
           onClick={() => {
             setEditingEvent(null);
             setManualOpen(true);
-            clearDraftPrefill();
           }}
         >
           <Bilingual label={ui.events.addEvent} />
@@ -112,7 +108,6 @@ export function EventsManager() {
             onEdit={(event) => {
               setEditingEvent(event);
               setManualOpen(true);
-              clearDraftPrefill();
             }}
             onDelete={setDeletingEvent}
           />
@@ -121,7 +116,6 @@ export function EventsManager() {
             onEdit={(event) => {
               setEditingEvent(event);
               setManualOpen(true);
-              clearDraftPrefill();
             }}
             onDelete={setDeletingEvent}
           />
@@ -131,10 +125,8 @@ export function EventsManager() {
       <EventFormModal
         opened={formOpened}
         event={editingEvent}
-        createPrefill={draftPrefill ?? undefined}
         onClose={() => {
           setManualOpen(false);
-          clearDraftPrefill();
         }}
       />
 

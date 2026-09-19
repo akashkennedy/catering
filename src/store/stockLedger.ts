@@ -1,6 +1,8 @@
 import { create } from "zustand";
 import { createJSONStorage, persist } from "zustand/middleware";
 
+import { fetchJson, newClientId, syncOrQueue } from "@/lib/storeSync";
+
 export const STOCK_ENTRY_TYPES = ["purchase", "used"] as const;
 export type StockEntryType = (typeof STOCK_ENTRY_TYPES)[number];
 
@@ -31,55 +33,80 @@ export type UsedEntryInput = {
 
 type StockLedgerState = {
   entries: StockLedgerEntry[];
+  loaded: boolean;
   addPurchaseEntry: (input: PurchaseEntryInput) => void;
   addUsedEntry: (input: UsedEntryInput) => void;
   removeEntriesForIngredient: (ingredientId: string) => void;
+  loadStockLedger: () => Promise<void>;
 };
+
+function toRecord(entry: StockLedgerEntry) {
+  return {
+    id: entry.id,
+    ingredientId: entry.ingredientId,
+    type: entry.type,
+    qty: entry.qty,
+    date: entry.date,
+    eventId: entry.eventId,
+    note: entry.note,
+  };
+}
 
 export const useStockLedgerStore = create<StockLedgerState>()(
   persist(
     (set) => ({
       entries: [],
-      addPurchaseEntry: (input) =>
-        set((state) => ({
-          entries: [
-            ...state.entries,
-            {
-              id: crypto.randomUUID(),
-              ingredientId: input.ingredientId,
-              type: "purchase",
-              qty: input.qty,
-              date: input.date,
-              eventId: null,
-              note: input.note ?? "",
-            },
-          ],
-        })),
-      addUsedEntry: (input) =>
-        set((state) => ({
-          entries: [
-            ...state.entries,
-            {
-              id: crypto.randomUUID(),
-              ingredientId: input.ingredientId,
-              type: "used",
-              qty: input.qty,
-              date: input.date,
-              eventId: input.eventId,
-              note: input.note ?? "",
-            },
-          ],
-        })),
-      removeEntriesForIngredient: (ingredientId) =>
+      loaded: false,
+      addPurchaseEntry: (input) => {
+        const entry: StockLedgerEntry = {
+          id: newClientId(),
+          ingredientId: input.ingredientId,
+          type: "purchase",
+          qty: input.qty,
+          date: input.date,
+          eventId: null,
+          note: input.note ?? "",
+        };
+        set((state) => ({ entries: [...state.entries, entry] }));
+        void syncOrQueue("POST", "/api/stock-entries", toRecord(entry));
+      },
+      addUsedEntry: (input) => {
+        const entry: StockLedgerEntry = {
+          id: newClientId(),
+          ingredientId: input.ingredientId,
+          type: "used",
+          qty: input.qty,
+          date: input.date,
+          eventId: input.eventId,
+          note: input.note ?? "",
+        };
+        set((state) => ({ entries: [...state.entries, entry] }));
+        void syncOrQueue("POST", "/api/stock-entries", toRecord(entry));
+      },
+      removeEntriesForIngredient: (ingredientId) => {
         set((state) => ({
           entries: state.entries.filter(
             (entry) => entry.ingredientId !== ingredientId
           ),
-        })),
+        }));
+        void syncOrQueue(
+          "DELETE",
+          `/api/stock-entries?ingredientId=${encodeURIComponent(ingredientId)}`
+        );
+      },
+      loadStockLedger: async () => {
+        const { flushOutbox } = await import("@/lib/outbox");
+        await flushOutbox();
+        const body = await fetchJson<{ entries?: StockLedgerEntry[] }>("/api/stock-entries");
+        if (body && Array.isArray(body.entries)) {
+          set({ entries: body.entries, loaded: true });
+        }
+      },
     }),
     {
       name: "catering-stock-ledger",
       storage: createJSONStorage(() => localStorage),
+      partialize: (state) => ({ entries: state.entries }),
     }
   )
 );

@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { Combobox, Group, Text, TextInput, useCombobox } from "@mantine/core";
+import { Combobox, Group, Skeleton, Text, TextInput, useCombobox } from "@mantine/core";
 import { useRouter } from "next/navigation";
 import { Search } from "lucide-react";
 
@@ -42,7 +42,7 @@ export function ShellSearch() {
   const utensils = useUtensilsStore((state) => state.utensils);
 
   if (!hydrated) {
-    return null;
+    return <Skeleton h={36} w={{ base: "100%", sm: 340 }} radius="sm" />;
   }
 
   const matches = (name: string) => name.toLowerCase().includes(query);

@@ -132,7 +132,7 @@ export function EventFormModal({ opened, event, onClose, createPrefill }: EventF
     setValue,
     control,
     watch,
-    formState: { errors },
+    formState: { errors, isSubmitting },
   } = useForm<EventFormValues>({
     resolver: zodResolver(buildEventSchema(!event, event?.date)),
     defaultValues: {
@@ -443,7 +443,7 @@ export function EventFormModal({ opened, event, onClose, createPrefill }: EventF
           <Button variant="default" onClick={onClose}>
             <Bilingual label={ui.common.cancel} />
           </Button>
-          <Button type="submit">
+          <Button type="submit" loading={isSubmitting}>
             {event ? (
               <Bilingual label={ui.common.save} />
             ) : (

@@ -47,7 +47,7 @@ export function AssignToEventModal({ opened, utensil, onClose }: AssignToEventMo
     handleSubmit,
     reset,
     control,
-    formState: { errors },
+    formState: { errors, isSubmitting },
   } = useForm<AssignFormValues>({
     resolver: zodResolver(assignSchema),
     defaultValues: {
@@ -171,7 +171,7 @@ export function AssignToEventModal({ opened, utensil, onClose }: AssignToEventMo
               <Button variant="default" onClick={onClose}>
                 <Bilingual label={ui.common.cancel} />
               </Button>
-              <Button type="submit">
+              <Button type="submit" loading={isSubmitting}>
                 <Bilingual label={ui.utensils.assignToEvent} />
               </Button>
             </Group>

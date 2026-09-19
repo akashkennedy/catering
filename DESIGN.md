@@ -57,21 +57,21 @@ Same roles, shifted for contrast on dark surfaces:
 ## 4. Layout — Desktop shell
 
 - **Header (60px, `--surface`):** "Catering" wordmark left → search bar centered (`sm`+) → search icon (mobile only) + notification bell right.
-- **Sidebar (260px, `--surface`):** nav items — Dashboard, Events, Customer Follow-up, Templates, Inventory, Employees, Rental, Calculator, Finance. Active item: leaf background + ink text; hover: 12% leaf wash. Bottom section: Dark-mode toggle row, then Settings button (Settings lives here, not in the nav list).
+- **Sidebar (260px, `--surface`):** nav items — Dashboard, Events, Customer Follow-up, Templates, Inventory, Employees, Rental, Calculator, Finance. Active item: leaf background + ink text; hover: 12% leaf wash. Bottom section: full-width New Event button (filled leaf, opens the full event form), then Dark-mode toggle row, then Settings button (Settings lives here, not in the nav list).
 - **Dark-mode toggle:** full nav-item row (moon icon + "Dark" label) with an animated sliding sun/moon pill at the right edge; the whole row is clickable (`role="switch"`).
 - **Main:** `md` page padding; dashboard cards on `--surface` with `--border`, 10px radius, separated by spacing — no heavy shadows.
 
 ## 5. Layout — Mobile
 
-- **Bottom tab bar** (fixed, `--surface`, border hairline, ≤639px): Dashboard, Events, Rental, Calculator + **More** (5th) opening a bottom sheet with Templates, Inventory, Employees, Follow-up, Finance, Settings. Active tab: leaf icon + label; inactive: muted.
+- **Bottom tab bar** (fixed, `--surface`, border hairline, ≤639px): Dashboard, Events, center Plus (raised leaf FAB opening the full event form), Calculator + **More** (5th) opening a right-side drawer with Rental, Templates, Inventory, Employees, Follow-up, Finance, Settings. Active tab: leaf icon + label; inactive: muted.
 - Dashboard widgets stack single-column, full-width.
 - Detail forms open as full-screen sheets on mobile.
 - Master lists render as tables on desktop, stacked cards on mobile.
 
 ## 6. Dashboard
 
-- Exactly three widget cards (Upcoming Events, Total Earnings, Payment Status) in a 3-col grid → stacked on mobile, plus one full-width **Quick Event** button on top.
-- Rhythm: 40px section gap, `xl` grid gaps, 20px card padding, 24px header-to-content gap in the three main cards.
+- Exactly three widget cards (Upcoming Events, Total Earnings, Payment Status) stacked in a single full-width column on all screens. New events are created from the sidebar New Event button (desktop) or the center Plus button (mobile).
+- Rhythm: 56px section gap, 40px vertical gap between stacked widget cards, 20px card padding, 24px header-to-content gap in the three main cards.
 - Stat pattern: small muted label → big value → status pill (leaf = positive/paid, kumkum = pending/negative).
 
 ## 7. Forms & inputs

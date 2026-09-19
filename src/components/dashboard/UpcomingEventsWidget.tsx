@@ -48,9 +48,9 @@ export function UpcomingEventsWidget() {
           <Bilingual label={ui.dashboard.upcomingEmpty} />
         </Text>
       ) : (
-        <Stack gap="md" style={{ flex: 1 }}>
+        <Stack gap="lg" style={{ flex: 1 }}>
           {upcoming.map((event) => (
-            <Stack key={event.id} gap={6}>
+            <Stack key={event.id} gap={8}>
               <Anchor
                 component={Link}
                 href={`/events/${event.id}`}

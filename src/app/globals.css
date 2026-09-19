@@ -296,6 +296,35 @@ body {
     align-items: center;
   }
 
+  .mobile-bottom-nav__plus-wrap {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: none;
+    border: none;
+    cursor: pointer;
+    padding: 0;
+  }
+
+  .mobile-bottom-nav__plus {
+    width: 52px;
+    height: 52px;
+    border-radius: 50%;
+    background: var(--accent-leaf);
+    color: #fff;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-top: -24px;
+    border: 2px solid var(--surface);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.25);
+  }
+
+  .mobile-bottom-nav__plus:active {
+    transform: scale(0.95);
+  }
+
   .mobile-more-item {
     display: flex;
     align-items: center;
@@ -361,7 +390,7 @@ body {
     display: flex;
     flex-direction: column;
     height: 100dvh;
-    padding-top: env(safe-area-inset-top, 0px);
+    padding-top: var(--apk-sat, env(safe-area-inset-top, 0px));
     padding-bottom: env(safe-area-inset-bottom, 0px);
   }
 }
@@ -493,7 +522,7 @@ input[type="number"] {
     align-items: center;
     gap: 4px;
     padding: 8px 12px;
-    padding-top: calc(8px + env(safe-area-inset-top, 0px));
+    padding-top: calc(8px + var(--apk-sat, env(safe-area-inset-top, 0px)));
     border-bottom: 1px solid var(--border);
     background: var(--surface);
   }
@@ -533,8 +562,26 @@ body {
 }
 
 @media (max-width: 639px) {
+  :root {
+    /* Top inset above the app header. Preserve the browser/WebView-provided
+       safe-area value (env() fallback only applies when the variable is
+       undefined, not when a WebView reports 0). The 24px Android status-bar
+       fallback is applied only via the AppsGeyser class or a native-provided
+       --appsgeyser-sat variable. */
+    --apk-sat: var(--appsgeyser-sat, env(safe-area-inset-top, 0px));
+  }
+
+  html.appsgeyser-apk {
+    --apk-sat: 24px;
+  }
+
+  .mantine-AppShell-root {
+    --app-shell-header-height: calc(60px + var(--apk-sat)) !important;
+    --app-shell-header-offset: calc(60px + var(--apk-sat)) !important;
+  }
+
   .mantine-AppShell-header {
-    padding-top: env(safe-area-inset-top, 0px);
+    padding-top: var(--apk-sat) !important;
     background: var(--surface) !important;
   }
 

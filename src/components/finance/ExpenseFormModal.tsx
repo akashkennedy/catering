@@ -37,7 +37,7 @@ export function ExpenseFormModal({ opened, onClose }: ExpenseFormModalProps) {
     handleSubmit,
     reset,
     control,
-    formState: { errors },
+    formState: { errors, isSubmitting },
   } = useForm<ExpenseFormValues>({
     resolver: zodResolver(expenseSchema),
     defaultValues: {
@@ -130,7 +130,7 @@ export function ExpenseFormModal({ opened, onClose }: ExpenseFormModalProps) {
             <Button variant="default" onClick={onClose}>
               <Bilingual label={ui.common.cancel} />
             </Button>
-            <Button type="submit">
+            <Button type="submit" loading={isSubmitting}>
               <Bilingual label={ui.finance.addExpense} />
             </Button>
           </Group>

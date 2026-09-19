@@ -14,11 +14,13 @@ import { usePathname } from "next/navigation";
 import {
   CalendarDays,
   Calculator,
-  CookingPot,
   LayoutDashboard,
+  Plus,
   MoreHorizontal,
   ClipboardList,
   ShoppingBasket,
+  CookingPot,
+  LogOut,
   UserRound,
   Wallet,
   Settings,
@@ -27,6 +29,7 @@ import {
 
 import { Bilingual } from "@/components/Bilingual";
 import { preferredText, ui, type Label } from "@/lib/i18n";
+import { useAuthStore } from "@/store/auth";
 import { useSettingsStore } from "@/store/settings";
 
 type MobileNavItem = {
@@ -38,11 +41,14 @@ type MobileNavItem = {
 const PRIMARY_TABS: MobileNavItem[] = [
   { label: ui.nav.dashboard, href: "/", icon: LayoutDashboard },
   { label: ui.nav.events, href: "/events", icon: CalendarDays },
-  { label: ui.nav.rental, href: "/utensils", icon: CookingPot },
+];
+
+const AFTER_TABS: MobileNavItem[] = [
   { label: ui.nav.calculator, href: "/calculator", icon: Calculator },
 ];
 
 const MORE_ITEMS: MobileNavItem[] = [
+  { label: ui.nav.rental, href: "/utensils", icon: CookingPot },
   { label: ui.nav.templates, href: "/templates", icon: ClipboardList },
   { label: ui.nav.ingredients, href: "/inventory", icon: ShoppingBasket },
   { label: ui.nav.employees, href: "/employees", icon: UserRound },
@@ -56,11 +62,13 @@ function isActive(pathname: string, href: string): boolean {
   return pathname === href || pathname.startsWith(`${href}/`);
 }
 
-export function MobileBottomNav() {
+export function MobileBottomNav({ onAddEvent }: { onAddEvent: () => void }) {
   const pathname = usePathname();
   const [moreOpened, setMoreOpened] = useState(false);
   const uiLanguage = useSettingsStore((state) => state.uiLanguage);
   const moreLabel = preferredText(ui.nav.more, uiLanguage);
+  const logout = useAuthStore((state) => state.logout);
+  const addEventLabel = preferredText(ui.events.addEvent, uiLanguage);
 
   const moreActive = MORE_ITEMS.some((item) => isActive(pathname, item.href));
 
@@ -68,6 +76,33 @@ export function MobileBottomNav() {
     <>
       <nav className="mobile-bottom-nav">
         {PRIMARY_TABS.map((item) => {
+          const Icon = item.icon;
+          const active = isActive(pathname, item.href);
+          return (
+            <Link
+              key={item.href}
+              href={item.href}
+              className={`mobile-bottom-nav__item${active ? " mobile-bottom-nav__item--active" : ""}`}
+              aria-current={active ? "page" : undefined}
+            >
+              <Icon size={20} />
+              <span className="mobile-bottom-nav__label">
+                <Bilingual label={item.label} />
+              </span>
+            </Link>
+          );
+        })}
+        <button
+          type="button"
+          className="mobile-bottom-nav__plus-wrap"
+          onClick={onAddEvent}
+          aria-label={addEventLabel}
+        >
+          <span className="mobile-bottom-nav__plus" aria-hidden>
+            <Plus size={24} />
+          </span>
+        </button>
+        {AFTER_TABS.map((item) => {
           const Icon = item.icon;
           const active = isActive(pathname, item.href);
           return (
@@ -125,6 +160,20 @@ export function MobileBottomNav() {
               </Link>
             );
           })}
+          <button
+            type="button"
+            className="mobile-more-item"
+            style={{ width: "100%", background: "none", border: "none", cursor: "pointer" }}
+            onClick={() => {
+              setMoreOpened(false);
+              void logout();
+            }}
+          >
+            <LogOut size={20} />
+            <span>
+              <Bilingual label={ui.auth.logout} />
+            </span>
+          </button>
         </Stack>
       </Drawer>
     </>

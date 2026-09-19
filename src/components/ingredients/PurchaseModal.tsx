@@ -44,7 +44,7 @@ export function PurchaseModal({ opened, ingredient, onClose }: PurchaseModalProp
     handleSubmit,
     reset,
     control,
-    formState: { errors },
+    formState: { errors, isSubmitting },
   } = useForm<PurchaseFormValues>({
     resolver: zodResolver(purchaseSchema),
     defaultValues: {
@@ -134,7 +134,7 @@ export function PurchaseModal({ opened, ingredient, onClose }: PurchaseModalProp
               <Button variant="default" onClick={onClose}>
                 <Bilingual label={ui.common.cancel} />
               </Button>
-              <Button type="submit">
+              <Button type="submit" loading={isSubmitting}>
                 <Bilingual label={ui.ingredients.logPurchase} />
               </Button>
             </Group>

@@ -6,7 +6,10 @@ export const SESSION_MAX_AGE_SECONDS = 60 * 60 * 24 * 7;
 function getSecret(): string {
   const secret = process.env.AUTH_SESSION_SECRET;
   if (!secret) {
-    throw new Error("AUTH_SESSION_SECRET environment variable is required");
+    if (process.env.NODE_ENV === "production") {
+      throw new Error("AUTH_SESSION_SECRET environment variable is required");
+    }
+    return "dev-only-secret";
   }
   return secret;
 }
@@ -15,7 +18,10 @@ function getExpectedCredentials(): { username: string; password: string } {
   const username = process.env.AUTH_USERNAME;
   const password = process.env.AUTH_PASSWORD;
   if (!username || !password) {
-    throw new Error("AUTH_USERNAME and AUTH_PASSWORD environment variables are required");
+    if (process.env.NODE_ENV === "production") {
+      throw new Error("AUTH_USERNAME and AUTH_PASSWORD environment variables are required");
+    }
+    return { username: username ?? "admin", password: password ?? "admin" };
   }
   return { username, password };
 }

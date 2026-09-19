@@ -652,3 +652,84 @@ body {
     padding-bottom: env(safe-area-inset-bottom, 0px);
   }
 }
+
+/* CheckRow — native-input-free checkbox (see CheckRow.tsx). */
+.check-row {
+  display: flex;
+  gap: 10px;
+  align-items: flex-start;
+  width: 100%;
+  padding: 4px 2px;
+  border: 0;
+  background: none;
+  cursor: pointer;
+  font: inherit;
+  color: var(--ink);
+  text-align: left;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.check-row__box {
+  flex: none;
+  width: 20px;
+  height: 20px;
+  margin-top: 1px;
+  border-radius: 6px;
+  border: 1px solid var(--border);
+  background: var(--surface);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #fff;
+}
+
+.check-row[data-checked] .check-row__box {
+  background: var(--accent-leaf);
+  border-color: var(--accent-leaf);
+}
+
+.check-row__text {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.check-row__label {
+  font-size: 0.875rem;
+}
+
+.check-row__desc {
+  font-size: 0.75rem;
+  color: var(--ink-muted);
+}
+
+/* ToggleSwitch — native-input-free switch (see CheckRow.tsx). */
+.toggle-switch {
+  flex: none;
+  width: 40px;
+  height: 22px;
+  padding: 2px;
+  border-radius: 999px;
+  border: 1px solid var(--border);
+  background: var(--border);
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.toggle-switch__thumb {
+  display: block;
+  width: 16px;
+  height: 16px;
+  border-radius: 999px;
+  background: var(--surface);
+  transition: transform 120ms ease;
+}
+
+.toggle-switch[data-checked] {
+  background: var(--accent-leaf);
+  border-color: var(--accent-leaf);
+}
+
+.toggle-switch[data-checked] .toggle-switch__thumb {
+  transform: translateX(18px);
+}

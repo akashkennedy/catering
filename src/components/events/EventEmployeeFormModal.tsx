@@ -3,7 +3,6 @@
 import { zodResolver } from "@hookform/resolvers/zod";
 import {
   Button,
-  Checkbox,
   Group,
   Modal,
   NumberInput,
@@ -15,6 +14,7 @@ import { z } from "zod";
 import { useEffect } from "react";
 
 import { Bilingual } from "@/components/Bilingual";
+import { CheckRow } from "@/components/CheckRow";
 import { ui, preferredText } from "@/lib/i18n";
 import { useSettingsStore } from "@/store/settings";
 import { useMobileSheet } from "@/hooks/useMobileSheet";
@@ -129,10 +129,17 @@ export function EventEmployeeFormModal({ opened, onClose, onAdd }: EventEmployee
               />
             )}
           />
-          <Checkbox
-            label={<Bilingual label={ui.events.saveToMaster} />}
-            description={<Bilingual label={ui.events.saveToMasterDesc} />}
-            {...register("saveToMaster")}
+          <Controller
+            name="saveToMaster"
+            control={control}
+            render={({ field }) => (
+              <CheckRow
+                checked={field.value}
+                onChange={field.onChange}
+                label={<Bilingual label={ui.events.saveToMaster} />}
+                description={<Bilingual label={ui.events.saveToMasterDesc} />}
+              />
+            )}
           />
           <Group justify="flex-end" mt="md">
             <Button variant="default" onClick={onClose}>

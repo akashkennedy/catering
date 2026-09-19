@@ -3,7 +3,6 @@
 import { zodResolver } from "@hookform/resolvers/zod";
 import {
   Button,
-  Checkbox,
   Group,
   Modal,
   NumberInput,
@@ -16,6 +15,7 @@ import { z } from "zod";
 import { useEffect } from "react";
 
 import { Bilingual } from "@/components/Bilingual";
+import { CheckRow } from "@/components/CheckRow";
 import { ui, preferredText } from "@/lib/i18n";
 import { useSettingsStore } from "@/store/settings";
 import { useMobileSheet } from "@/hooks/useMobileSheet";
@@ -215,10 +215,17 @@ export function EventUtensilFormModal({
             {...register("dateTo")}
             error={errors.dateTo?.message}
           />
-          <Checkbox
-            label={<Bilingual label={ui.events.saveUtensilToMaster} />}
-            description={<Bilingual label={ui.events.saveUtensilToMasterDesc} />}
-            {...register("saveToMaster")}
+          <Controller
+            name="saveToMaster"
+            control={control}
+            render={({ field }) => (
+              <CheckRow
+                checked={field.value}
+                onChange={field.onChange}
+                label={<Bilingual label={ui.events.saveUtensilToMaster} />}
+                description={<Bilingual label={ui.events.saveUtensilToMasterDesc} />}
+              />
+            )}
           />
           <Group justify="flex-end" mt="md">
             <Button variant="default" onClick={onClose}>

@@ -3,7 +3,6 @@
 import { zodResolver } from "@hookform/resolvers/zod";
 import {
   Button,
-  Checkbox,
   Group,
   NumberInput,
   Select,
@@ -18,6 +17,7 @@ import { Calculator } from "lucide-react";
 import { z } from "zod";
 
 import { Bilingual } from "@/components/Bilingual";
+import { CheckRow } from "@/components/CheckRow";
 import { formatINR } from "@/lib/format";
 import { ui, preferredText } from "@/lib/i18n";
 import { useSettingsStore } from "@/store/settings";
@@ -139,22 +139,26 @@ export function PricingCalculator() {
               <Text size="sm" fw={500} mb={4}>
                 <Bilingual label={ui.events.includeCourses} />
               </Text>
-              <Checkbox.Group
-                value={checkedDishIds}
-                onChange={(value) =>
-                  setSelectedDishIds(value.length === allDishIds.length ? [] : value)
-                }
-              >
-                <Stack gap={4}>
-                  {template.dishes.map((dish) => (
-                    <Checkbox
+              <Stack gap={4}>
+                {template.dishes.map((dish) => {
+                  const dishChecked = checkedDishIds.includes(dish.id);
+                  return (
+                    <CheckRow
                       key={dish.id}
-                      value={dish.id}
+                      checked={dishChecked}
+                      onChange={(next) => {
+                        const nextIds = next
+                          ? [...checkedDishIds, dish.id]
+                          : checkedDishIds.filter((id) => id !== dish.id);
+                        setSelectedDishIds(
+                          nextIds.length === allDishIds.length ? [] : nextIds
+                        );
+                      }}
                       label={`${dishDisplayName(dish, uiLanguage)} (${dish.ingredients.length})`}
                     />
-                  ))}
-                </Stack>
-              </Checkbox.Group>
+                  );
+                })}
+              </Stack>
             </div>
           )}
           <Controller

@@ -5,7 +5,6 @@ import {
   ActionIcon,
   Button,
   Card,
-  Checkbox,
   Group,
   NumberInput,
   Select,
@@ -16,6 +15,7 @@ import {
 import { Plus, Trash } from "lucide-react";
 
 import { Bilingual } from "@/components/Bilingual";
+import { CheckRow } from "@/components/CheckRow";
 import { preferredText, ui } from "@/lib/i18n";
 import { useSettingsStore } from "@/store/settings";
 import {
@@ -160,31 +160,33 @@ function MealGroupCard({
                 mb="xs"
               />
             )}
-            <Checkbox.Group
-              value={checkedIds}
-              onChange={(value) =>
-                onChange({
-                  ...group,
-                  selectedDishIds:
-                    value.length === allDishIds.length ? [] : value,
-                })
-              }
-            >
-              <Stack gap={4}>
-                {visibleDishes.map((dish) => (
-                  <Checkbox
+            <Stack gap={4}>
+              {visibleDishes.map((dish) => {
+                const dishChecked = checkedIds.includes(dish.id);
+                return (
+                  <CheckRow
                     key={dish.id}
-                    value={dish.id}
+                    checked={dishChecked}
+                    onChange={(next) => {
+                      const nextIds = next
+                        ? [...checkedIds, dish.id]
+                        : checkedIds.filter((id) => id !== dish.id);
+                      onChange({
+                        ...group,
+                        selectedDishIds:
+                          nextIds.length === allDishIds.length ? [] : nextIds,
+                      });
+                    }}
                     label={`${dishDisplayName(dish, uiLanguage)} (${dish.ingredients.length})`}
                   />
-                ))}
-                {visibleDishes.length === 0 && (
-                  <Text size="sm" c="dimmed">
-                    <Bilingual label={ui.templates.noMatch} />
-                  </Text>
-                )}
-              </Stack>
-            </Checkbox.Group>
+                );
+              })}
+              {visibleDishes.length === 0 && (
+                <Text size="sm" c="dimmed">
+                  <Bilingual label={ui.templates.noMatch} />
+                </Text>
+              )}
+            </Stack>
           </div>
         )}
       </Stack>

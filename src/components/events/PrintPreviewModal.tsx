@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { Button, Chip, Group, Modal, Stack, Text } from "@mantine/core";
+import { Button, Group, Modal, Stack, Text } from "@mantine/core";
 import { Download } from "lucide-react";
 
 import { Bilingual } from "@/components/Bilingual";
@@ -87,21 +87,29 @@ export function PrintPreviewModal({
           <Text size="sm" fw={500} mb={4}>
             <Bilingual label={ui.events.printCategories} />
           </Text>
-          <Chip.Group
-            multiple
-            value={selectedTags}
-            onChange={(value) =>
-              setTagOverride({ eventId: event.id, tags: value as IngredientTag[] })
-            }
-          >
-            <Group gap="xs">
-              {availableTags.map((tag) => (
-                <Chip key={tag} value={tag} size="sm">
+          <Group gap="xs">
+            {availableTags.map((tag) => {
+              const active = selectedTags.includes(tag);
+              return (
+                <button
+                  key={tag}
+                  type="button"
+                  aria-pressed={active}
+                  className={`ingredient-filter-chip${active ? " ingredient-filter-chip--active" : ""}`}
+                  onClick={() =>
+                    setTagOverride({
+                      eventId: event.id,
+                      tags: active
+                        ? selectedTags.filter((item) => item !== tag)
+                        : [...selectedTags, tag],
+                    })
+                  }
+                >
                   {preferredText(ui.ingredients.tags[tag], uiLanguage)}
-                </Chip>
-              ))}
-            </Group>
-          </Chip.Group>
+                </button>
+              );
+            })}
+          </Group>
         </div>
 
         {visibleLines.length === 0 ? (

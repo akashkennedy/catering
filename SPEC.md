@@ -519,3 +519,76 @@ This section records only what was built **after** §12 was written. §§1–12 
 - **Legacy import (one-time, from `mampally-new.vercel.app`):** `src/lib/legacySeed.ts` is a frozen copy of the old app's data — 2 meals (Saapadu 42 courses, Biriyani 40 courses) + 182 unique ingredients with Tamil names, units, categories and prices. `importLegacyData()` (`src/lib/legacyImport.ts`) adds missing ingredients (matched by lowercased English name; units via `normalizeUnit`, categories mapped `masala→masala-spices` / `meat→meat-fish`) then adds both meals as templates with all courses + `qtyPer100`; re-runs skip existing entries, never duplicating. The UI button existed on the Templates page and was later removed (§15); the libs stay for future re-imports. Most old courses import with zero ingredients (only 16 links exist in the old app) — ready to fill in the template editor.
 - **Template list tidy:** mobile cards and desktop rows are **click-to-edit** (card has `role="button"` + Enter/Space support); the per-row pencil buttons are deleted, only the kumkum delete icon remains (`stopPropagation` so it never opens the editor). Course pills were replaced by a single dimmed comma-separated line (`Name (count), …`, capped at 5 dishes + bilingual `moreItems` remainder). Templates page also has search across template/dish names (`templateMatchesQuery`) with a no-match empty state.
 - **Double-tick fix (old Android WebViews ignore `appearance: none`):** all Mantine `Checkbox` / `Chip` / `Switch` usages are gone app-wide (zero remaining). Replacements with no native `<input>` inside: shared `CheckRow` (button + `role="checkbox"` + single Lucide `Check`, leaf fill, theme-aware CSS in `globals.css`) used in the meal course pickers, calculator-era pickers (removed with §15), and both save-to-master toggles; shared `ToggleSwitch` (`role="switch"`) for the utensil returned toggles; plain-button `ingredient-filter-chip` toggles for print-preview categories.
+
+---
+
+## 17. V8 Addendum — public landing page + client manager (narrow scope)
+
+- **Routes:** `/site` (public, no login/sidebar — `AuthGate` + `AppLayout` early-return via `isPublicSitePath`), `/site-manager` (CRM screen: desktop sidebar + mobile More drawer, `Globe` icon). 1:1 mirror of `mampallicatering.vercel.app` sections: header, hero, trust cards, stats, heritage, menus, standards, gallery, testimonials, contact (WhatsApp `wa.me` submit), footer.
+- **Client-editable = exactly 4 editors:** Contact (phone numbers, WhatsApp digits, office address En+Ta), Menus (copy, course groups + `English | Tamil` per-line items, ₹ price with 0 hiding it, photo URL, optional live-template link auto-listing dish names), Gallery (photo link OR Instagram post + caption + fixed categories), Testimonials (quote En+Ta, author, event, place, 1–5 stars, `manual|google` source + profile URL, Google-ready `authorPhotoUrl`/`googleReviewId` fields). No visibility toggles, no restore — sections always render (empty lists return `null`). Everything else (hero, stats, about, standards, contact options/zones, footer) is hardcoded bilingual copy in `src/lib/siteCopy.ts` (dev-only).
+- **Gallery Instagram embeds:** no API key needed — items store the post URL, public page renders `blockquote.instagram-media` + `embed.js` (`lazyOnload`, `instgrm.Embeds.process()` re-run on items/filter change). Offline or blocked script degrades to caption + "View on Instagram" link by construction. Posts must be public; manager validates the URL contains `instagram.com/`.
+- **Store:** `siteContent.ts` (`catering-site`, v3 — v1 gallery items migrate to `kind: "photo"`, business gains address fields, v3 defaults local-only `lastPublishedAt`) seeded from the live site. Manager header has a **Live Preview** button opening `/site` in a new tab (the earlier inline preview rendering the public components was removed to keep the manager light).
+- **Google reviews:** Phase 1 = manual paste with "via Google" badge (no API key, offline-safe, zero policy risk). `GOOGLE_MAPS_URL` in `siteCopy.ts` is empty — pasting the full Maps URL activates the "Review us on Google" button. Phase 2 = Places API auto-sync (max 5 reviews, server proxy since keys can't ship in-app, mandatory author attribution) into the existing Google-ready fields.
+- **Photos** are URL strings (no uploads until Phase 2 storage buckets); seed URLs hotlink the live site temporarily. Visitor language is a local en/ta switch on the public page (visitors have no settings store).
+
+---
+
+## 18. V9 Addendum — Neon-backed website publishing (CRM edits the live site)
+
+- **Goal:** the CRM site manager publishes straight to the live website project. Shared store: **Neon Postgres**, table `site_content` (`id TEXT PK`, `data JSONB`, `updated_at`, single row `id='default'`). Schema + access notes live in `db/site-content.sql`; website-side code in `db/WEBSITE_INTEGRATION.md`.
+- **CRM side:** `src/lib/siteDb.ts` (server-only `@neondatabase/serverless` wrapper; missing `DATABASE_URL` → typed 503) + `src/app/api/site-content/route.ts` (`GET` pull / `POST` publish, both require the CRM login session cookie via `server-auth`, zod-validated payload). Publish best-effort pings the website revalidate endpoint (`SITE_REVALIDATE_URL` + `SITE_REVALIDATE_SECRET`); result surfaces `revalidated: true/false`. No RLS in Neon — writes are gated by the session-checked route, `DATABASE_URL` never leaves the server (see `.env.example`).
+- **Manager UI:** Publish card on `/site-manager` (Publish to website / Load from database with confirm, last-published timestamp persisted locally, 503 shows the connect hint). Pull normalizes via `normalizeRemoteContent()` (missing ids regenerated, ratings clamped, unknown gallery kinds → photo) and never touches `lastPublishedAt` except from the server's `updatedAt`.
+- **Website side (other repo):** reads the same table with its own connection string (read-only role recommended), falls back to empty content when unreachable, refreshes via `revalidateTag("site-content")` from its own `/api/revalidate-site` route.
+- **Google reviews:** unchanged plan — manual paste now, Places API sync later into the same fields.
+
+---
+
+## 19. V10 Addendum — bilingual meal templates + multi-meal events (old-app logic port)
+
+- **Source:** menu/course model reverse-engineered live from the sibling project (`mampally-new.vercel.app` catering module: `Meal { nameEn, nameTa, courses[] { items[] { qtyPer100, pricePerUnit } } }`, Setup/Plan tabs, per-order `mealGroups[] { mealId, people, selectedCourseIds[] }`). Ported as logic only, in our refined UI.
+- **Bilingual templates:** `FoodTemplate { nameEn, nameTa }`, `TemplateDish { nameEn, nameTa }` (store `catering-templates`, v1 migrate: legacy `name` → `nameEn`, `nameTa: ""`). Helpers `templateDisplayName()` / `dishDisplayName()` (Tamil falls back to English) and `templateMatchesQuery()` (matches En, Ta, and dish names). Template form has side-by-side English + Tamil inputs with offline auto-fill (`suggestTamilName()`: ingredient dictionary + small dish map — Saapadu, Sambar, Poriyal…); Tamil optional, never blocking. All dropdowns, tables, cards and global search show current-language names.
+- **Course setup parity:** template cards/table show a dimmed comma-separated dish line (`Name (count), …`, capped at 5 dishes + bilingual `moreItems` remainder); template list has search; the editor shows live unit + `globalPrice` reference per ingredient row (`unit · ₹price/unit · ≈ ₹line-cost / 100`) and per-dish totals in each dish header.
+- **Multi-meal events (supersedes one-template-per-event, §4.2):** `EventMealGroup { id, templateId, headcount, selectedDishIds }` where `[]` = all dishes; `CateringEvent.mealGroups[]` (store `catering-events` v5→v6 migrate: legacy `templateId + headcount` → one group; legacy `templateId` kept synced to the first group). `buildScaledIngredientsForGroups()` scales each group's selected dishes by its own headcount and sums duplicates; `resolveGroupDishes()` treats empty/unknown selections as all dishes. Shared `MealGroupsEditor` (template select, headcount + 100/200/300/500 chips, course checkboxes with search) is used in both the event form (replaces the single template dropdown; overall headcount stays for pricing) and event detail (group edits rescale immediately; overall headcount edits no longer wipe group scaling; groupless legacy events keep the old path). The pricing calculator briefly had the same course filter before its deletion (§15).
+- **Pricing rule (deliberate divergence from the old app):** no `pricePerUnit` snapshots on template items — scaling always resolves live `Ingredient.globalPrice` with per-event overrides (SPEC §7 data-integrity rule); the old "apply price to meal-only vs master" modal was not ported. (Phase C briefly added meal/course headings to the PDF; §14's rewrite replaced them with pure category lists.)
+
+---
+
+## 20. V11 Addendum — Backend migration (NeonDB) + real auth + permissions
+
+Supersedes §1 (Phase 2 is now), §13.13 (mock gate replaced), and UI-only roles. Source plan: `BACKEND-MIGRATION.md` (kept in-repo as the build record). **Explicitly accepted trade-off:** full offline is gone, but localStorage stays as an **offline read cache** (API is source of truth; loads overwrite cache; writes apply locally then sync) — not the doc's pure online-only variant.
+
+- **Schema** (`db/migrations/0001–0004`, tracked in `schema_migrations`, applied via `npm run db:migrate`): `users`, `sessions`, `permissions`; `ingredients`, `food_templates` + `template_dishes` + `template_dish_ingredients`; `events` + `event_meal_groups` / `event_ingredient_lines` / `event_employee_lines` / `event_utensil_lines`; `employees`, `utensils`, `stock_ledger_entries`, `vessel_stock_entries`, `expenses`, `other_income`, `reminders`, `vendor_names`, `site_content`. All ids are app-generated UUID TEXT (preserves client ids through migration). Ingredient references are plain TEXT (no FK) to preserve dangling-tolerant "Unknown ingredient" behavior; structural nesting uses FKs with `ON DELETE CASCADE`. Money/qty are NUMERIC (coerced with `Number()` on read — pg returns NUMERIC as string over HTTP).
+- **DB layer:** shared `@neondatabase/serverless` client (`src/lib/db.ts`; `siteDb.ts` delegates to it). No ORM (deliberate: consistent with the V9 site-content code). Scripts: `db:check` (scratch-table round-trip probe), `db:migrate` (ordered, idempotent, `$$`-aware splitter), `db:seed-admin` (`ADMIN_EMAIL`/`ADMIN_PASSWORD`, bcrypt-12, skips when present).
+- **Auth upgrade:** `bcryptjs` hashing (pure JS, Edge-safe); DB `users` (`email` unique/lowercased, `passwordHash`, `isAdmin`, `employeeId`) + `sessions` (random token cookie, 7-day TTL, `deleteExpiredSessions` helper). Login tries DB first, falls back to legacy env-credential HMAC flow **only while `DATABASE_URL` is unset** (keeps dev + pre-migration working); rate limiting kept. Logout deletes the DB row. `/api/auth/me` exposes `{ user, permissions }`; the auth store carries `userId/isAdmin/employeeId/permissions` (admin/legacy resolve to full). First admin comes from the seed script — no shared credential remains once migrated.
+- **Permissions (server-enforced via `requirePermission()`; UI hiding is secondary):** `permissions` table (`canViewFinance`, `canViewOtherEmployeeRates`, `canManageEmployees`, `canManageSettings`); new employee logins default to everything-true except the two finance flags; admin always resolves full and admin/self permission edits are 403. Enforcement map: finance + income routes → `canViewFinance`; employee master writes + users routes → `canManageEmployees`; site publish → `canManageSettings`; everything else → any session. `!canViewOtherEmployeeRates` masks others' `toPay/paid` to 0 in events GET (own linked lines stay) and PATCH preserves hidden pay values so masked zeros can never overwrite real data (deletes still apply).
+- **API migration:** every entity group has session-gated routes (30 total, see build output); POSTs accept client ids with `ON CONFLICT DO NOTHING` (idempotent replay); PATCHes are full-replace; DELETEs are idempotent. Frontend stores keep `persist` as cache + `loaded` flag + `load*()` (flush outbox, then server-overwrites-cache) called on screen mount; mutations are optimistic-local then background-sync, failures queued in `catering-outbox` (ordered replay, 4xx-dropped except 401/429). UI gating: Finance nav + `/finance` + EarningsWidget hidden without `canViewFinance`; pay columns/totals hidden per the masking rule; accounts section hidden without `canManageEmployees`.
+- **Migration tool:** `/migrate` page (+ Settings link) POSTs every cached record per entity with a per-entity moved/failed report; safe to re-run. Dev-seed wipe also clears the outbox so cleared data cannot replay.
+- **Accounts screen:** Logins & access section on `/employees` (admin-gated): list logins with admin badge, create login (email + min-8 temp password, optional employee link, duplicate guards), per-user permission toggles effective immediately (optimistic with rollback), delete with server-side admin/self guards.
+
+---
+
+## 21. Project status (living section — update on every push)
+
+### Committed & pushed to `origin/dev`
+| Commit | Content |
+|---|---|
+| `f695488` | Bilingual meal/course templates, multi-meal events, legacy import, tidy click-to-edit list (§§16, 19) |
+| `b703a6e` | Dual-language buy-list + detailed PDFs, category groups, print preview (§14) |
+| `937f6af` | Double-tick fix: native-input-free checks/switches/chips (§16) |
+| `65dcb5a` | Calculator removed, New Event button to sidebar top, import button removed (§15) |
+| `58d4c6d` | SPEC V7 addendum only |
+
+### Built, verified, NOT yet committed (working tree)
+- Public landing page + client manager: `/site`, `/site-manager`, `siteContent` store, `siteCopy`, shell bypass (§17).
+- Neon website publishing: `/api/site-content`, `siteDb`, publish card, `db/site-content.sql`, website integration doc (§18).
+- Full backend migration: 30 API routes, all stores API-first with offline cache + outbox, DB auth + permissions, `/migrate` tool, accounts screen, finance/rate gating (§20).
+- Verification so far: `tsc` clean, `eslint` 0 errors, `npm run build` 36/36 routes green. DB-touching tests (connection probe, migration apply, login round-trip, 403 check, idempotent import) **not run — blocked on credentials**.
+
+### Blocked / pending (needs the user)
+1. **Neon `DATABASE_URL`** (pooled) + permission to run `db:migrate` + `db:check`.
+2. **`ADMIN_EMAIL` / `ADMIN_PASSWORD`** for `db:seed-admin` (or user runs it).
+3. **Website repo access** for the website-side read layer (`db/WEBSITE_INTEGRATION.md` has the exact code).
+4. Commit + push of the working tree after (1)–(3) resolve.
+
+### Deliberately left out of git
+- `hello.ts`, `neon.ts` (root scratch files), `.neon` gitignore entry — user's own Neon experiments, untouched.

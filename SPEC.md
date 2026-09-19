@@ -494,3 +494,12 @@ This section records only what was built **after** §12 was written. §§1–12 
 - `AuthGate` in the root layout renders a `CardSkeleton` until hydrated, then the `LoginForm` when logged out, otherwise the normal shell (`AppLayout` + `ReminderNotifier`, so no notifications pre-login). Fully local, works offline in the APK.
 - `LoginForm` follows the app's usual template: centered `dash-card` (max 400px, full-width on phones), RHF + Zod, Mantine `TextInput` + `PasswordInput` with `admin` placeholder hints, full-width leaf submit with `loading={isSubmitting}`, kumkum invalid-credentials error, bilingual labels via new `ui.auth` i18n keys (no language switcher on the form — follows the stored UI language).
 - Logout: nav-styled button under Settings in the desktop sidebar + entry at the bottom of the mobile More drawer.
+
+---
+
+## 14. V5 Addendum — dual-language invoice PDFs (supersedes §4.6 PDF language toggle)
+
+- **Two PDFs, both dual-language** (Tamil + English together, always Noto Sans Tamil): **Buy list** (name + qty, no prices) and **Detailed** (name + qty + price with totals). Filename suffixes `_buy-list` / `_detailed`; the old per-language export + `generateEventPdf` are removed.
+- **Layout:** `# | பொருள் | Ingredient | Qty | Unit | [Price ₹]`; rows grouped under bilingual category headings (`INGREDIENT_TAGS` order, sorted by English name); unknown-tag/unknown-ingredient lines fall under Grocery, never dropped.
+- **Pre-print step:** event detail's Invoice button opens `PrintPreviewModal` (full sheet) with category filter chips (tags present in the event, all-on), the existing editable qty/price line tables (edits save to the event via the normal store update), a live filtered subtotal, and the two download buttons. Detailed total = printed lines only; event total/advance/balance shown for context. No employees in either PDF (unchanged).
+- Settings → document-language card is retained but no longer consumed by event PDFs.

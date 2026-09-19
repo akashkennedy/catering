@@ -10,7 +10,6 @@ import {
   Group,
   NumberInput,
   Paper,
-  SegmentedControl,
   Select,
   Stack,
   Tabs,
@@ -46,7 +45,7 @@ import { useSettingsStore } from "@/store/settings";
 import { useStockLedgerStore } from "@/store/stockLedger";
 import { useTemplatesStore } from "@/store/templates";
 import { useVendorSuggestionsStore } from "@/store/vendorSuggestions";
-import { generateEventPdf } from "@/lib/pdf";
+import { PrintPreviewModal } from "./PrintPreviewModal";
 import { todayLocalISO } from "@/lib/date";
 import { EVENT_STATUS_OPTIONS } from "./EventFormModal";
 import {
@@ -68,7 +67,6 @@ export function EventDetail() {
   const masterEmployees = useEmployeesStore((state) => state.employees);
   const vendorSuggestions = useVendorSuggestionsStore((state) => state.vendorSuggestions);
   const addVendorSuggestion = useVendorSuggestionsStore((state) => state.addVendorSuggestion);
-  const defaultLanguage = useSettingsStore((state) => state.defaultLanguage);
   const uiLanguage = useSettingsStore((state) => state.uiLanguage);
   const addUsedEntry = useStockLedgerStore((state) => state.addUsedEntry);
   const ledgerEntries = useStockLedgerStore((state) => state.entries);
@@ -76,8 +74,7 @@ export function EventDetail() {
   const [utensilFormOpened, setUtensilFormOpened] = useState(false);
   const [assignValue, setAssignValue] = useState<string | null>(null);
   const [utensilVendorName, setUtensilVendorName] = useState("");
-  const [pdfLang, setPdfLang] = useState<"en" | "ta">(defaultLanguage);
-  const [generatingPdf, setGeneratingPdf] = useState(false);
+  const [printOpened, setPrintOpened] = useState(false);
 
   if (!event) {
     return (
@@ -304,15 +301,6 @@ export function EventDetail() {
     update({ utensils: eventUtensils.filter((line) => line.id !== lineId) });
   };
 
-  const handleGeneratePdf = async () => {
-    setGeneratingPdf(true);
-    try {
-      await generateEventPdf(event, ingredients, pdfLang, templates);
-    } finally {
-      setGeneratingPdf(false);
-    }
-  };
-
   const runningTotal = eventIngredientCost(event);
   const totalToPay = eventEmployeeToPay(event);
   const totalPaid = eventEmployeePaid(event);
@@ -338,23 +326,21 @@ export function EventDetail() {
 
       <Paper withBorder p="md">
         <Group gap="md" align="flex-end" wrap="wrap">
-          <SegmentedControl
-            value={pdfLang}
-            onChange={(value) => setPdfLang(value as "en" | "ta")}
-            data={[
-              { label: <Bilingual label={ui.settings.english} />, value: "en" },
-              { label: <Bilingual label={ui.settings.tamil} />, value: "ta" },
-            ]}
-          />
-          <Button
-            leftSection={<Download size={18} />}
-            onClick={handleGeneratePdf}
-            loading={generatingPdf}
-          >
+          <Button leftSection={<Download size={18} />} onClick={() => setPrintOpened(true)}>
             <Bilingual label={ui.events.invoice} />
           </Button>
         </Group>
       </Paper>
+
+      <PrintPreviewModal
+        opened={printOpened}
+        event={event}
+        ingredients={ingredients}
+        usedIngredientIds={usedIngredientIds}
+        onMarkUsed={handleMarkUsed}
+        onLineChange={handleLineChange}
+        onClose={() => setPrintOpened(false)}
+      />
 
       <Paper withBorder p="md">
         <Stack gap="md">

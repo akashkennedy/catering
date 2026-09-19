@@ -189,6 +189,14 @@ export const ui = {
       "All courses included.",
       "அனைத்து உணவுகளும் சேர்க்கப்பட்டுள்ளன."
     ),
+    printPreview: lab("Print preview", "அச்சு முன்னோட்டம்"),
+    printCategories: lab("Print categories", "அச்சிட வேண்டிய வகைகள்"),
+    buyListPdf: lab("Buy list (qty only)", "வாங்கும் பட்டியல் (அளவு மட்டும்)"),
+    detailedPdf: lab("Detailed (with price)", "விரிவானது (விலையுடன்)"),
+    printNote: lab(
+      "Quantity and price edits here are saved to the event. Unchecked categories are left out of the PDF.",
+      "இங்கு அளவு மற்றும் விலை திருத்தங்கள் நிகழ்வில் சேமிக்கப்படும். தேர்வு நீக்கிய வகைகள் PDF-இல் வராது."
+    ),
     invoice: lab("Invoice", "விலைப்பட்டியல்"),
     editEvent: lab("Edit Event", "நிகழ்வைத் திருத்து"),
     nameRequired: lab("Name is required", "பெயர் தேவை"),

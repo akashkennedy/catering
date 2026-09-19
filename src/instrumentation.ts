@@ -1,4 +1,4 @@
-import { validateAuthConfig } from "@/lib/server-auth";
+import { validateAuthConfig } from "@/lib/validate-auth-config";
 
 export async function register() {
   validateAuthConfig();

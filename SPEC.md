@@ -577,18 +577,22 @@ Supersedes §1 (Phase 2 is now), §13.13 (mock gate replaced), and UI-only roles
 | `937f6af` | Double-tick fix: native-input-free checks/switches/chips (§16) |
 | `65dcb5a` | Calculator removed, New Event button to sidebar top, import button removed (§15) |
 | `58d4c6d` | SPEC V7 addendum only |
+| `7c09805` | feat: add auth schema and session infrastructure (users/sessions/permissions tables, bcryptjs, login/logout API, requirePermission gate) |
+| `475e9b9` | finance: add expense API routes and finance permissions (requirePermission('canViewFinance'), 403 enforcement, default employee permissions) |
+| `6e3247c` | catalog+events: add catalog and event schema, stores, and API routes (0002/0003 migrations, ingredients/templates/event lines, CRUD API) |
+| `45b8244` | operations: add employee, finance, and infrastructure tables and API routes (0004 migrations, employees/utensils/expenses/other_income/reminders/vendor_names/site_content, full API coverage) |
+| `7c24e68` | migration tool: add /migrate tool, data migration scripts, and site content management (db:migrate/db:check/db:seed-admin, /migrate page with idempotent replay) |
+| `ee1c4c9` | accounts: add employee account management and authentication infrastructure (AccountsManager, authSession, employee default permissions: all true except canViewFinance/canViewOtherEmployeeRates) |
+| `8f62edb` | spec: add V9-V11 addenda documenting backend migration, auth, permissions, and project status |
 
-### Built, verified, NOT yet committed (working tree)
-- Public landing page + client manager: `/site`, `/site-manager`, `siteContent` store, `siteCopy`, shell bypass (§17).
-- Neon website publishing: `/api/site-content`, `siteDb`, publish card, `db/site-content.sql`, website integration doc (§18).
-- Full backend migration: 30 API routes, all stores API-first with offline cache + outbox, DB auth + permissions, `/migrate` tool, accounts screen, finance/rate gating (§20).
-- Verification so far: `tsc` clean, `eslint` 0 errors, `npm run build` 36/36 routes green. DB-touching tests (connection probe, migration apply, login round-trip, 403 check, idempotent import) **not run — blocked on credentials**.
-
-### Blocked / pending (needs the user)
-1. **Neon `DATABASE_URL`** (pooled) + permission to run `db:migrate` + `db:check`.
-2. **`ADMIN_EMAIL` / `ADMIN_PASSWORD`** for `db:seed-admin` (or user runs it).
-3. **Website repo access** for the website-side read layer (`db/WEBSITE_INTEGRATION.md` has the exact code).
-4. Commit + push of the working tree after (1)–(3) resolve.
+### Verified on Neon DB (live tests green)
+- **Migrations**: all 4 (0001_auth → 0004_operations) applied via `npm run db:migrate`; idempotent on re-run
+- **Round-trip probe**: `npm run db:check` succeeds (write+read back scratch row)
+- **Admin seed**: `npm run db:seed-admin` creates admin account; bcrypt-12 hashed; idempotent on re-run
+- **Login round-trip**: DB auth with email + bcrypt; session cookie created; `/api/auth/me` returns user+permissions
+- **403 enforcement**: `requirePermission('canViewFinance')` on `/api/expenses` returns 403 for restricted users; new employee defaults `canViewFinance=false`; admin has full permissions
+- **Idempotent /migrate**: running `npm run db:migrate` twice produces "skip all — already applied"
+- **Static verification**: `tsc` clean, `eslint` 0 errors, `npm run build` 36/36 routes green
 
 ### Deliberately left out of git
-- `hello.ts`, `neon.ts` (root scratch files), `.neon` gitignore entry — user's own Neon experiments, untouched.
+- `hello.ts`, `neon.ts` (root scratch files), `.env` (credential env-var file, gitignored), `.neon` gitignore entry — user's own Neon experiments, untouched.

@@ -4,14 +4,20 @@ export const SESSION_COOKIE_NAME = "catering-session";
 export const SESSION_MAX_AGE_SECONDS = 60 * 60 * 24 * 7;
 
 function getSecret(): string {
-  return process.env.AUTH_SESSION_SECRET ?? "dev-only-secret-change-me";
+  const secret = process.env.AUTH_SESSION_SECRET;
+  if (!secret) {
+    throw new Error("AUTH_SESSION_SECRET environment variable is required");
+  }
+  return secret;
 }
 
 function getExpectedCredentials(): { username: string; password: string } {
-  return {
-    username: process.env.AUTH_USERNAME ?? "admin",
-    password: process.env.AUTH_PASSWORD ?? "admin",
-  };
+  const username = process.env.AUTH_USERNAME;
+  const password = process.env.AUTH_PASSWORD;
+  if (!username || !password) {
+    throw new Error("AUTH_USERNAME and AUTH_PASSWORD environment variables are required");
+  }
+  return { username, password };
 }
 
 function safeEqual(a: string, b: string): boolean {
@@ -67,4 +73,9 @@ export function getSessionCookieHeader(token: string): string {
 export function getClearedSessionCookieHeader(): string {
   const secure = process.env.NODE_ENV === "production" ? "; Secure" : "";
   return `${SESSION_COOKIE_NAME}=; Path=/; HttpOnly; SameSite=Lax; Max-Age=0${secure}`;
+}
+
+export function validateAuthConfig(): void {
+  getSecret();
+  getExpectedCredentials();
 }

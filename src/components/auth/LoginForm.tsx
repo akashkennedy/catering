@@ -55,14 +55,14 @@ export function LoginForm() {
               placeholder="admin"
               autoComplete="username"
               error={errors.username ? preferredText(ui.auth.username, uiLanguage) : undefined}
-              {...register("username")}
+              {...register("username", { onChange: () => setInvalid(false) })}
             />
             <PasswordInput
               label={<Bilingual label={ui.auth.password} />}
               placeholder="admin"
               autoComplete="current-password"
               error={errors.password ? preferredText(ui.auth.password, uiLanguage) : undefined}
-              {...register("password")}
+              {...register("password", { onChange: () => setInvalid(false) })}
             />
             {invalid ? (
               <Text size="sm" style={{ color: "var(--accent-kumkum)" }}>

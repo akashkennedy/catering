@@ -59,12 +59,13 @@ export const useAuthStore = create<AuthState>()((set) => ({
   },
   logout: async () => {
     try {
-      await fetch("/api/auth/logout", {
+      const response = await fetch("/api/auth/logout", {
         method: "POST",
         credentials: "same-origin",
       });
+      if (!response.ok) throw new Error("Logout failed");
     } catch {
-      // Ignore network errors; still clear local session state.
+      return;
     }
     clearLegacyPersistedAuth();
     set({ status: "unauthenticated", authed: false, username: null });
@@ -87,6 +88,10 @@ export const useAuthStore = create<AuthState>()((set) => ({
       set({ status: "authenticated", authed: true, username: data.username });
       return true;
     } catch {
+      const current = useAuthStore.getState();
+      if (current.status === "authenticated") {
+        return true;
+      }
       set({ status: "unauthenticated", authed: false, username: null });
       return false;
     }

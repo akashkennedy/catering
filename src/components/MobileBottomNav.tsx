@@ -169,7 +169,7 @@ export function MobileBottomNav({ onAddEvent }: { onAddEvent: () => void }) {
               void logout();
             }}
           >
-            <LogOut size={20} />
+            <LogOut size={20} aria-hidden />
             <span>
               <Bilingual label={ui.auth.logout} />
             </span>

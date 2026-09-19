@@ -132,7 +132,7 @@ export function NotificationCenter() {
           icon: <Package size={16} />,
           label: ingredient.name,
           detail: `${remaining} ${ingredient.unit ?? ""} remaining`,
-          href: "/inventory",
+          href: "/ingredients",
           accent: "kumkum",
         });
       }

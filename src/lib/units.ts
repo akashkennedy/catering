@@ -1,4 +1,4 @@
-export const UNITS = ["gm", "kg", "litre", "piece"] as const;
+export const UNITS = ["gm", "kg", "litre", "ml", "piece"] as const;
 
 export type Unit = (typeof UNITS)[number];
 
@@ -22,6 +22,12 @@ const UNIT_ALIASES: Record<string, Unit> = {
   litres: "litre",
   liter: "litre",
   liters: "litre",
+  ml: "ml",
+  mls: "ml",
+  millilitre: "ml",
+  millilitres: "ml",
+  milliliter: "ml",
+  milliliters: "ml",
   pc: "piece",
   pcs: "piece",
   piece: "piece",

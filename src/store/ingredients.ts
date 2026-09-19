@@ -1,10 +1,16 @@
 import { create } from "zustand";
 import { createJSONStorage, persist } from "zustand/middleware";
 
+import {
+  isIngredientTag,
+  type IngredientTag,
+} from "@/lib/ingredientTags";
+
 export type Ingredient = {
   id: string;
   name: string;
   tamilName: string;
+  tag: IngredientTag;
   unit: string;
   qty: number;
   globalPrice: number;
@@ -50,7 +56,7 @@ export const useIngredientsStore = create<IngredientsState>()(
     {
       name: "catering-ingredients",
       storage: createJSONStorage(() => localStorage),
-      version: 1,
+      version: 2,
       migrate: (persistedState) => {
         const state = persistedState as {
           ingredients?: Array<Record<string, unknown>> | null;
@@ -59,6 +65,7 @@ export const useIngredientsStore = create<IngredientsState>()(
           ...state,
           ingredients: (state.ingredients ?? []).map((raw) => ({
             ...raw,
+            tag: isIngredientTag(raw.tag) ? raw.tag : "grocery",
             openingStock:
               typeof raw.openingStock === "number" ? raw.openingStock : 0,
             lowStockThreshold:

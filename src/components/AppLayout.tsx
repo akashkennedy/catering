@@ -51,7 +51,7 @@ const NAV_ITEMS: NavItem[] = [
   { label: ui.nav.events, href: "/events", icon: CalendarDays },
   { label: ui.dashboard.customerFollowUp, href: "/follow-ups", icon: PhoneCall },
   { label: ui.nav.templates, href: "/templates", icon: ClipboardList },
-  { label: ui.nav.ingredients, href: "/inventory", icon: ShoppingBasket },
+  { label: ui.nav.ingredients, href: "/ingredients", icon: ShoppingBasket },
   { label: ui.nav.employees, href: "/employees", icon: UserRound },
   { label: ui.nav.rental, href: "/utensils", icon: CookingPot },
   { label: ui.nav.calculator, href: "/calculator", icon: Calculator },

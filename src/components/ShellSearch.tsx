@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useDeferredValue, useState } from "react";
 import { Combobox, Group, Skeleton, Text, TextInput, useCombobox } from "@mantine/core";
 import { useRouter } from "next/navigation";
 import { Search } from "lucide-react";
@@ -31,7 +31,8 @@ export function ShellSearch() {
   });
 
   const [value, setValue] = useState("");
-  const query = value.trim().toLowerCase();
+  const deferredValue = useDeferredValue(value);
+  const query = deferredValue.trim().toLowerCase();
   const uiLanguage = useSettingsStore((state) => state.uiLanguage);
   const placeholder = preferredText(ui.search.placeholder, uiLanguage);
 
@@ -76,7 +77,7 @@ export function ShellSearch() {
         key: `ingredient:${ingredient.id}`,
         name: ingredient.name,
         typeLabel: ui.nav.ingredients,
-        href: "/inventory",
+        href: "/ingredients",
       })),
     ...employees
       .filter((employee) => matches(employee.name))

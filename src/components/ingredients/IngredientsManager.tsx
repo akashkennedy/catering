@@ -1,86 +1,141 @@
 "use client";
 
-import { useState } from "react";
-import { Button, Group, Modal, Stack, Text, Title } from "@mantine/core";
-import { Plus } from "lucide-react";
+import { useCallback, useDeferredValue, useEffect, useMemo, useState } from "react";
+import { Button, Group, Modal, Stack, Text, TextInput, Title } from "@mantine/core";
+import { Plus, Search } from "lucide-react";
 
 import { IngredientCards } from "./IngredientCards";
 import { IngredientFormModal } from "./IngredientFormModal";
 import { IngredientTable } from "./IngredientTable";
-import { PurchaseModal } from "./PurchaseModal";
 import { Bilingual } from "@/components/Bilingual";
-import { InventoryAlertsWidget } from "@/components/dashboard/InventoryAlertsWidget";
-import { ui } from "@/lib/i18n";
+import { preferredText, ui } from "@/lib/i18n";
+import { INGREDIENT_TAGS, type IngredientTag } from "@/lib/ingredientTags";
+import { seedIngredientCatalog } from "@/lib/seedIngredients";
+import { useSettingsStore } from "@/store/settings";
 import { useIngredientsStore, type Ingredient } from "@/store/ingredients";
-import { useStockLedgerStore } from "@/store/stockLedger";
+
+type TagFilter = "all" | IngredientTag;
 
 export function IngredientsManager() {
   const ingredients = useIngredientsStore((state) => state.ingredients);
   const deleteIngredient = useIngredientsStore((state) => state.deleteIngredient);
-  const removeEntriesForIngredient = useStockLedgerStore(
-    (state) => state.removeEntriesForIngredient
-  );
   const [formOpened, setFormOpened] = useState(false);
   const [editingIngredient, setEditingIngredient] = useState<Ingredient | null>(null);
   const [deletingIngredient, setDeletingIngredient] = useState<Ingredient | null>(null);
-  const [purchaseIngredient, setPurchaseIngredient] = useState<Ingredient | null>(null);
+  const [activeTag, setActiveTag] = useState<TagFilter>("all");
+  const [query, setQuery] = useState("");
+  const deferredQuery = useDeferredValue(query);
+  const uiLanguage = useSettingsStore((state) => state.uiLanguage);
+  const searchPlaceholder = preferredText(ui.ingredients.searchIngredients, uiLanguage);
+
+  useEffect(() => {
+    seedIngredientCatalog();
+  }, []);
+
+  const counts = useMemo(() => {
+    const byTag: Record<string, number> = {};
+    for (const ingredient of ingredients) {
+      byTag[ingredient.tag] = (byTag[ingredient.tag] ?? 0) + 1;
+    }
+    return byTag;
+  }, [ingredients]);
+
+  const filtered = useMemo(() => {
+    const q = deferredQuery.trim().toLowerCase();
+    return ingredients.filter((ingredient) => {
+      if (activeTag !== "all" && ingredient.tag !== activeTag) return false;
+      if (!q) return true;
+      return (
+        ingredient.name.toLowerCase().includes(q) ||
+        ingredient.tamilName.toLowerCase().includes(q)
+      );
+    });
+  }, [ingredients, activeTag, deferredQuery]);
+
+  const handleEdit = useCallback((ingredient: Ingredient) => {
+    setEditingIngredient(ingredient);
+    setFormOpened(true);
+  }, []);
+
+  const filters = [
+    { value: "all" as const, label: ui.ingredients.tags.all, count: ingredients.length },
+    ...INGREDIENT_TAGS.map((tag) => ({
+      value: tag,
+      label: ui.ingredients.tags[tag],
+      count: counts[tag] ?? 0,
+    })),
+  ];
 
   return (
     <Stack gap="lg">
-      <InventoryAlertsWidget />
       <div className="dash-card" style={{ padding: 0 }}>
-      <div style={{ padding: 16 }}>
-        <Group justify="space-between" mb="md">
-          <Title order={2}>
-            <Bilingual label={ui.nav.ingredients} />
-          </Title>
-          <Button
-            leftSection={<Plus size={18} />}
-            onClick={() => {
-              setEditingIngredient(null);
-              setFormOpened(true);
-            }}
-          >
-            <Bilingual label={ui.ingredients.addIngredient} />
-          </Button>
-        </Group>
+        <div style={{ padding: 16 }}>
+          <Group justify="space-between" mb="md">
+            <Title order={2}>
+              <Bilingual label={ui.nav.ingredients} />
+            </Title>
+            <Button
+              leftSection={<Plus size={18} />}
+              onClick={() => {
+                setEditingIngredient(null);
+                setFormOpened(true);
+              }}
+            >
+              <Bilingual label={ui.ingredients.addIngredient} />
+            </Button>
+          </Group>
 
-        {ingredients.length === 0 ? (
-          <Text c="dimmed">
-            <Bilingual label={ui.ingredients.empty} />
-          </Text>
-        ) : (
-          <>
-            <IngredientTable
-              ingredients={ingredients}
-              onEdit={(ingredient) => {
-                setEditingIngredient(ingredient);
-                setFormOpened(true);
-              }}
-              onDelete={setDeletingIngredient}
-              onLogPurchase={setPurchaseIngredient}
-            />
-            <IngredientCards
-              ingredients={ingredients}
-              onEdit={(ingredient) => {
-                setEditingIngredient(ingredient);
-                setFormOpened(true);
-              }}
-              onDelete={setDeletingIngredient}
-              onLogPurchase={setPurchaseIngredient}
-            />
-          </>
-        )}
-      </div>
+          <TextInput
+            role="search"
+            aria-label={searchPlaceholder}
+            placeholder={searchPlaceholder}
+            leftSection={<Search size={16} aria-hidden />}
+            value={query}
+            onChange={(event) => setQuery(event.currentTarget.value)}
+            mb="md"
+          />
+
+          <div className="ingredient-filters" role="tablist" aria-label="Filter ingredients">
+            {filters.map((filter) => {
+              const active = activeTag === filter.value;
+              return (
+                <button
+                  key={filter.value}
+                  type="button"
+                  role="tab"
+                  aria-selected={active}
+                  className={`ingredient-filter-chip${active ? " ingredient-filter-chip--active" : ""}`}
+                  onClick={() => setActiveTag(filter.value)}
+                >
+                  <Bilingual label={filter.label} />
+                  <span className="ingredient-filter-chip__count">{filter.count}</span>
+                </button>
+              );
+            })}
+          </div>
+
+          {filtered.length === 0 ? (
+            <Text c="dimmed">
+              <Bilingual label={deferredQuery.trim() ? ui.ingredients.noMatch : ui.ingredients.empty} />
+            </Text>
+          ) : (
+            <>
+              <IngredientTable
+                ingredients={filtered}
+                onEdit={handleEdit}
+                onDelete={setDeletingIngredient}
+              />
+              <IngredientCards
+                ingredients={filtered}
+                onEdit={handleEdit}
+                onDelete={setDeletingIngredient}
+              />
+            </>
+          )}
+        </div>
       </div>
 
       <IngredientFormModal opened={formOpened} ingredient={editingIngredient} onClose={() => setFormOpened(false)} />
-
-      <PurchaseModal
-        opened={purchaseIngredient !== null}
-        ingredient={purchaseIngredient}
-        onClose={() => setPurchaseIngredient(null)}
-      />
 
       <Modal
         opened={deletingIngredient !== null}
@@ -106,7 +161,6 @@ export function IngredientsManager() {
               color="kumkum"
               onClick={() => {
                 if (deletingIngredient) {
-                  removeEntriesForIngredient(deletingIngredient.id);
                   deleteIngredient(deletingIngredient.id);
                 }
                 setDeletingIngredient(null);

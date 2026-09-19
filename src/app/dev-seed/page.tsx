@@ -30,10 +30,10 @@ export default function DevSeedPage() {
   const loadMockData = () => {
     // Ingredients
     const addIngredient = useIngredientsStore.getState().addIngredient;
-    addIngredient({ name: "Rice", tamilName: "அரிசி", unit: "kg", qty: 0, globalPrice: 65, openingStock: 50, lowStockThreshold: 10 });
-    addIngredient({ name: "Chicken", tamilName: "கோழி", unit: "kg", qty: 0, globalPrice: 220, openingStock: 5, lowStockThreshold: 8 });
-    addIngredient({ name: "Oil", tamilName: "எண்ணெய்", unit: "litre", qty: 0, globalPrice: 140, openingStock: 20, lowStockThreshold: 5 });
-    addIngredient({ name: "Milk", tamilName: "பால்", unit: "litre", qty: 0, globalPrice: 60, openingStock: 10, lowStockThreshold: 4 });
+    addIngredient({ name: "Rice", tamilName: "அரிசி", tag: "grocery", unit: "kg", qty: 0, globalPrice: 65, openingStock: 50, lowStockThreshold: 10 });
+    addIngredient({ name: "Chicken", tamilName: "கோழி", tag: "meat-fish", unit: "kg", qty: 0, globalPrice: 220, openingStock: 5, lowStockThreshold: 8 });
+    addIngredient({ name: "Oil", tamilName: "எண்ணெய்", tag: "grocery", unit: "litre", qty: 0, globalPrice: 140, openingStock: 20, lowStockThreshold: 5 });
+    addIngredient({ name: "Milk", tamilName: "பால்", tag: "grocery", unit: "litre", qty: 0, globalPrice: 60, openingStock: 10, lowStockThreshold: 4 });
     const ingredients = useIngredientsStore.getState().ingredients;
     const byName = new Map(ingredients.map((i) => [i.name, i.id]));
     const riceId = byName.get("Rice") ?? "";
@@ -155,7 +155,7 @@ export default function DevSeedPage() {
       notified: false,
     });
 
-    setStatus("Mock data loaded. Open /, /events, /finance, /follow-ups, /inventory, /utensils to test.");
+    setStatus("Mock data loaded. Open /, /events, /finance, /follow-ups, /ingredients, /utensils to test.");
   };
 
   const clearAllData = () => {
@@ -189,7 +189,7 @@ export default function DevSeedPage() {
     <Stack gap="md" p="xl">
       <Title order={2}>Demo Data</Title>
       <Text c="dimmed" size="sm">
-        Load sample events, inventory, employees, utensils, expenses and reminders to explore the app.
+        Load sample events, ingredients, employees, utensils, expenses and reminders to explore the app.
       </Text>
       <Group>
         <Button onClick={loadMockData}>Load demo data</Button>

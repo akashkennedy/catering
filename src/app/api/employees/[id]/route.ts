@@ -33,15 +33,15 @@ export async function PATCH(
   if (existing.length === 0) {
     return NextResponse.json({ error: "Employee not found." }, { status: 404 });
   }
-  await sql`
+  const rows = (await sql`
     UPDATE employees SET
       name = ${parsed.data.name},
       phone = ${parsed.data.phone},
       default_rate = ${parsed.data.defaultRate},
       updated_at = NOW()
     WHERE id = ${id}
-  `;
-  const rows = await sql`SELECT * FROM employees WHERE id = ${id} LIMIT 1`;
+    RETURNING *
+  `) as Record<string, unknown>[];
   return NextResponse.json({ employee: toEmployee(rows[0] as Record<string, unknown>) });
 }
 

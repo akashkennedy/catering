@@ -17,6 +17,7 @@ import {
   Title,
 } from "@mantine/core";
 import { Download, Plus, Salad, Users, UtensilsCrossed } from "lucide-react";
+import { useMediaQuery } from "@mantine/hooks";
 
 import { EventEmployeeCards } from "./EventEmployeeCards";
 import { EventEmployeeFormModal } from "./EventEmployeeFormModal";
@@ -83,6 +84,9 @@ export function EventDetail() {
     canViewAllPay || !ownEmployeeId ? null : new Set<string>([ownEmployeeId]);
   const loadEvents = useEventsStore((state) => state.loadEvents);
   const eventsLoaded = useEventsStore((state) => state.loaded);
+  // Render only the matching list variant (table xor cards) instead of
+  // mounting both and hiding one with CSS.
+  const isMobile = useMediaQuery("(max-width: 639px)");
   const loadTemplates = useTemplatesStore((state) => state.loadTemplates);
   const loadIngredients = useIngredientsStore((state) => state.loadIngredients);
   const loadVesselLedger = useVesselStockLedgerStore((state) => state.loadVesselLedger);
@@ -463,16 +467,19 @@ export function EventDetail() {
             </Text>
           ) : (
             <Stack gap="md">
-              <EventIngredientTable
-                lines={eventIngredients}
-                ingredients={ingredients}
-                onLineChange={handleLineChange}
-              />
-              <EventIngredientCards
-                lines={eventIngredients}
-                ingredients={ingredients}
-                onLineChange={handleLineChange}
-              />
+              {isMobile ? (
+                <EventIngredientCards
+                  lines={eventIngredients}
+                  ingredients={ingredients}
+                  onLineChange={handleLineChange}
+                />
+              ) : (
+                <EventIngredientTable
+                  lines={eventIngredients}
+                  ingredients={ingredients}
+                  onLineChange={handleLineChange}
+                />
+              )}
               <Paper withBorder p="md">
                 <Group justify="space-between" wrap="nowrap">
                   <Text fw={600}>
@@ -523,19 +530,22 @@ export function EventDetail() {
                 <Bilingual label={ui.events.noEmployees} />
               </Text>
             ) : (
-              <Stack gap="md">
-                <EventEmployeeTable
-                  lines={eventEmployees}
-                  onLineChange={handleEmployeeLineChange}
-                  onRemove={handleEmployeeRemove}
-                  visiblePayFor={visiblePayFor}
-                />
+            <Stack gap="md">
+              {isMobile ? (
                 <EventEmployeeCards
                   lines={eventEmployees}
                   onLineChange={handleEmployeeLineChange}
                   onRemove={handleEmployeeRemove}
                   visiblePayFor={visiblePayFor}
                 />
+              ) : (
+                <EventEmployeeTable
+                  lines={eventEmployees}
+                  onLineChange={handleEmployeeLineChange}
+                  onRemove={handleEmployeeRemove}
+                  visiblePayFor={visiblePayFor}
+                />
+              )}
                 {canViewAllPay && (
                 <Paper withBorder p="md">
                   <Stack gap={6}>
@@ -600,19 +610,22 @@ export function EventDetail() {
                 <Bilingual label={ui.events.noUtensils} />
               </Text>
             ) : (
-              <Stack gap="md">
-                <EventUtensilTable
-                  lines={eventUtensils}
-                  onLineChange={handleUtensilLineChange}
-                  onToggleReturned={handleToggleReturned}
-                  onRemove={handleUtensilRemove}
-                />
+            <Stack gap="md">
+              {isMobile ? (
                 <EventUtensilCards
                   lines={eventUtensils}
                   onLineChange={handleUtensilLineChange}
                   onToggleReturned={handleToggleReturned}
                   onRemove={handleUtensilRemove}
                 />
+              ) : (
+                <EventUtensilTable
+                  lines={eventUtensils}
+                  onLineChange={handleUtensilLineChange}
+                  onToggleReturned={handleToggleReturned}
+                  onRemove={handleUtensilRemove}
+                />
+              )}
                 <Paper withBorder p="md">
                   <Group justify="space-between" wrap="nowrap">
                     <Text fw={600}>

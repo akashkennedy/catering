@@ -81,18 +81,13 @@ export async function fetchFullEvent(
   if (events.length === 0) return null;
   const event = events[0] as Row;
 
-  const groupRows = (await sql`
-    SELECT * FROM event_meal_groups WHERE event_id = ${eventId} ORDER BY position ASC, id ASC
-  `) as Row[];
-  const ingredientRows = (await sql`
-    SELECT * FROM event_ingredient_lines WHERE event_id = ${eventId}
-  `) as Row[];
-  const employeeRows = (await sql`
-    SELECT * FROM event_employee_lines WHERE event_id = ${eventId}
-  `) as Row[];
-  const utensilRows = (await sql`
-    SELECT * FROM event_utensil_lines WHERE event_id = ${eventId}
-  `) as Row[];
+  // The four child queries are independent — fire them together.
+  const [groupRows, ingredientRows, employeeRows, utensilRows] = (await Promise.all([
+    sql`SELECT * FROM event_meal_groups WHERE event_id = ${eventId} ORDER BY position ASC, id ASC`,
+    sql`SELECT * FROM event_ingredient_lines WHERE event_id = ${eventId}`,
+    sql`SELECT * FROM event_employee_lines WHERE event_id = ${eventId}`,
+    sql`SELECT * FROM event_utensil_lines WHERE event_id = ${eventId}`,
+  ])) as Row[][];
 
   return {
     id: String(event.id),
@@ -155,10 +150,12 @@ export async function writeEventChildren(
   eventId: string,
   data: z.infer<typeof eventSchema>
 ): Promise<void> {
-  let position = 0;
-  for (const group of data.mealGroups) {
+  // Line writes are independent of each other — fire them together.
+  // Positions/ids are assigned synchronously first so ordering is stable.
+  const writes: Promise<unknown>[] = [];
+  data.mealGroups.forEach((group, position) => {
     const groupId = group.id ?? newId("grp");
-    await sql`
+    writes.push(sql`
       INSERT INTO event_meal_groups (id, event_id, template_id, headcount, selected_dish_ids, position)
       VALUES (${groupId}, ${eventId}, ${group.templateId}, ${group.headcount}, ${JSON.stringify(group.selectedDishIds)}, ${position})
       ON CONFLICT (id) DO UPDATE SET
@@ -167,12 +164,11 @@ export async function writeEventChildren(
         headcount = EXCLUDED.headcount,
         selected_dish_ids = EXCLUDED.selected_dish_ids,
         position = EXCLUDED.position
-    `;
-    position += 1;
-  }
+    `);
+  });
   for (const line of data.ingredients) {
     const lineId = line.id ?? newId("eil");
-    await sql`
+    writes.push(sql`
       INSERT INTO event_ingredient_lines (id, event_id, ingredient_id, qty, price)
       VALUES (${lineId}, ${eventId}, ${line.ingredientId}, ${line.qty}, ${line.price})
       ON CONFLICT (id) DO UPDATE SET
@@ -180,11 +176,11 @@ export async function writeEventChildren(
         ingredient_id = EXCLUDED.ingredient_id,
         qty = EXCLUDED.qty,
         price = EXCLUDED.price
-    `;
+    `);
   }
   for (const line of data.employees) {
     const lineId = line.id ?? newId("eel");
-    await sql`
+    writes.push(sql`
       INSERT INTO event_employee_lines (id, event_id, employee_id, name, phone, to_pay, paid)
       VALUES (${lineId}, ${eventId}, ${line.employeeId}, ${line.name}, ${line.phone}, ${line.toPay}, ${line.paid})
       ON CONFLICT (id) DO UPDATE SET
@@ -194,11 +190,11 @@ export async function writeEventChildren(
         phone = EXCLUDED.phone,
         to_pay = EXCLUDED.to_pay,
         paid = EXCLUDED.paid
-    `;
+    `);
   }
   for (const line of data.utensils) {
     const lineId = line.id ?? newId("eul");
-    await sql`
+    writes.push(sql`
       INSERT INTO event_utensil_lines
         (id, event_id, vendor_name, vendor_phone, utensil_id, utensil_name, qty, rental_price, date_from, date_to, returned)
       VALUES
@@ -214,8 +210,9 @@ export async function writeEventChildren(
         date_from = EXCLUDED.date_from,
         date_to = EXCLUDED.date_to,
         returned = EXCLUDED.returned
-    `;
+    `);
   }
+  await Promise.all(writes);
 }
 
 export async function GET() {
@@ -230,9 +227,12 @@ export async function GET() {
   const ownEmployeeId = session.user.employeeId;
   const sql = db();
   const rows = (await sql`SELECT id FROM events ORDER BY created_at ASC`) as Row[];
+  // Each event's reads are independent — resolve them together.
+  const fullEvents = await Promise.all(
+    rows.map((row) => fetchFullEvent(sql, String(row.id)))
+  );
   const events: CateringEvent[] = [];
-  for (const row of rows) {
-    const full = await fetchFullEvent(sql, String(row.id));
+  for (const full of fullEvents) {
     if (!full) continue;
     if (maskOthers) {
       full.employees = full.employees.map((line) =>

@@ -50,12 +50,16 @@ export async function POST(request: Request) {
   }
   const sql = db();
   const id = parsed.data.id ?? newId();
-  await sql`
+  const inserted = (await sql`
     INSERT INTO other_income (id, amount, date, note)
     VALUES (${id}, ${parsed.data.amount}, ${parsed.data.date}, ${parsed.data.note})
     ON CONFLICT (id) DO NOTHING
-  `;
-  const rows = await sql`SELECT * FROM other_income WHERE id = ${id} LIMIT 1`;
+    RETURNING *
+  `) as Record<string, unknown>[];
+  const rows =
+    inserted.length > 0
+      ? inserted
+      : ((await sql`SELECT * FROM other_income WHERE id = ${id} LIMIT 1`) as Record<string, unknown>[]);
   if (rows.length === 0) {
     return NextResponse.json({ error: "Could not save income entry." }, { status: 500 });
   }

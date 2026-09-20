@@ -22,6 +22,9 @@ type UtensilsState = {
   loadUtensils: () => Promise<void>;
 };
 
+// Shared in-flight load so simultaneous mounts fire a single request.
+let loadUtensilsRequest: Promise<void> | null = null;
+
 export const useUtensilsStore = create<UtensilsState>()(
   persist(
     (set) => ({
@@ -50,12 +53,20 @@ export const useUtensilsStore = create<UtensilsState>()(
         void syncOrQueue("DELETE", `/api/utensils/${encodeURIComponent(id)}`);
       },
       loadUtensils: async () => {
-        const { flushOutbox } = await import("@/lib/outbox");
-        await flushOutbox();
-        const body = await fetchJson<{ utensils?: Utensil[] }>("/api/utensils");
-        if (body && Array.isArray(body.utensils)) {
-          set({ utensils: body.utensils, loaded: true });
+        if (useUtensilsStore.getState().loaded) return;
+        if (!loadUtensilsRequest) {
+          loadUtensilsRequest = (async () => {
+            const { flushOutbox } = await import("@/lib/outbox");
+            await flushOutbox();
+            const body = await fetchJson<{ utensils?: Utensil[] }>("/api/utensils");
+            if (body && Array.isArray(body.utensils)) {
+              set({ utensils: body.utensils, loaded: true });
+            }
+          })().finally(() => {
+            loadUtensilsRequest = null;
+          });
         }
+        await loadUtensilsRequest;
       },
     }),
     {

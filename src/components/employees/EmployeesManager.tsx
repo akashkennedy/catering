@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { Button, Group, Modal, Stack, Text, Title } from "@mantine/core";
 import { Plus } from "lucide-react";
+import { useMediaQuery } from "@mantine/hooks";
 
 import { AccountsManager } from "./AccountsManager";
 import { EmployeeCards } from "./EmployeeCards";
@@ -19,6 +20,9 @@ export function EmployeesManager() {
   const deleteEmployee = useEmployeesStore((state) => state.deleteEmployee);
   const loadEmployees = useEmployeesStore((state) => state.loadEmployees);
   const loaded = useEmployeesStore((state) => state.loaded);
+  // Render only the matching list variant (table xor cards) instead of
+  // mounting both and hiding one with CSS.
+  const isMobile = useMediaQuery("(max-width: 639px)");
 
   useEffect(() => {
     void loadEmployees();
@@ -53,25 +57,24 @@ export function EmployeesManager() {
           <Text c="dimmed">
             <Bilingual label={ui.employees.empty} />
           </Text>
+        ) : isMobile ? (
+          <EmployeeCards
+            employees={employees}
+            onEdit={(employee) => {
+              setEditingEmployee(employee);
+              setFormOpened(true);
+            }}
+            onDelete={setDeletingEmployee}
+          />
         ) : (
-          <>
-            <EmployeeTable
-              employees={employees}
-              onEdit={(employee) => {
-                setEditingEmployee(employee);
-                setFormOpened(true);
-              }}
-              onDelete={setDeletingEmployee}
-            />
-            <EmployeeCards
-              employees={employees}
-              onEdit={(employee) => {
-                setEditingEmployee(employee);
-                setFormOpened(true);
-              }}
-              onDelete={setDeletingEmployee}
-            />
-          </>
+          <EmployeeTable
+            employees={employees}
+            onEdit={(employee) => {
+              setEditingEmployee(employee);
+              setFormOpened(true);
+            }}
+            onDelete={setDeletingEmployee}
+          />
         )}
       </div>
 

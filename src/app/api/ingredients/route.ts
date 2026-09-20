@@ -66,14 +66,18 @@ export async function POST(request: Request) {
   const sql = db();
   const id = parsed.data.id ?? newId();
   const d = parsed.data;
-  await sql`
+  const inserted = (await sql`
     INSERT INTO ingredients
       (id, name, tamil_name, tag, unit, qty, global_price, opening_stock, low_stock_threshold, updated_at)
     VALUES
       (${id}, ${d.name}, ${d.tamilName}, ${d.tag}, ${d.unit}, ${d.qty}, ${d.globalPrice}, ${d.openingStock}, ${d.lowStockThreshold}, NOW())
     ON CONFLICT (id) DO NOTHING
-  `;
-  const rows = await sql`SELECT * FROM ingredients WHERE id = ${id} LIMIT 1`;
+    RETURNING *
+  `) as IngredientRow[];
+  const rows =
+    inserted.length > 0
+      ? inserted
+      : ((await sql`SELECT * FROM ingredients WHERE id = ${id} LIMIT 1`) as IngredientRow[]);
   if (rows.length === 0) {
     return NextResponse.json({ error: "Could not save ingredient." }, { status: 500 });
   }

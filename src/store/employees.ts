@@ -21,6 +21,9 @@ type EmployeesState = {
   loadEmployees: () => Promise<void>;
 };
 
+// Shared in-flight load so simultaneous mounts fire a single request.
+let loadEmployeesRequest: Promise<void> | null = null;
+
 export const useEmployeesStore = create<EmployeesState>()(
   persist(
     (set) => ({
@@ -49,12 +52,20 @@ export const useEmployeesStore = create<EmployeesState>()(
         void syncOrQueue("DELETE", `/api/employees/${encodeURIComponent(id)}`);
       },
       loadEmployees: async () => {
-        const { flushOutbox } = await import("@/lib/outbox");
-        await flushOutbox();
-        const body = await fetchJson<{ employees?: Employee[] }>("/api/employees");
-        if (body && Array.isArray(body.employees)) {
-          set({ employees: body.employees, loaded: true });
+        if (useEmployeesStore.getState().loaded) return;
+        if (!loadEmployeesRequest) {
+          loadEmployeesRequest = (async () => {
+            const { flushOutbox } = await import("@/lib/outbox");
+            await flushOutbox();
+            const body = await fetchJson<{ employees?: Employee[] }>("/api/employees");
+            if (body && Array.isArray(body.employees)) {
+              set({ employees: body.employees, loaded: true });
+            }
+          })().finally(() => {
+            loadEmployeesRequest = null;
+          });
         }
+        await loadEmployeesRequest;
       },
     }),
     {

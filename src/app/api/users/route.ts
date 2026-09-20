@@ -35,20 +35,22 @@ export async function GET() {
     FROM users u LEFT JOIN employees e ON e.id = u.employee_id
     ORDER BY u.created_at ASC
   `) as Row[];
-  const users = [];
-  for (const row of rows) {
-    const userId = String(row.id);
-    const isAdmin = row.is_admin === true;
-    const stored = isAdmin ? null : await getPermissions(userId);
-    users.push({
-      id: userId,
-      username: String(row.username),
-      isAdmin,
-      employeeId: typeof row.employee_id === "string" ? row.employee_id : null,
-      employeeName: typeof row.employee_name === "string" ? row.employee_name : null,
-      permissions: stored ?? { ...FULL_PERMISSIONS },
-    });
-  }
+  // Permission lookups are independent per user — resolve them together.
+  const users = await Promise.all(
+    rows.map(async (row) => {
+      const userId = String(row.id);
+      const isAdmin = row.is_admin === true;
+      const stored = isAdmin ? null : await getPermissions(userId);
+      return {
+        id: userId,
+        username: String(row.username),
+        isAdmin,
+        employeeId: typeof row.employee_id === "string" ? row.employee_id : null,
+        employeeName: typeof row.employee_name === "string" ? row.employee_name : null,
+        permissions: stored ?? { ...FULL_PERMISSIONS },
+      };
+    })
+  );
   return NextResponse.json({ users });
 }
 
@@ -71,18 +73,21 @@ export async function POST(request: Request) {
   }
   const username = normalizeUsername(parsed.data.username);
   const sql = db();
-  const existing = await sql`SELECT id FROM users WHERE username = ${username} LIMIT 1`;
+  // The two existence checks are independent — fire them together.
+  const [existing, linked] = await Promise.all([
+    sql`SELECT id FROM users WHERE username = ${username} LIMIT 1`,
+    parsed.data.employeeId
+      ? sql`SELECT id FROM users WHERE employee_id = ${parsed.data.employeeId} LIMIT 1`
+      : Promise.resolve([]),
+  ]);
   if (existing.length > 0) {
     return NextResponse.json({ error: "That username is already taken." }, { status: 409 });
   }
-  if (parsed.data.employeeId) {
-    const linked = await sql`SELECT id FROM users WHERE employee_id = ${parsed.data.employeeId} LIMIT 1`;
-    if (linked.length > 0) {
-      return NextResponse.json(
-        { error: "That employee already has a login." },
-        { status: 409 }
-      );
-    }
+  if (linked.length > 0) {
+    return NextResponse.json(
+      { error: "That employee already has a login." },
+      { status: 409 }
+    );
   }
   const id = newId();
   await sql`

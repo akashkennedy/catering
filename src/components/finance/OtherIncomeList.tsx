@@ -2,6 +2,7 @@
 
 import { ActionIcon, Card, Group, Stack, Table, Text } from "@mantine/core";
 import { Trash } from "lucide-react";
+import { useMediaQuery } from "@mantine/hooks";
 
 import { Bilingual } from "@/components/Bilingual";
 import { ui } from "@/lib/i18n";
@@ -15,6 +16,42 @@ type OtherIncomeListProps = {
 };
 
 export function OtherIncomeList({ otherIncomes, onDelete }: OtherIncomeListProps) {
+  // Render only the matching list variant (table xor cards) instead of
+  // mounting both and hiding one with CSS.
+  const isMobile = useMediaQuery("(max-width: 639px)");
+  if (isMobile) {
+    return (
+      <Stack gap="sm">
+        {otherIncomes.map((income) => (
+          <Card key={income.id} withBorder padding="md">
+            <Group justify="space-between" align="flex-start" wrap="nowrap">
+              <Stack gap={6}>
+                <Text size="sm" c="dimmed">
+                  {formatIndianDate(income.date)}
+                </Text>
+                {income.note ? (
+                  <Text size="sm" lineClamp={2}>
+                    {income.note}
+                  </Text>
+                ) : null}
+              </Stack>
+              <Group gap="sm" align="flex-start" wrap="nowrap">
+                <Text fw={600}>{formatINR(income.amount)}</Text>
+                <ActionIcon
+                  variant="subtle"
+                  color="kumkum"
+                  aria-label={`Delete other income on ${income.date}`}
+                  onClick={() => onDelete(income)}
+                >
+                  <Trash size={16} />
+                </ActionIcon>
+              </Group>
+            </Group>
+          </Card>
+        ))}
+      </Stack>
+    );
+  }
   return (
     <>
       <div className="hidden sm:block">
@@ -52,35 +89,6 @@ export function OtherIncomeList({ otherIncomes, onDelete }: OtherIncomeListProps
           </Table.Tbody>
         </Table>
       </div>
-      <Stack gap="sm" className="sm:hidden">
-        {otherIncomes.map((income) => (
-          <Card key={income.id} withBorder padding="md">
-            <Group justify="space-between" align="flex-start" wrap="nowrap">
-              <Stack gap={6}>
-                <Text size="sm" c="dimmed">
-                  {formatIndianDate(income.date)}
-                </Text>
-                {income.note ? (
-                  <Text size="sm" lineClamp={2}>
-                    {income.note}
-                  </Text>
-                ) : null}
-              </Stack>
-              <Group gap="sm" align="flex-start" wrap="nowrap">
-                <Text fw={600}>{formatINR(income.amount)}</Text>
-                <ActionIcon
-                  variant="subtle"
-                  color="kumkum"
-                  aria-label={`Delete other income on ${income.date}`}
-                  onClick={() => onDelete(income)}
-                >
-                  <Trash size={16} />
-                </ActionIcon>
-              </Group>
-            </Group>
-          </Card>
-        ))}
-      </Stack>
     </>
   );
 }

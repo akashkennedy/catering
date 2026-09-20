@@ -55,21 +55,23 @@ export async function PATCH(
   `;
   // Full replace of dishes: removed dishes vanish via cascade.
   await sql`DELETE FROM template_dishes WHERE template_id = ${id}`;
-  let position = 0;
-  for (const dish of parsed.data.dishes) {
+  // Dish/link inserts are independent — positions/ids assigned first, then
+  // fired together.
+  const writes: Promise<unknown>[] = [];
+  parsed.data.dishes.forEach((dish, position) => {
     const dishId = dish.id ?? newId("dish");
-    await sql`
+    writes.push(sql`
       INSERT INTO template_dishes (id, template_id, name_en, name_ta, position)
       VALUES (${dishId}, ${id}, ${dish.nameEn}, ${dish.nameTa}, ${position})
-    `;
+    `);
     for (const item of dish.ingredients) {
-      await sql`
+      writes.push(sql`
         INSERT INTO template_dish_ingredients (id, dish_id, ingredient_id, qty_per_100)
         VALUES (${newId("tdi")}, ${dishId}, ${item.ingredientId}, ${item.qtyPer100})
-      `;
+      `);
     }
-    position += 1;
-  }
+  });
+  await Promise.all(writes);
   const full = await fetchFullTemplate(sql, id);
   return NextResponse.json({ template: full });
 }

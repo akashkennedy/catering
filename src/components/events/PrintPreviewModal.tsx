@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { Button, Group, Modal, Stack, Text } from "@mantine/core";
 import { Download } from "lucide-react";
+import { useMediaQuery } from "@mantine/hooks";
 
 import { Bilingual } from "@/components/Bilingual";
 import { preferredText, ui } from "@/lib/i18n";
@@ -12,12 +13,7 @@ import { formatINR } from "@/lib/format";
 import type { Ingredient } from "@/store/ingredients";
 import type { CateringEvent, EventIngredientLine } from "@/store/events";
 import type { IngredientTag } from "@/lib/ingredientTags";
-import {
-  generateBuyListPdf,
-  generateDetailedPdf,
-  presentTags,
-  tagOfLine,
-} from "@/lib/pdf";
+import { presentTags, tagOfLine } from "@/lib/printLines";
 import { EventIngredientCards } from "./EventIngredientCards";
 import { EventIngredientTable } from "./EventIngredientTable";
 
@@ -43,6 +39,9 @@ export function PrintPreviewModal({
     tags: IngredientTag[];
   } | null>(null);
   const [generating, setGenerating] = useState<"buy" | "detailed" | null>(null);
+  // Render only the matching list variant (table xor cards) instead of
+  // mounting both and hiding one with CSS.
+  const isMobile = useMediaQuery("(max-width: 639px)");
 
   const availableTags = presentTags(event.ingredients ?? [], ingredients);
   const selectedTags =
@@ -56,6 +55,8 @@ export function PrintPreviewModal({
   const download = async (kind: "buy" | "detailed") => {
     setGenerating(kind);
     try {
+      // The PDF engine (~1MB) loads only when the user actually downloads.
+      const { generateBuyListPdf, generateDetailedPdf } = await import("@/lib/pdf");
       const lines: EventIngredientLine[] = visibleLines;
       if (kind === "buy") {
         await generateBuyListPdf(event, ingredients, lines, selectedTags);
@@ -112,19 +113,18 @@ export function PrintPreviewModal({
           <Text size="sm" c="dimmed">
             <Bilingual label={ui.events.noIngredients} />
           </Text>
+        ) : isMobile ? (
+          <EventIngredientCards
+            lines={visibleLines}
+            ingredients={ingredients}
+            onLineChange={onLineChange}
+          />
         ) : (
-          <>
-            <EventIngredientTable
-              lines={visibleLines}
-              ingredients={ingredients}
-              onLineChange={onLineChange}
-            />
-            <EventIngredientCards
-              lines={visibleLines}
-              ingredients={ingredients}
-              onLineChange={onLineChange}
-            />
-          </>
+          <EventIngredientTable
+            lines={visibleLines}
+            ingredients={ingredients}
+            onLineChange={onLineChange}
+          />
         )}
 
         <Group justify="space-between" align="baseline">

@@ -25,6 +25,9 @@ type VendorSuggestionsState = {
   loadVendorSuggestions: () => Promise<void>;
 };
 
+// Shared in-flight load so simultaneous mounts fire a single request.
+let loadVendorSuggestionsRequest: Promise<void> | null = null;
+
 export const useVendorSuggestionsStore = create<VendorSuggestionsState>()(
   persist(
     (set) => ({
@@ -44,18 +47,26 @@ export const useVendorSuggestionsStore = create<VendorSuggestionsState>()(
         }
       },
       loadVendorSuggestions: async () => {
-        const { flushOutbox } = await import("@/lib/outbox");
-        await flushOutbox();
-        const body = await fetchJson<{ vendorNames?: unknown }>("/api/vendor-names");
-        if (body && Array.isArray(body.vendorNames)) {
-          const names = body.vendorNames.filter(
-            (name): name is string => typeof name === "string"
-          );
-          set((state) => ({
-            vendorSuggestions: Array.from(new Set([...state.vendorSuggestions, ...names])),
-            loaded: true,
-          }));
+        if (useVendorSuggestionsStore.getState().loaded) return;
+        if (!loadVendorSuggestionsRequest) {
+          loadVendorSuggestionsRequest = (async () => {
+            const { flushOutbox } = await import("@/lib/outbox");
+            await flushOutbox();
+            const body = await fetchJson<{ vendorNames?: unknown }>("/api/vendor-names");
+            if (body && Array.isArray(body.vendorNames)) {
+              const names = body.vendorNames.filter(
+                (name): name is string => typeof name === "string"
+              );
+              set((state) => ({
+                vendorSuggestions: Array.from(new Set([...state.vendorSuggestions, ...names])),
+                loaded: true,
+              }));
+            }
+          })().finally(() => {
+            loadVendorSuggestionsRequest = null;
+          });
         }
+        await loadVendorSuggestionsRequest;
       },
     }),
     {

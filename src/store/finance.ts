@@ -84,6 +84,9 @@ async function deletePath(path: string): Promise<boolean> {
   }
 }
 
+// Shared in-flight load so simultaneous mounts fire a single request.
+let loadFinanceRequest: Promise<void> | null = null;
+
 export const useFinanceStore = create<FinanceState>()(
   persist(
     (set, get) => ({
@@ -129,26 +132,34 @@ export const useFinanceStore = create<FinanceState>()(
         }
       },
       loadFinance: async () => {
-        const { flushOutbox } = await import("@/lib/outbox");
-        await flushOutbox();
-        try {
-          const [expensesRes, incomesRes] = await Promise.all([
-            fetch("/api/expenses", { credentials: "same-origin" }),
-            fetch("/api/other-incomes", { credentials: "same-origin" }),
-          ]);
-          if (!expensesRes.ok || !incomesRes.ok) return;
-          const expensesBody = (await expensesRes.json()) as { expenses?: Expense[] };
-          const incomesBody = (await incomesRes.json()) as { otherIncomes?: OtherIncome[] };
-          set({
-            expenses: Array.isArray(expensesBody.expenses) ? expensesBody.expenses : get().expenses,
-            otherIncomes: Array.isArray(incomesBody.otherIncomes)
-              ? incomesBody.otherIncomes
-              : get().otherIncomes,
-            loaded: true,
+        if (useFinanceStore.getState().loaded) return;
+        if (!loadFinanceRequest) {
+          loadFinanceRequest = (async () => {
+            const { flushOutbox } = await import("@/lib/outbox");
+            await flushOutbox();
+            try {
+              const [expensesRes, incomesRes] = await Promise.all([
+                fetch("/api/expenses", { credentials: "same-origin" }),
+                fetch("/api/other-incomes", { credentials: "same-origin" }),
+              ]);
+              if (!expensesRes.ok || !incomesRes.ok) return;
+              const expensesBody = (await expensesRes.json()) as { expenses?: Expense[] };
+              const incomesBody = (await incomesRes.json()) as { otherIncomes?: OtherIncome[] };
+              set({
+                expenses: Array.isArray(expensesBody.expenses) ? expensesBody.expenses : get().expenses,
+                otherIncomes: Array.isArray(incomesBody.otherIncomes)
+                  ? incomesBody.otherIncomes
+                  : get().otherIncomes,
+                loaded: true,
+              });
+            } catch {
+              // Offline: keep the localStorage cache as the read source.
+            }
+          })().finally(() => {
+            loadFinanceRequest = null;
           });
-        } catch {
-          // Offline: keep the localStorage cache as the read source.
         }
+        await loadFinanceRequest;
       },
     }),
     {

@@ -58,49 +58,8 @@ const styles = StyleSheet.create({
   rowEven: { backgroundColor: "#f9f9f9" },
 });
 
-export type PrintLine = {
-  key: string;
-  nameEn: string;
-  nameTa: string;
-  qty: number;
-  unit: string;
-  price: number;
-};
-
-export function toPrintLines(
-  lines: EventIngredientLine[],
-  ingredients: Ingredient[]
-): PrintLine[] {
-  const byId = new Map(ingredients.map((item) => [item.id, item]));
-  return lines.map((line) => {
-    const master = byId.get(line.ingredientId);
-    return {
-      key: line.id,
-      nameEn: master?.name || "—",
-      nameTa: master?.tamilName || master?.name || "—",
-      qty: line.qty,
-      unit: normalizeUnit(master?.unit),
-      price: line.price,
-    };
-  });
-}
-
-export function tagOfLine(
-  line: EventIngredientLine,
-  ingredients: Ingredient[]
-): IngredientTag {
-  const master = ingredients.find((item) => item.id === line.ingredientId);
-  return master && isIngredientTag(master.tag) ? master.tag : "grocery";
-}
-
-export function presentTags(
-  lines: EventIngredientLine[],
-  ingredients: Ingredient[]
-): IngredientTag[] {
-  const seen = new Set<IngredientTag>();
-  for (const line of lines) seen.add(tagOfLine(line, ingredients));
-  return INGREDIENT_TAGS.filter((tag) => seen.has(tag));
-}
+export type { PrintLine } from "./printLines";
+import { tagOfLine, type PrintLine } from "./printLines";
 
 type GroupedLine = PrintLine & { serial: number };
 

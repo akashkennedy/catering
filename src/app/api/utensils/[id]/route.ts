@@ -34,7 +34,7 @@ export async function PATCH(
   if (existing.length === 0) {
     return NextResponse.json({ error: "Utensil not found." }, { status: 404 });
   }
-  await sql`
+  const rows = (await sql`
     UPDATE utensils SET
       name = ${parsed.data.name},
       rent_price = ${parsed.data.rentPrice},
@@ -42,8 +42,8 @@ export async function PATCH(
       low_stock_threshold = ${parsed.data.lowStockThreshold},
       updated_at = NOW()
     WHERE id = ${id}
-  `;
-  const rows = await sql`SELECT * FROM utensils WHERE id = ${id} LIMIT 1`;
+    RETURNING *
+  `) as Record<string, unknown>[];
   return NextResponse.json({ utensil: toUtensil(rows[0] as Record<string, unknown>) });
 }
 

@@ -36,11 +36,11 @@ type MobileNavItem = {
 const PRIMARY_TABS: MobileNavItem[] = [
   { label: ui.nav.dashboard, href: "/", icon: LayoutDashboard },
   { label: ui.nav.events, href: "/events", icon: CalendarDays },
+  { label: ui.nav.ingredients, href: "/ingredients", icon: ShoppingBasket },
 ];
 
 const MORE_ITEMS: MobileNavItem[] = [
   { label: ui.nav.templates, href: "/templates", icon: ClipboardList },
-  { label: ui.nav.ingredients, href: "/ingredients", icon: ShoppingBasket },
   { label: ui.nav.employees, href: "/employees", icon: UserRound },
   { label: ui.dashboard.customerFollowUp, href: "/follow-ups", icon: PhoneCall },
   { label: ui.nav.website, href: "/site-manager", icon: Globe },
@@ -73,7 +73,7 @@ export function MobileBottomNav({ onAddEvent }: { onAddEvent: () => void }) {
   return (
     <>
       <nav className="mobile-bottom-nav">
-        {PRIMARY_TABS.map((item) => {
+        {PRIMARY_TABS.slice(0, 2).map((item) => {
           const Icon = item.icon;
           const active = isActive(pathname, item.href);
           return (
@@ -100,6 +100,23 @@ export function MobileBottomNav({ onAddEvent }: { onAddEvent: () => void }) {
             <Plus size={24} />
           </span>
         </button>
+        {PRIMARY_TABS.slice(2).map((item) => {
+          const Icon = item.icon;
+          const active = isActive(pathname, item.href);
+          return (
+            <Link
+              key={item.href}
+              href={item.href}
+              className={`mobile-bottom-nav__item${active ? " mobile-bottom-nav__item--active" : ""}`}
+              aria-current={active ? "page" : undefined}
+            >
+              <Icon size={20} />
+              <span className="mobile-bottom-nav__label">
+                <Bilingual label={item.label} />
+              </span>
+            </Link>
+          );
+        })}
         <button
           type="button"
           className={`mobile-bottom-nav__item${moreActive ? " mobile-bottom-nav__item--active" : ""}`}

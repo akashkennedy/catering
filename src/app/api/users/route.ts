@@ -5,14 +5,15 @@ import { db } from "@/lib/db";
 import { requirePermission } from "@/lib/requirePermission";
 import {
   FULL_PERMISSIONS,
+  USERNAME_PATTERN,
   getPermissions,
-  normalizeEmail,
+  normalizeUsername,
   setPermissions,
 } from "@/lib/authDb";
 import { hashPassword } from "@/lib/password";
 
 const createUserSchema = z.object({
-  email: z.string().trim().min(3).max(254),
+  username: z.string().trim().min(3).max(30).regex(USERNAME_PATTERN),
   password: z.string().min(8).max(200),
   employeeId: z.string().nullable().optional(),
 });
@@ -29,7 +30,7 @@ export async function GET() {
   if ("response" in auth) return auth.response;
   const sql = db();
   const rows = (await sql`
-    SELECT u.id, u.email, u.is_admin, u.employee_id, u.created_at,
+    SELECT u.id, u.username, u.is_admin, u.employee_id, u.created_at,
            e.name AS employee_name
     FROM users u LEFT JOIN employees e ON e.id = u.employee_id
     ORDER BY u.created_at ASC
@@ -41,7 +42,7 @@ export async function GET() {
     const stored = isAdmin ? null : await getPermissions(userId);
     users.push({
       id: userId,
-      email: String(row.email),
+      username: String(row.username),
       isAdmin,
       employeeId: typeof row.employee_id === "string" ? row.employee_id : null,
       employeeName: typeof row.employee_name === "string" ? row.employee_name : null,
@@ -64,18 +65,15 @@ export async function POST(request: Request) {
   const parsed = createUserSchema.safeParse(body);
   if (!parsed.success) {
     return NextResponse.json(
-      { error: "Email and a password of at least 8 characters are required." },
+      { error: "A username (3-30 chars: letters, digits, . _ -) and a password of at least 8 characters are required." },
       { status: 400 }
     );
   }
-  const email = normalizeEmail(parsed.data.email);
-  if (!email.includes("@")) {
-    return NextResponse.json({ error: "Enter a valid email address." }, { status: 400 });
-  }
+  const username = normalizeUsername(parsed.data.username);
   const sql = db();
-  const existing = await sql`SELECT id FROM users WHERE email = ${email} LIMIT 1`;
+  const existing = await sql`SELECT id FROM users WHERE username = ${username} LIMIT 1`;
   if (existing.length > 0) {
-    return NextResponse.json({ error: "That email is already registered." }, { status: 409 });
+    return NextResponse.json({ error: "That username is already taken." }, { status: 409 });
   }
   if (parsed.data.employeeId) {
     const linked = await sql`SELECT id FROM users WHERE employee_id = ${parsed.data.employeeId} LIMIT 1`;
@@ -88,8 +86,8 @@ export async function POST(request: Request) {
   }
   const id = newId();
   await sql`
-    INSERT INTO users (id, email, password_hash, is_admin, employee_id)
-    VALUES (${id}, ${email}, ${await hashPassword(parsed.data.password)}, FALSE, ${parsed.data.employeeId ?? null})
+    INSERT INTO users (id, username, password_hash, is_admin, employee_id)
+    VALUES (${id}, ${username}, ${await hashPassword(parsed.data.password)}, FALSE, ${parsed.data.employeeId ?? null})
   `;
   // New employee logins start on the restricted default template (§18.3).
   await setPermissions(id, {
@@ -98,5 +96,5 @@ export async function POST(request: Request) {
     canManageEmployees: true,
     canManageSettings: true,
   });
-  return NextResponse.json({ ok: true, id, email });
+  return NextResponse.json({ ok: true, id, username });
 }

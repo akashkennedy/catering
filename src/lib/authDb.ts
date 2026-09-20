@@ -1,6 +1,9 @@
 import { randomUUID } from "node:crypto";
 
 import { db } from "./db";
+import { normalizeUsername } from "./username";
+
+export { USERNAME_PATTERN, isValidUsername, normalizeUsername } from "./username";
 
 /**
  * Database-backed users, sessions and permissions.
@@ -10,7 +13,7 @@ import { db } from "./db";
 
 export type DbUser = {
   id: string;
-  email: string;
+  username: string;
   passwordHash: string;
   isAdmin: boolean;
   employeeId: string | null;
@@ -49,7 +52,7 @@ export const FULL_PERMISSIONS = {
 function toDbUser(row: Record<string, unknown>): DbUser {
   return {
     id: String(row.id),
-    email: String(row.email),
+    username: String(row.username),
     passwordHash: String(row.password_hash),
     isAdmin: row.is_admin === true,
     employeeId:
@@ -57,13 +60,9 @@ function toDbUser(row: Record<string, unknown>): DbUser {
   };
 }
 
-export function normalizeEmail(email: string): string {
-  return email.trim().toLowerCase();
-}
-
-export async function getUserByEmail(email: string): Promise<DbUser | null> {
+export async function getUserByUsername(username: string): Promise<DbUser | null> {
   const sql = db();
-  const rows = await sql`SELECT * FROM users WHERE email = ${normalizeEmail(email)} LIMIT 1`;
+  const rows = await sql`SELECT * FROM users WHERE username = ${normalizeUsername(username)} LIMIT 1`;
   if (rows.length === 0) return null;
   return toDbUser(rows[0] as Record<string, unknown>);
 }

@@ -18,7 +18,7 @@ type MeResponse = {
   authenticated: boolean;
   user?: {
     id: string;
-    email: string;
+    username: string;
     isAdmin: boolean;
     employeeId: string | null;
   };

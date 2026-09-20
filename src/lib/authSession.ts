@@ -15,7 +15,7 @@ import {
 import { DbNotConfiguredError } from "./db";
 
 export type RequestSession = {
-  user: DbUser | { id: string; email: string; isAdmin: true; employeeId: null };
+  user: DbUser | { id: string; username: string; isAdmin: true; employeeId: null };
   permissions: DbPermissions;
   /** True when authenticated via the legacy env-credential HMAC flow. */
   legacy: boolean;
@@ -39,7 +39,7 @@ export async function resolveRequestSession(): Promise<RequestSession | null> {
     const legacy = verifySessionToken(token);
     if (!legacy) return null;
     return {
-      user: { id: "legacy-admin", email: legacy.username, isAdmin: true, employeeId: null },
+      user: { id: "legacy-admin", username: legacy.username, isAdmin: true, employeeId: null },
       permissions: { userId: "legacy-admin", ...FULL_PERMISSIONS },
       legacy: true,
     };

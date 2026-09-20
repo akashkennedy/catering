@@ -8,8 +8,8 @@ import {
 import { DbNotConfiguredError } from "@/lib/db";
 import {
   createSession as createDbSession,
-  getUserByEmail,
-  normalizeEmail,
+  getUserByUsername,
+  normalizeUsername,
 } from "@/lib/authDb";
 import { verifyPassword } from "@/lib/password";
 
@@ -54,15 +54,15 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "Username and password are required" }, { status: 400 });
   }
 
-  // Preferred path: database users (email + bcrypt hash).
+  // Preferred path: database users (username + bcrypt hash).
   try {
-    const user = await getUserByEmail(username);
+    const user = await getUserByUsername(username);
     if (!user || !(await verifyPassword(password, user.passwordHash))) {
       return NextResponse.json({ error: "Invalid credentials" }, { status: 401 });
     }
     attempts.delete(ip);
     const session = await createDbSession(user.id);
-    const response = NextResponse.json({ username: user.email, isAdmin: user.isAdmin });
+    const response = NextResponse.json({ username: user.username, isAdmin: user.isAdmin });
     response.headers.append("Set-Cookie", getSessionCookieHeader(session.id));
     return response;
   } catch (error) {
@@ -81,7 +81,7 @@ export async function POST(request: Request) {
 
   attempts.delete(ip);
 
-  const normalized = normalizeEmail(username);
+  const normalized = normalizeUsername(username);
   const { token } = createSessionToken(normalized);
   const response = NextResponse.json({ username: normalized, isAdmin: true });
   response.headers.append("Set-Cookie", getSessionCookieHeader(token));

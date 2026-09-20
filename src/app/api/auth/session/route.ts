@@ -9,7 +9,7 @@ export async function GET() {
   }
   return NextResponse.json({
     authenticated: true,
-    username: session.user.email,
+    username: session.user.username,
     isAdmin: session.user.isAdmin,
   });
 }

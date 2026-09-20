@@ -384,7 +384,7 @@ export const ui = {
     ratePrefix: lab("Rate:", "விகிதம்:"),
     accounts: lab("Logins & access", "உள்நுழைவுகள் & அணுகல்"),
     createLogin: lab("Create login", "உள்நுழைவு உருவாக்கு"),
-    loginEmail: lab("Login email", "உள்நுழைவு மின்னஞ்சல்"),
+    loginUsername: lab("Login username", "உள்நுழைவு பயனர் பெயர்"),
     tempPassword: lab("Temporary password (min 8)", "தற்காலிக கடவுச்சொல் (குறைந்தது 8)"),
     linkEmployee: lab("Link to employee (optional)", "ஊழியருடன் இணை (விருப்பம்)"),
     noEmployeeLink: lab("Standalone login", "தனி உள்நுழைவு"),

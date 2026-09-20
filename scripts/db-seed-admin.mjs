@@ -1,7 +1,7 @@
 /**
- * Creates the first admin account (idempotent — skips when the email exists).
+ * Creates the first admin account (idempotent — skips when the username exists).
  *
- * Usage: ADMIN_EMAIL=... ADMIN_PASSWORD=... node scripts/db-seed-admin.mjs
+ * Usage: ADMIN_USERNAME=... ADMIN_PASSWORD=... node scripts/db-seed-admin.mjs
  * (npm run db:seed-admin loads .env via --env-file automatically)
  */
 import { randomUUID } from "node:crypto";
@@ -9,15 +9,19 @@ import bcrypt from "bcryptjs";
 import { neon } from "@neondatabase/serverless";
 
 const url = process.env.DATABASE_URL;
-const email = (process.env.ADMIN_EMAIL ?? "").trim().toLowerCase();
+const username = (process.env.ADMIN_USERNAME ?? "").trim().toLowerCase();
 const password = process.env.ADMIN_PASSWORD ?? "";
 
 if (!url) {
   console.error("DATABASE_URL is not set. See .env.example.");
   process.exit(1);
 }
-if (!email || !password) {
-  console.error("ADMIN_EMAIL and ADMIN_PASSWORD are both required.");
+if (!username || !password) {
+  console.error("ADMIN_USERNAME and ADMIN_PASSWORD are both required.");
+  process.exit(1);
+}
+if (!/^[a-z0-9._-]{3,30}$/.test(username)) {
+  console.error("ADMIN_USERNAME must be 3-30 chars: letters, digits, . _ -");
   process.exit(1);
 }
 if (password.length < 8) {
@@ -27,17 +31,17 @@ if (password.length < 8) {
 
 const sql = neon(url);
 
-const existing = await sql`SELECT id FROM users WHERE email = ${email} LIMIT 1`;
+const existing = await sql`SELECT id FROM users WHERE username = ${username} LIMIT 1`;
 if (existing.length > 0) {
-  console.log(`Skip: admin ${email} already exists.`);
+  console.log(`Skip: admin ${username} already exists.`);
   process.exit(0);
 }
 
 const id = randomUUID();
 const passwordHash = await bcrypt.hash(password, 12);
 await sql`
-  INSERT INTO users (id, email, password_hash, is_admin, employee_id)
-  VALUES (${id}, ${email}, ${passwordHash}, TRUE, NULL)
+  INSERT INTO users (id, username, password_hash, is_admin, employee_id)
+  VALUES (${id}, ${username}, ${passwordHash}, TRUE, NULL)
 `;
 await sql`
   INSERT INTO permissions
@@ -46,4 +50,4 @@ await sql`
   ON CONFLICT (user_id) DO NOTHING
 `;
 
-console.log(`Created admin ${email}.`);
+console.log(`Created admin ${username}.`);

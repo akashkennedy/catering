@@ -26,11 +26,12 @@ import { preferredText, ui } from "@/lib/i18n";
 import { useSettingsStore } from "@/store/settings";
 import { useMobileSheet } from "@/hooks/useMobileSheet";
 import { useEmployeesStore } from "@/store/employees";
+import { USERNAME_PATTERN } from "@/lib/username";
 import type { SessionPermissions } from "@/store/auth";
 
 type AccountUser = {
   id: string;
-  email: string;
+  username: string;
   isAdmin: boolean;
   employeeId: string | null;
   employeeName: string | null;
@@ -38,7 +39,12 @@ type AccountUser = {
 };
 
 const createSchema = z.object({
-  email: z.string().trim().min(3, "Email is required"),
+  username: z
+    .string()
+    .trim()
+    .min(3, "Username is required")
+    .max(30)
+    .regex(USERNAME_PATTERN, "3-30 chars: letters, digits, . _ -"),
   password: z.string().min(8, "Minimum 8 characters"),
   employeeId: z.string().nullable(),
 });
@@ -86,12 +92,12 @@ function CreateLoginModal({
     formState: { errors, isSubmitting },
   } = useForm<CreateValues>({
     resolver: zodResolver(createSchema),
-    defaultValues: { email: "", password: "", employeeId: null },
+    defaultValues: { username: "", password: "", employeeId: null },
   });
 
   useEffect(() => {
     if (!opened) return;
-    reset({ email: "", password: "", employeeId: null });
+    reset({ username: "", password: "", employeeId: null });
   }, [opened, reset]);
 
   const close = () => {
@@ -124,10 +130,11 @@ function CreateLoginModal({
       <form onSubmit={handleSubmit(onSubmit)}>
         <Stack gap="sm">
           <TextInput
-            label={<Bilingual label={ui.employees.loginEmail} />}
+            label={<Bilingual label={ui.employees.loginUsername} />}
+            placeholder="e.g. ravi.cook"
             withAsterisk
-            {...register("email")}
-            error={errors.email?.message}
+            {...register("username")}
+            error={errors.username?.message}
           />
           <PasswordInput
             label={<Bilingual label={ui.employees.tempPassword} />}
@@ -269,7 +276,7 @@ export function AccountsManager() {
                 <Stack gap={2} style={{ minWidth: 0 }}>
                   <Group gap="xs">
                     <Text size="sm" fw={600} truncate>
-                      {user.email}
+                      {user.username}
                     </Text>
                     {user.isAdmin && (
                       <Badge size="xs">
@@ -287,7 +294,7 @@ export function AccountsManager() {
                   <ActionIcon
                     variant="subtle"
                     color="kumkum"
-                    aria-label={`${preferredText(ui.employees.removeLogin, "en")} ${user.email}`}
+                    aria-label={`${preferredText(ui.employees.removeLogin, "en")} ${user.username}`}
                     onClick={() => void removeLogin(user.id)}
                   >
                     <Trash size={16} />

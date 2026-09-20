@@ -27,6 +27,7 @@ import { EventUtensilCards } from "./EventUtensilCards";
 import { EventUtensilFormModal } from "./EventUtensilFormModal";
 import { EventUtensilTable } from "./EventUtensilTable";
 import { Bilingual } from "@/components/Bilingual";
+import { ListPageSkeleton } from "@/components/LoadingSkeletons";
 import { ui, preferredText } from "@/lib/i18n";
 import { formatIndianDate } from "@/lib/date";
 import { formatINR } from "@/lib/format";
@@ -81,6 +82,7 @@ export function EventDetail() {
   const visiblePayFor =
     canViewAllPay || !ownEmployeeId ? null : new Set<string>([ownEmployeeId]);
   const loadEvents = useEventsStore((state) => state.loadEvents);
+  const eventsLoaded = useEventsStore((state) => state.loaded);
   const loadTemplates = useTemplatesStore((state) => state.loadTemplates);
   const loadIngredients = useIngredientsStore((state) => state.loadIngredients);
   const loadVesselLedger = useVesselStockLedgerStore((state) => state.loadVesselLedger);
@@ -97,6 +99,9 @@ export function EventDetail() {
   }, [loadEvents, loadTemplates, loadIngredients, loadVesselLedger, loadVendorSuggestions]);
 
   if (!event) {
+    if (!eventsLoaded) {
+      return <ListPageSkeleton />;
+    }
     return (
       <Stack gap="md">
         <Title order={1}>Event Detail</Title>

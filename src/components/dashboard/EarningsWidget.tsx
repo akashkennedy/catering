@@ -5,6 +5,7 @@ import { Group, SegmentedControl, Stack, Text } from "@mantine/core";
 import { IndianRupee } from "lucide-react";
 
 import { Bilingual } from "@/components/Bilingual";
+import { LoadingSpinner } from "@/components/LoadingSkeletons";
 import { ui } from "@/lib/i18n";
 import { formatINR } from "@/lib/format";
 import { currentMonthKey, eventCollected } from "@/lib/financeReport";
@@ -15,6 +16,7 @@ type EarningsFilter = "month" | "all";
 
 export function EarningsWidget() {
   const events = useEventsStore((state) => state.events);
+  const loaded = useEventsStore((state) => state.loaded);
   const canViewFinance = useAuthStore((state) => state.permissions.canViewFinance);
   const [filter, setFilter] = useState<EarningsFilter>("month");
 
@@ -47,7 +49,9 @@ export function EarningsWidget() {
           ]}
         />
       </Group>
-      {filtered.length === 0 ? (
+      {!loaded ? (
+        <LoadingSpinner />
+      ) : filtered.length === 0 ? (
         <Text size="sm" c="dimmed">
           <Bilingual label={ui.dashboard.earningsEmpty} />
         </Text>

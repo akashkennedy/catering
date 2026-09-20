@@ -165,7 +165,7 @@ export default function DevSeedPage() {
       notified: false,
     });
 
-    setStatus("Mock data loaded. Open /, /events, /finance, /follow-ups, /ingredients, /utensils to test.");
+    setStatus("Mock data loaded. Open /, /events, /finance, /follow-ups, /ingredients to test.");
   };
 
   const clearAllData = () => {

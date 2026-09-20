@@ -16,7 +16,6 @@ import { usePathname } from "next/navigation";
 import {
   CalendarDays,
   ClipboardList,
-  CookingPot,
   LayoutDashboard,
   LogOut,
   Plus,
@@ -54,7 +53,6 @@ const NAV_ITEMS: NavItem[] = [
   { label: ui.nav.templates, href: "/templates", icon: ClipboardList },
   { label: ui.nav.ingredients, href: "/ingredients", icon: ShoppingBasket },
   { label: ui.nav.employees, href: "/employees", icon: UserRound },
-  { label: ui.nav.rental, href: "/utensils", icon: CookingPot },
   { label: ui.nav.website, href: "/site-manager", icon: Globe },
   { label: ui.nav.finance, href: "/finance", icon: Wallet },
 ];

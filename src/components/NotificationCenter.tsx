@@ -19,13 +19,10 @@ import { todayLocalISO } from "@/lib/date";
 import { formatPhone } from "@/lib/phone";
 import { clientPendingAmount, eventEmployeePending } from "@/lib/eventFinances";
 import { isLowStock, remainingStock } from "@/lib/stock";
-import { isVesselLow, vesselAvailability } from "@/lib/vesselStock";
 import { useRemindersStore } from "@/store/reminders";
 import { useEventsStore } from "@/store/events";
 import { useIngredientsStore } from "@/store/ingredients";
 import { useStockLedgerStore } from "@/store/stockLedger";
-import { useUtensilsStore } from "@/store/utensils";
-import { useVesselStockLedgerStore } from "@/store/vesselStockLedger";
 
 type NotificationItem = {
   id: string;
@@ -59,8 +56,6 @@ export function NotificationCenter() {
   const events = useEventsStore((s) => s.events);
   const ingredients = useIngredientsStore((s) => s.ingredients);
   const ledgerEntries = useStockLedgerStore((s) => s.entries);
-  const utensils = useUtensilsStore((s) => s.utensils);
-  const vesselEntries = useVesselStockLedgerStore((s) => s.entries);
 
   const dismiss = useCallback((id: string) => {
     if (id.startsWith("reminder-")) {
@@ -138,23 +133,8 @@ export function NotificationCenter() {
       }
     }
 
-    for (const utensil of utensils) {
-      if (isVesselLow(utensil, vesselEntries)) {
-        const available = vesselAvailability(utensil, vesselEntries);
-        items.push({
-          id: `vessel-${utensil.id}`,
-          type: "data",
-          icon: <Package size={16} />,
-          label: utensil.name,
-          detail: `${available} available`,
-          href: "/utensils",
-          accent: "kumkum",
-        });
-      }
-    }
-
     return items.filter((item) => !hidden.has(item.id));
-  }, [reminders, events, ingredients, ledgerEntries, utensils, vesselEntries, hidden]);
+  }, [reminders, events, ingredients, ledgerEntries, hidden]);
 
   const count = notifications.length;
   const reminderCount = notifications.filter((n) => n.type === "reminder").length;

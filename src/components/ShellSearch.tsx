@@ -12,7 +12,6 @@ import { useEventsStore } from "@/store/events";
 import { templateDisplayName, templateMatchesQuery, useTemplatesStore } from "@/store/templates";
 import { useIngredientsStore } from "@/store/ingredients";
 import { useEmployeesStore } from "@/store/employees";
-import { useUtensilsStore } from "@/store/utensils";
 
 const MAX_PER_TYPE = 6;
 
@@ -40,7 +39,6 @@ export function ShellSearch() {
   const templates = useTemplatesStore((state) => state.templates);
   const ingredients = useIngredientsStore((state) => state.ingredients);
   const employees = useEmployeesStore((state) => state.employees);
-  const utensils = useUtensilsStore((state) => state.utensils);
 
   if (!hydrated) {
     return <Skeleton h={36} w={{ base: "100%", sm: 340 }} radius="sm" />;
@@ -87,15 +85,6 @@ export function ShellSearch() {
         name: employee.name,
         typeLabel: ui.nav.employees,
         href: "/employees",
-      })),
-    ...utensils
-      .filter((utensil) => matches(utensil.name))
-      .slice(0, MAX_PER_TYPE)
-      .map((utensil) => ({
-        key: `utensil:${utensil.id}`,
-        name: utensil.name,
-        typeLabel: ui.nav.rental,
-        href: "/utensils",
       })),
   ];
 

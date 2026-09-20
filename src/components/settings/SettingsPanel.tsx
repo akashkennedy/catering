@@ -7,6 +7,7 @@ import { Bilingual } from "@/components/Bilingual";
 import { ThemeControl } from "@/components/ThemeControl";
 import { exportDatabaseToExcel } from "@/lib/exportExcel";
 import { ui } from "@/lib/i18n";
+import { useAuthStore } from "@/store/auth";
 import {
   useSettingsStore,
   type DefaultLanguage,
@@ -18,6 +19,7 @@ export function SettingsPanel() {
   const setUiLanguage = useSettingsStore((state) => state.setUiLanguage);
   const defaultLanguage = useSettingsStore((state) => state.defaultLanguage);
   const setDefaultLanguage = useSettingsStore((state) => state.setDefaultLanguage);
+  const canExportExcel = useAuthStore((state) => state.permissions.canExportExcel);
   const [exporting, setExporting] = useState(false);
   const [exportStatus, setExportStatus] = useState<"idle" | "done" | "failed">("idle");
 
@@ -95,11 +97,12 @@ export function SettingsPanel() {
         </Stack>
       </div>
 
-      <div className="dash-card">
-        <Stack gap="sm">
-          <Text fw={600} size="sm">
-            <Bilingual label={ui.settings.exportExcel} />
-          </Text>
+      {canExportExcel ? (
+        <div className="dash-card">
+          <Stack gap="sm">
+            <Text fw={600} size="sm">
+              <Bilingual label={ui.settings.exportExcel} />
+            </Text>
           <Text size="xs" c="dimmed">
             <Bilingual label={ui.settings.exportExcelNote} />
           </Text>
@@ -122,8 +125,9 @@ export function SettingsPanel() {
               <Bilingual label={ui.settings.exportExcelFailed} />
             </Text>
           ) : null}
-        </Stack>
-      </div>
+          </Stack>
+        </div>
+      ) : null}
     </Stack>
   );
 }

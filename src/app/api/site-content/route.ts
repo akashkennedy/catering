@@ -1,7 +1,6 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
 
-import { resolveRequestSession } from "@/lib/authSession";
 import { requirePermission } from "@/lib/requirePermission";
 import { DbNotConfiguredError } from "@/lib/db";
 import {
@@ -63,16 +62,14 @@ const payloadSchema = z.object({
   testimonials: z.array(testimonialSchema),
 });
 
-async function requireSession(): Promise<NextResponse | null> {
-  const session = await resolveRequestSession();
-  if (!session) {
-    return NextResponse.json({ error: "Not signed in." }, { status: 401 });
-  }
+async function requirePublishPermission(): Promise<NextResponse | null> {
+  const auth = await requirePermission("canManageSettings");
+  if ("response" in auth) return auth.response;
   return null;
 }
 
-async function requirePublishPermission(): Promise<NextResponse | null> {
-  const auth = await requirePermission("canManageSettings");
+async function requireViewPermission(): Promise<NextResponse | null> {
+  const auth = await requirePermission("canViewWebsite");
   if ("response" in auth) return auth.response;
   return null;
 }
@@ -84,9 +81,9 @@ function dbErrorResponse(error: unknown): NextResponse {
   return NextResponse.json({ error: "Database request failed." }, { status: 500 });
 }
 
-/** Pull the live website content doc (CRM login required). */
+/** Pull the live website content doc (requires canViewWebsite). */
 export async function GET() {
-  const denied = await requireSession();
+  const denied = await requireViewPermission();
   if (denied) return denied;
   try {
     const row = await getSiteContentRow();

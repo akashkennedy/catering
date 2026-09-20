@@ -6,6 +6,7 @@ import { useRouter } from "next/navigation";
 import { Search } from "lucide-react";
 
 import { preferredText, ui, type Label } from "@/lib/i18n";
+import { useAuthStore } from "@/store/auth";
 import { useHydrated } from "@/hooks/useHydrated";
 import { useSettingsStore } from "@/store/settings";
 import { useEventsStore } from "@/store/events";
@@ -39,6 +40,7 @@ export function ShellSearch() {
   const templates = useTemplatesStore((state) => state.templates);
   const ingredients = useIngredientsStore((state) => state.ingredients);
   const employees = useEmployeesStore((state) => state.employees);
+  const canViewEmployees = useAuthStore((state) => state.permissions.canViewEmployees);
 
   if (!hydrated) {
     return <Skeleton h={36} w={{ base: "100%", sm: 340 }} radius="sm" />;
@@ -77,15 +79,17 @@ export function ShellSearch() {
         typeLabel: ui.nav.ingredients,
         href: "/ingredients",
       })),
-    ...employees
-      .filter((employee) => matches(employee.name))
-      .slice(0, MAX_PER_TYPE)
-      .map((employee) => ({
-        key: `employee:${employee.id}`,
-        name: employee.name,
-        typeLabel: ui.nav.employees,
-        href: "/employees",
-      })),
+    ...(canViewEmployees
+      ? employees
+          .filter((employee) => matches(employee.name))
+          .slice(0, MAX_PER_TYPE)
+          .map((employee) => ({
+            key: `employee:${employee.id}`,
+            name: employee.name,
+            typeLabel: ui.nav.employees,
+            href: "/employees",
+          }))
+      : []),
   ];
 
   const options = results.length > 0;

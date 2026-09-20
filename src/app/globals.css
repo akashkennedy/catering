@@ -117,6 +117,17 @@ body {
   padding: 20px;
 }
 
+/* Sign-in form: no focus ring on inputs/button (scoped to this card only —
+   the rest of the app keeps its default focus indicator). */
+.login-card.login-card input:focus,
+.login-card.login-card input:focus-visible,
+.login-card.login-card button:focus,
+.login-card.login-card button:focus-visible {
+  outline: none;
+  box-shadow: none;
+  border-color: var(--border);
+}
+
 .dash-stat {
   display: flex;
   flex-direction: column;

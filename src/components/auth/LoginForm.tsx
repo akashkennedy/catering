@@ -39,7 +39,7 @@ export function LoginForm() {
 
   return (
     <Stack align="center" justify="center" mih="100dvh" p="md">
-      <div className="dash-card" style={{ width: "100%", maxWidth: 400 }}>
+      <div className="dash-card login-card" style={{ width: "100%", maxWidth: 400 }}>
         <form onSubmit={handleSubmit(onSubmit)}>
           <Stack gap="md">
             <Stack gap={4}>
@@ -51,15 +51,15 @@ export function LoginForm() {
               </Text>
             </Stack>
             <TextInput
-              label={<Bilingual label={ui.auth.username} />}
-              placeholder="admin"
+              placeholder={preferredText(ui.auth.username, uiLanguage)}
+              aria-label={preferredText(ui.auth.username, uiLanguage)}
               autoComplete="username"
               error={errors.username ? preferredText(ui.auth.username, uiLanguage) : undefined}
               {...register("username", { onChange: () => setInvalid(false) })}
             />
             <PasswordInput
-              label={<Bilingual label={ui.auth.password} />}
-              placeholder="admin"
+              placeholder={preferredText(ui.auth.password, uiLanguage)}
+              aria-label={preferredText(ui.auth.password, uiLanguage)}
               autoComplete="current-password"
               error={errors.password ? preferredText(ui.auth.password, uiLanguage) : undefined}
               {...register("password", { onChange: () => setInvalid(false) })}

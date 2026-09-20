@@ -95,6 +95,9 @@ export async function POST(request: Request) {
     canViewOtherEmployeeRates: false,
     canManageEmployees: true,
     canManageSettings: true,
+    canViewEmployees: false,
+    canViewWebsite: false,
+    canExportExcel: false,
   });
   return NextResponse.json({ ok: true, id, username });
 }

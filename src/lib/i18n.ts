@@ -77,6 +77,10 @@ export const ui = {
     actions: lab("Actions", "செயல்கள்"),
     template: lab("Template", "டெம்ப்ளேட்"),
     noDate: lab("No date", "தேதி இல்லை"),
+    noAccess: lab(
+      "You don't have access to this section. Ask your admin.",
+      "இந்தப் பிரிவை அணுக உங்களுக்கு அனுமதி இல்லை. நிர்வாகியைத் தொடர்புகொள்ளவும்."
+    ),
   },
   events: {
     addEvent: lab("Add Event", "நிகழ்வு சேர்க்க"),
@@ -391,6 +395,9 @@ export const ui = {
     adminBadge: lab("Admin", "நிர்வாகி"),
     permViewFinance: lab("See income & expenses", "வருமானம் & செலவு பார்க்க"),
     permViewRates: lab("See others' pay", "மற்றவர் ஊதியம் பார்க்க"),
+    permViewEmployees: lab("See employees", "ஊழியர்களைப் பார்க்க"),
+    permViewWebsite: lab("See website", "இணையதளம் பார்க்க"),
+    permExportExcel: lab("Export to Excel", "எக்செல் ஏற்றுமதி"),
     permManageEmployees: lab("Manage employees & logins", "ஊழியர்கள் & உள்நுழைவுகள்"),
     permManageSettings: lab("Manage settings", "அமைப்புகள்"),
     removeLogin: lab("Remove login", "உள்நுழைவை நீக்கு"),

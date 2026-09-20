@@ -61,10 +61,13 @@ export function MobileBottomNav({ onAddEvent }: { onAddEvent: () => void }) {
   const logout = useAuthStore((state) => state.logout);
   const addEventLabel = preferredText(ui.events.addEvent, uiLanguage);
 
-  const canViewFinance = useAuthStore((state) => state.permissions.canViewFinance);
-  const visibleMoreItems = canViewFinance
-    ? MORE_ITEMS
-    : MORE_ITEMS.filter((item) => item.href !== "/finance");
+  const permissions = useAuthStore((state) => state.permissions);
+  const visibleMoreItems = MORE_ITEMS.filter((item) => {
+    if (item.href === "/finance" && !permissions.canViewFinance) return false;
+    if (item.href === "/employees" && !permissions.canViewEmployees) return false;
+    if (item.href === "/site-manager" && !permissions.canViewWebsite) return false;
+    return true;
+  });
   const moreActive = visibleMoreItems.some((item) => isActive(pathname, item.href));
 
   return (

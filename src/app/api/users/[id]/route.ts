@@ -10,6 +10,9 @@ const permissionsSchema = z.object({
   canViewOtherEmployeeRates: z.boolean(),
   canManageEmployees: z.boolean(),
   canManageSettings: z.boolean(),
+  canViewEmployees: z.boolean(),
+  canViewWebsite: z.boolean(),
+  canExportExcel: z.boolean(),
 });
 
 /**

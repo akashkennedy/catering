@@ -8,6 +8,7 @@ import { AccountsManager } from "./AccountsManager";
 import { EmployeeCards } from "./EmployeeCards";
 import { EmployeeFormModal } from "./EmployeeFormModal";
 import { EmployeeTable } from "./EmployeeTable";
+import { ListPageSkeleton } from "@/components/LoadingSkeletons";
 import { useAuthStore } from "@/store/auth";
 import { Bilingual } from "@/components/Bilingual";
 import { ui } from "@/lib/i18n";
@@ -17,6 +18,7 @@ export function EmployeesManager() {
   const employees = useEmployeesStore((state) => state.employees);
   const deleteEmployee = useEmployeesStore((state) => state.deleteEmployee);
   const loadEmployees = useEmployeesStore((state) => state.loadEmployees);
+  const loaded = useEmployeesStore((state) => state.loaded);
 
   useEffect(() => {
     void loadEmployees();
@@ -45,7 +47,9 @@ export function EmployeesManager() {
           </Button>
         </Group>
 
-        {employees.length === 0 ? (
+        {!loaded ? (
+          <ListPageSkeleton />
+        ) : employees.length === 0 ? (
           <Text c="dimmed">
             <Bilingual label={ui.employees.empty} />
           </Text>

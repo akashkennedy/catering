@@ -67,12 +67,15 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
   const [searchOpened, setSearchOpened] = useState(false);
   const [newEventOpened, setNewEventOpened] = useState(false);
   const logout = useAuthStore((state) => state.logout);
-  const canViewFinance = useAuthStore((state) => state.permissions.canViewFinance);
+  const permissions = useAuthStore((state) => state.permissions);
   const pathname = usePathname();
   const uiLanguage = useSettingsStore((state) => state.uiLanguage);
-  const visibleNavItems = canViewFinance
-    ? NAV_ITEMS
-    : NAV_ITEMS.filter((item) => item.href !== "/finance");
+  const visibleNavItems = NAV_ITEMS.filter((item) => {
+    if (item.href === "/finance" && !permissions.canViewFinance) return false;
+    if (item.href === "/employees" && !permissions.canViewEmployees) return false;
+    if (item.href === "/site-manager" && !permissions.canViewWebsite) return false;
+    return true;
+  });
 
   if (isPublicSitePath(pathname ?? "")) {
     return <>{children}</>;

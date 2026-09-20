@@ -8,6 +8,7 @@ import { TemplateCards } from "./TemplateCards";
 import { TemplateFormModal } from "./TemplateFormModal";
 import { TemplateTable } from "./TemplateTable";
 import { Bilingual } from "@/components/Bilingual";
+import { ListPageSkeleton } from "@/components/LoadingSkeletons";
 import { preferredText, ui } from "@/lib/i18n";
 import { useSettingsStore } from "@/store/settings";
 import { templateDisplayName, templateMatchesQuery, useTemplatesStore, type FoodTemplate } from "@/store/templates";
@@ -21,6 +22,7 @@ export function TemplatesManager() {
   const [deletingTemplate, setDeletingTemplate] = useState<FoodTemplate | null>(null);
   const [query, setQuery] = useState("");
   const loadTemplates = useTemplatesStore((state) => state.loadTemplates);
+  const loaded = useTemplatesStore((state) => state.loaded);
 
   useEffect(() => {
     void loadTemplates();
@@ -59,7 +61,9 @@ export function TemplatesManager() {
           />
         )}
 
-        {templates.length === 0 ? (
+        {!loaded ? (
+          <ListPageSkeleton />
+        ) : templates.length === 0 ? (
           <Text c="dimmed">
             <Bilingual label={ui.templates.empty} />
           </Text>

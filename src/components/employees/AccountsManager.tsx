@@ -57,6 +57,9 @@ const PERMISSION_ROWS: {
 }[] = [
   { key: "canViewFinance", label: ui.employees.permViewFinance },
   { key: "canViewOtherEmployeeRates", label: ui.employees.permViewRates },
+  { key: "canViewEmployees", label: ui.employees.permViewEmployees },
+  { key: "canViewWebsite", label: ui.employees.permViewWebsite },
+  { key: "canExportExcel", label: ui.employees.permExportExcel },
   { key: "canManageEmployees", label: ui.employees.permManageEmployees },
   { key: "canManageSettings", label: ui.employees.permManageSettings },
 ];

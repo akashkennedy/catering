@@ -18,6 +18,7 @@ import { EventCards } from "./EventCards";
 import { EventFormModal } from "./EventFormModal";
 import { EventTable } from "./EventTable";
 import { Bilingual } from "@/components/Bilingual";
+import { ListPageSkeleton } from "@/components/LoadingSkeletons";
 import { ui, preferredText } from "@/lib/i18n";
 import { useSettingsStore } from "@/store/settings";
 import { useEventsStore, type CateringEvent, type EventStatus } from "@/store/events";
@@ -44,6 +45,7 @@ export function EventsManager() {
   const [dateFilter, setDateFilter] = useState("");
   const [statusFilter, setStatusFilter] = useState<StatusFilter>("all");
   const loadEvents = useEventsStore((state) => state.loadEvents);
+  const loaded = useEventsStore((state) => state.loaded);
 
   useEffect(() => {
     void loadEvents();
@@ -98,7 +100,9 @@ export function EventsManager() {
         </Group>
       </Stack>
 
-      {events.length === 0 ? (
+      {!loaded ? (
+        <ListPageSkeleton />
+      ) : events.length === 0 ? (
         <Text c="dimmed">
           <Bilingual label={ui.events.empty} />
         </Text>

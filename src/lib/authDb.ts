@@ -31,6 +31,9 @@ export type DbPermissions = {
   canViewOtherEmployeeRates: boolean;
   canManageEmployees: boolean;
   canManageSettings: boolean;
+  canViewEmployees: boolean;
+  canViewWebsite: boolean;
+  canExportExcel: boolean;
 };
 
 export const SESSION_TTL_SECONDS = 60 * 60 * 24 * 7;
@@ -40,6 +43,9 @@ export const DEFAULT_EMPLOYEE_PERMISSIONS = {
   canViewOtherEmployeeRates: false,
   canManageEmployees: true,
   canManageSettings: true,
+  canViewEmployees: false,
+  canViewWebsite: false,
+  canExportExcel: false,
 } as const;
 
 export const FULL_PERMISSIONS = {
@@ -47,6 +53,9 @@ export const FULL_PERMISSIONS = {
   canViewOtherEmployeeRates: true,
   canManageEmployees: true,
   canManageSettings: true,
+  canViewEmployees: true,
+  canViewWebsite: true,
+  canExportExcel: true,
 } as const;
 
 function toDbUser(row: Record<string, unknown>): DbUser {
@@ -119,6 +128,9 @@ export async function getPermissions(userId: string): Promise<DbPermissions | nu
     canViewOtherEmployeeRates: row.can_view_other_employee_rates === true,
     canManageEmployees: row.can_manage_employees === true,
     canManageSettings: row.can_manage_settings === true,
+    canViewEmployees: row.can_view_employees === true,
+    canViewWebsite: row.can_view_website === true,
+    canExportExcel: row.can_export_excel === true,
   };
 }
 
@@ -139,19 +151,25 @@ export async function setPermissions(
     canViewOtherEmployeeRates: boolean;
     canManageEmployees: boolean;
     canManageSettings: boolean;
+    canViewEmployees: boolean;
+    canViewWebsite: boolean;
+    canExportExcel: boolean;
   }
 ): Promise<void> {
   const sql = db();
   await sql`
     INSERT INTO permissions
-      (user_id, can_view_finance, can_view_other_employee_rates, can_manage_employees, can_manage_settings, updated_at)
+      (user_id, can_view_finance, can_view_other_employee_rates, can_manage_employees, can_manage_settings, can_view_employees, can_view_website, can_export_excel, updated_at)
     VALUES
-      (${userId}, ${permissions.canViewFinance}, ${permissions.canViewOtherEmployeeRates}, ${permissions.canManageEmployees}, ${permissions.canManageSettings}, NOW())
+      (${userId}, ${permissions.canViewFinance}, ${permissions.canViewOtherEmployeeRates}, ${permissions.canManageEmployees}, ${permissions.canManageSettings}, ${permissions.canViewEmployees}, ${permissions.canViewWebsite}, ${permissions.canExportExcel}, NOW())
     ON CONFLICT (user_id) DO UPDATE SET
       can_view_finance = EXCLUDED.can_view_finance,
       can_view_other_employee_rates = EXCLUDED.can_view_other_employee_rates,
       can_manage_employees = EXCLUDED.can_manage_employees,
       can_manage_settings = EXCLUDED.can_manage_settings,
+      can_view_employees = EXCLUDED.can_view_employees,
+      can_view_website = EXCLUDED.can_view_website,
+      can_export_excel = EXCLUDED.can_export_excel,
       updated_at = NOW()
   `;
 }

@@ -12,6 +12,9 @@ export type SessionPermissions = {
   canViewOtherEmployeeRates: boolean;
   canManageEmployees: boolean;
   canManageSettings: boolean;
+  canViewEmployees: boolean;
+  canViewWebsite: boolean;
+  canExportExcel: boolean;
 };
 
 type MeResponse = {
@@ -30,6 +33,9 @@ const FULL_PERMISSIONS: SessionPermissions = {
   canViewOtherEmployeeRates: true,
   canManageEmployees: true,
   canManageSettings: true,
+  canViewEmployees: true,
+  canViewWebsite: true,
+  canExportExcel: true,
 };
 
 type AuthState = {

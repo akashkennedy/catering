@@ -21,7 +21,9 @@ import { Controller, useForm } from "react-hook-form";
 import { z } from "zod";
 
 import { Bilingual } from "@/components/Bilingual";
+import { NoAccess } from "@/components/NoAccess";
 import { preferredText, ui } from "@/lib/i18n";
+import { useAuthStore } from "@/store/auth";
 import { useSettingsStore } from "@/store/settings";
 import { useMobileSheet } from "@/hooks/useMobileSheet";
 import { templateDisplayName, useTemplatesStore } from "@/store/templates";
@@ -1167,6 +1169,10 @@ function TestimonialsManager() {
 }
 
 export function SiteManager() {
+  const canViewWebsite = useAuthStore((state) => state.permissions.canViewWebsite);
+  if (!canViewWebsite) {
+    return <NoAccess />;
+  }
   return (
     <Stack gap="md">
       <Group justify="space-between">

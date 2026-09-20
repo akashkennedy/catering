@@ -8,6 +8,7 @@ import { IngredientCards } from "./IngredientCards";
 import { IngredientFormModal } from "./IngredientFormModal";
 import { IngredientTable } from "./IngredientTable";
 import { Bilingual } from "@/components/Bilingual";
+import { ListPageSkeleton } from "@/components/LoadingSkeletons";
 import { preferredText, ui } from "@/lib/i18n";
 import { INGREDIENT_TAGS, type IngredientTag } from "@/lib/ingredientTags";
 import { seedIngredientCatalog } from "@/lib/seedIngredients";
@@ -20,6 +21,7 @@ export function IngredientsManager() {
   const ingredients = useIngredientsStore((state) => state.ingredients);
   const deleteIngredient = useIngredientsStore((state) => state.deleteIngredient);
   const loadIngredients = useIngredientsStore((state) => state.loadIngredients);
+  const loaded = useIngredientsStore((state) => state.loaded);
 
   useEffect(() => {
     void loadIngredients();
@@ -119,7 +121,9 @@ export function IngredientsManager() {
             })}
           </div>
 
-          {filtered.length === 0 ? (
+          {!loaded ? (
+            <ListPageSkeleton />
+          ) : filtered.length === 0 ? (
             <Text c="dimmed">
               <Bilingual label={deferredQuery.trim() ? ui.ingredients.noMatch : ui.ingredients.empty} />
             </Text>

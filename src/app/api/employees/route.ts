@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import { z } from "zod";
 
 import { db } from "@/lib/db";
-import { requirePermission, requireSession } from "@/lib/requirePermission";
+import { requirePermission } from "@/lib/requirePermission";
 import type { Employee } from "@/store/employees";
 
 const employeeSchema = z.object({
@@ -28,7 +28,7 @@ function newId(): string {
 }
 
 export async function GET() {
-  const auth = await requireSession();
+  const auth = await requirePermission("canViewEmployees");
   if ("response" in auth) return auth.response;
   const sql = db();
   const rows = await sql`SELECT * FROM employees ORDER BY name ASC`;

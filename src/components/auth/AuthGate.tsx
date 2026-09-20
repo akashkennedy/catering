@@ -3,9 +3,10 @@
 import { useEffect } from "react";
 import { usePathname } from "next/navigation";
 
+import { Loader, Stack, Text, Title } from "@mantine/core";
+
 import { useAuthStore } from "@/store/auth";
 import { useHydrated } from "@/hooks/useHydrated";
-import { CardSkeleton } from "@/components/LoadingSkeletons";
 import { LoginForm } from "./LoginForm";
 
 /** Public landing page bypasses the login gate entirely. */
@@ -29,9 +30,13 @@ export function AuthGate({ children }: { children: React.ReactNode }) {
 
   if (!hydrated || status === "loading") {
     return (
-      <div style={{ padding: 16 }}>
-        <CardSkeleton />
-      </div>
+      <Stack align="center" justify="center" mih="100dvh" gap="md" p="md">
+        <Title order={2}>Catering</Title>
+        <Loader size="lg" />
+        <Text size="sm" c="dimmed">
+          Loading…
+        </Text>
+      </Stack>
     );
   }
 

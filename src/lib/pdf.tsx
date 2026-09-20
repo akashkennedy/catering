@@ -8,9 +8,12 @@ import { normalizeUnit } from "@/lib/units";
 import { formatIndianDate } from "@/lib/date";
 import { eventBalance } from "@/lib/eventFinances";
 import { ui, preferredText } from "@/lib/i18n";
-import { INGREDIENT_TAGS, isIngredientTag, type IngredientTag } from "@/lib/ingredientTags";
+import { INGREDIENT_TAGS, type IngredientTag } from "@/lib/ingredientTags";
 
 const TAMIL_FAMILY = "NotoSansTamil";
+
+const BRAND_NAME = "Mampalli Catering";
+const BRAND_PHONE = "9025350666";
 
 let fontRegistered = false;
 
@@ -56,6 +59,9 @@ const styles = StyleSheet.create({
   tableFooter: { backgroundColor: "#f0f0f0", padding: 6 },
   tableFooterText: { fontWeight: "bold", fontSize: 9, flex: 1 },
   rowEven: { backgroundColor: "#f9f9f9" },
+  brandTitle: { fontSize: 22, fontWeight: "bold", textAlign: "center", marginBottom: 2 },
+  brandPhone: { fontSize: 11, textAlign: "center", marginBottom: 12 },
+  thankYou: { fontSize: 13, fontWeight: "bold", textAlign: "center", marginTop: 18 },
 });
 
 export type { PrintLine } from "./printLines";
@@ -100,6 +106,49 @@ function groupLines(
         }),
       };
     }
+  );
+}
+
+/**
+ * Brand heading — first page only. Renders an empty string on every other
+ * page so no space is reserved there.
+ */
+function BrandHeader() {
+  return (
+    <>
+      <Text
+        style={styles.brandTitle}
+        render={({ pageNumber }) => (pageNumber === 1 ? BRAND_NAME : "")}
+      />
+      <Text
+        style={styles.brandPhone}
+        render={({ pageNumber }) => (pageNumber === 1 ? BRAND_PHONE : "")}
+      />
+    </>
+  );
+}
+
+/**
+ * Thank-you footer — bottom of the last page only. `fixed` pins it to the
+ * page bottom; the render condition skips every other page (including all
+ * middle pages of multi-page invoices).
+ */
+function ThankYouFooter() {
+  const label = `${preferredText(ui.events.thankYou, "en")} / ${preferredText(
+    ui.events.thankYou,
+    "ta"
+  )}`;
+  return (
+    <Text
+      fixed
+      style={[
+        styles.thankYou,
+        { position: "absolute", bottom: 30, left: 30, right: 30 },
+      ]}
+      render={({ pageNumber, totalPages }) =>
+        pageNumber === totalPages ? label : ""
+      }
+    />
   );
 }
 
@@ -223,7 +272,7 @@ function GroupedTable({
   );
 }
 
-function buildDocument(
+export function buildDocument(
   event: CateringEvent,
   ingredients: Ingredient[],
   lines: EventIngredientLine[],
@@ -239,12 +288,14 @@ function buildDocument(
   return (
     <Document>
       <Page size="A4" style={styles.page}>
+        <BrandHeader />
         <EventHeader event={event} />
         <Text style={styles.sectionTitle}>
           {preferredText(ui.templates.ingredients, "ta")} /{" "}
           {preferredText(ui.templates.ingredients, "en")}
         </Text>
         <GroupedTable groups={groups} withPrice={withPrice} event={event} subtotal={subtotal} />
+        <ThankYouFooter />
       </Page>
     </Document>
   );

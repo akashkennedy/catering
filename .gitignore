@@ -37,3 +37,4 @@ next-env.d.ts
 # serwist generated files
 public/sw*
 public/swe-worker*
+.neon

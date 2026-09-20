@@ -15,9 +15,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import {
   CalendarDays,
-  Calculator,
   ClipboardList,
-  CookingPot,
   LayoutDashboard,
   LogOut,
   Plus,
@@ -27,9 +25,11 @@ import {
   PhoneCall,
   UserRound,
   Wallet,
+  Globe,
 } from "lucide-react";
 
 import { Bilingual } from "@/components/Bilingual";
+import { isPublicSitePath } from "@/components/auth/AuthGate";
 import { MobileBottomNav } from "@/components/MobileBottomNav";
 import { MobileSearchOverlay } from "@/components/MobileSearchOverlay";
 import { NotificationCenter } from "@/components/NotificationCenter";
@@ -51,10 +51,9 @@ const NAV_ITEMS: NavItem[] = [
   { label: ui.nav.events, href: "/events", icon: CalendarDays },
   { label: ui.dashboard.customerFollowUp, href: "/follow-ups", icon: PhoneCall },
   { label: ui.nav.templates, href: "/templates", icon: ClipboardList },
-  { label: ui.nav.ingredients, href: "/inventory", icon: ShoppingBasket },
+  { label: ui.nav.ingredients, href: "/ingredients", icon: ShoppingBasket },
   { label: ui.nav.employees, href: "/employees", icon: UserRound },
-  { label: ui.nav.rental, href: "/utensils", icon: CookingPot },
-  { label: ui.nav.calculator, href: "/calculator", icon: Calculator },
+  { label: ui.nav.website, href: "/site-manager", icon: Globe },
   { label: ui.nav.finance, href: "/finance", icon: Wallet },
 ];
 
@@ -68,8 +67,19 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
   const [searchOpened, setSearchOpened] = useState(false);
   const [newEventOpened, setNewEventOpened] = useState(false);
   const logout = useAuthStore((state) => state.logout);
+  const permissions = useAuthStore((state) => state.permissions);
   const pathname = usePathname();
   const uiLanguage = useSettingsStore((state) => state.uiLanguage);
+  const visibleNavItems = NAV_ITEMS.filter((item) => {
+    if (item.href === "/finance" && !permissions.canViewFinance) return false;
+    if (item.href === "/employees" && !permissions.canViewEmployees) return false;
+    if (item.href === "/site-manager" && !permissions.canViewWebsite) return false;
+    return true;
+  });
+
+  if (isPublicSitePath(pathname ?? "")) {
+    return <>{children}</>;
+  }
 
   return (
     <AppShell
@@ -106,8 +116,15 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
       >
         <Stack justify="space-between" gap="md" style={{ flex: 1, minHeight: 0 }}>
           <Stack gap="sm" style={{ flex: 1, minHeight: 0 }}>
+            <Button
+              fullWidth
+              leftSection={<Plus size={18} aria-hidden />}
+              onClick={() => setNewEventOpened(true)}
+            >
+              <Bilingual label={ui.events.addEvent} />
+            </Button>
             <Stack gap={4} style={{ flex: 1, minHeight: 0, overflowY: "auto" }}>
-              {NAV_ITEMS.map((item) => {
+              {visibleNavItems.map((item) => {
                 const Icon = item.icon;
                 const active = isActive(pathname, item.href);
                 return (
@@ -127,13 +144,6 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
               })}
             </Stack>
           </Stack>
-          <Button
-            fullWidth
-            leftSection={<Plus size={18} aria-hidden />}
-            onClick={() => setNewEventOpened(true)}
-          >
-            <Bilingual label={ui.events.addEvent} />
-          </Button>
           <Box visibleFrom="sm">
             <ThemeControl />
           </Box>

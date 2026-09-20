@@ -4,6 +4,9 @@
  * Add new entries at the bottom of the relevant category.
  */
 
+import { INGREDIENT_CATALOG } from "./ingredientCatalog";
+import type { IngredientTag } from "./ingredientTags";
+
 export const ingredientTranslations: Record<string, string> = {
   // Grains & staples
   "rice": "அரிசி",
@@ -176,6 +179,164 @@ export const ingredientTranslations: Record<string, string> = {
  * Returns undefined if no match is found (caller should fall back to manual entry).
  */
 export function lookupTamilName(englishName: string): string | undefined {
-  const key = englishName.trim().toLowerCase();
-  return ingredientTranslations[key];
+  return lookupIngredient(englishName)?.tamilName;
+}
+
+export type IngredientSuggestion = {
+  tamilName: string;
+  tag: IngredientTag;
+};
+
+/**
+ * Tanglish → Tamil aliases so typing a romanised Tamil word (e.g. "pallari",
+ * "arisi", "venkayam") still auto-fills the Tamil name.
+ */
+const tanglishAliases: Record<string, string> = {
+  arisi: "அரிசி",
+  ari: "அரிசி",
+  ponni: "பொன்னி அரிசி",
+  ponny: "பொன்னி அரிசி",
+  rawk: "பச்சரிசி",
+  aval: "அவல்",
+  ada: "அடை",
+  pal: "பால்",
+  thayir: "தயிர்",
+  ennai: "எண்ணெய்",
+  nallennai: "நல்லெண்ணெய்",
+  thennai: "தேங்காய்",
+  coconut: "தேங்காய்",
+  ulli: "வெங்காயம்",
+  venkayam: "வெங்காயம்",
+  pallari: "பல்லரி",
+  smallulli: "சின்ன உள்ளி",
+  chinnaulli: "சின்ன உள்ளி",
+  takkali: "தக்காளி",
+  thakkali: "தக்காளி",
+  urulaikizhangu: "உருளைக்கிழங்கு",
+  urulai: "உருளை கிழங்கு",
+  kilangu: "கிழங்கு",
+  kathirikkai: "கத்திரிக்காய்",
+  vendaikkai: "வெண்டைக்காய்",
+  pavakkai: "பாவக்காய்",
+  avarakkai: "அவரக்காய்",
+  putalangkai: "புடலங்காய்",
+  vazhudhana: "வழுதனங்காய்",
+  murungaikkai: "முருங்கைக்காய்",
+  vendhayam: "வெந்தயம்",
+  venthayam: "வெந்தயம்",
+  seeragam: "ஜீரகம்",
+  jeeragam: "ஜீரகம்",
+  manjal: "மஞ்சள்",
+  milagai: "மிளகாய்",
+  uppu: "உப்பு",
+  sarkkarai: "சர்க்கரை",
+  vellam: "வெல்லம்",
+  kothamalli: "கொத்தமல்லி",
+  malitthool: "மல்லித்தூள்",
+  malitthooli: "மல்லி பொடி",
+  karuvapillai: "கறிவேப்பிலை",
+  karuvapilai: "கறிவேப்பிலை",
+  pudhina: "புதினா",
+  pudina: "புதினா",
+  kozhi: "கோழி",
+  koli: "கோழி",
+  "nattu koli": "நாட்டு கோழி",
+  maattu: "மட்டன்",
+  meen: "மீன்",
+  thengai: "தேங்காய்",
+  vaazhaipazham: "வாழைப்பழம்",
+  vaazhaikkai: "வாழைக்காய்",
+  vazhaikkai: "வாழைக்காய்",
+  "vazha ilai": "வாழ இலை",
+  godhumai: "கோதுமை",
+  maavu: "மாவு",
+  mavu: "மாவு",
+  "arisi mavu": "அரிசி மாவு",
+  "kadala mavu": "கடலை மாவு",
+  "thoor dal": "துவரம் பருப்பு",
+  toordal: "துவரம் பருப்பு",
+  paasi: "பாசிப்பருப்பு",
+  uzhundu: "உளுந்து",
+  ulundu: "உளுந்து",
+  kadalai: "கடலை",
+  ellumichai: "எலுமிச்சை",
+  elumichai: "எலுமிச்சை",
+  pachai: "பச்சை",
+};
+
+/** The full catalog gives us tuned English/tanglish → Tamil + tag suggestions. */
+const catalogSuggestions = new Map<string, IngredientSuggestion>();
+
+for (const item of INGREDIENT_CATALOG) {
+  const key = item.name.trim().toLowerCase();
+  if (!key || catalogSuggestions.has(key)) continue;
+  catalogSuggestions.set(key, { tamilName: item.tamilName, tag: item.tag });
+}
+
+function normalizedKey(value: string): string {
+  return value
+    .trim()
+    .toLowerCase()
+    .replace(/[()]/g, " ")
+    .replace(/\s+/g, " ")
+    .trim();
+}
+
+const DISH_TAMIL_MAP: Record<string, string> = {
+  saapadu: "சாப்பாடு",
+  sambar: "சாம்பார்",
+  rasam: "ரசம்",
+  moru: "மோர்",
+  "moru curry": "மோர் குழம்பு",
+  poriyal: "பொரியல்",
+  pachadi: "பச்சடி",
+  avial: "அவியல்",
+  payasam: "பாயசம்",
+  biryani: "பிரியாணி",
+  "chicken biryani": "சிக்கன் பிரியாணி",
+  meals: "சாப்பாடு",
+};
+
+/**
+ * Best-effort Tamil suggestion for template / course (dish) names.
+ * Reuses the ingredient dictionary, plus a small dish map. Offline-safe.
+ */
+export function suggestTamilName(englishName: string): string {
+  const key = normalizedKey(englishName);
+  if (!key) return "";
+  const dishHit = DISH_TAMIL_MAP[key];
+  if (dishHit) return dishHit;
+  return lookupIngredient(englishName)?.tamilName ?? "";
+}
+
+/**
+ * Best-effort lookup for an English or Tanglish ingredient name.
+ * Returns the Tamil name (and matching category tag) when found.
+ */
+export function lookupIngredient(
+  englishName: string
+): IngredientSuggestion | undefined {
+  const key = normalizedKey(englishName);
+  if (!key) return undefined;
+
+  const fromCatalog = catalogSuggestions.get(key);
+  if (fromCatalog) return fromCatalog;
+
+  const direct = ingredientTranslations[key];
+  if (direct) return { tamilName: direct, tag: "grocery" };
+
+  const alias = tanglishAliases[key];
+  if (alias) return { tamilName: alias, tag: "grocery" };
+
+  const flat = key.replace(/ /g, "");
+  const flatFromCatalog = catalogSuggestions.get(flat);
+  if (flatFromCatalog) return flatFromCatalog;
+  const flatDirect = ingredientTranslations[flat];
+  if (flatDirect) return { tamilName: flatDirect, tag: "grocery" };
+  const flatAlias = tanglishAliases[flat];
+  if (flatAlias) {
+    return { tamilName: flatAlias, tag: "grocery" };
+  }
+
+  return undefined;
 }

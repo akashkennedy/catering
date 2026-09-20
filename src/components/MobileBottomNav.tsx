@@ -2,27 +2,22 @@
 
 import { useState } from "react";
 import {
-  ActionIcon,
-  Box,
   Drawer,
-  Group,
   Stack,
-  Text,
 } from "@mantine/core";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import {
   CalendarDays,
-  Calculator,
   LayoutDashboard,
   Plus,
   MoreHorizontal,
   ClipboardList,
   ShoppingBasket,
-  CookingPot,
   LogOut,
   UserRound,
   Wallet,
+  Globe,
   Settings,
   PhoneCall,
 } from "lucide-react";
@@ -43,16 +38,12 @@ const PRIMARY_TABS: MobileNavItem[] = [
   { label: ui.nav.events, href: "/events", icon: CalendarDays },
 ];
 
-const AFTER_TABS: MobileNavItem[] = [
-  { label: ui.nav.calculator, href: "/calculator", icon: Calculator },
-];
-
 const MORE_ITEMS: MobileNavItem[] = [
-  { label: ui.nav.rental, href: "/utensils", icon: CookingPot },
   { label: ui.nav.templates, href: "/templates", icon: ClipboardList },
-  { label: ui.nav.ingredients, href: "/inventory", icon: ShoppingBasket },
+  { label: ui.nav.ingredients, href: "/ingredients", icon: ShoppingBasket },
   { label: ui.nav.employees, href: "/employees", icon: UserRound },
   { label: ui.dashboard.customerFollowUp, href: "/follow-ups", icon: PhoneCall },
+  { label: ui.nav.website, href: "/site-manager", icon: Globe },
   { label: ui.nav.finance, href: "/finance", icon: Wallet },
   { label: ui.nav.settings, href: "/settings", icon: Settings },
 ];
@@ -70,7 +61,14 @@ export function MobileBottomNav({ onAddEvent }: { onAddEvent: () => void }) {
   const logout = useAuthStore((state) => state.logout);
   const addEventLabel = preferredText(ui.events.addEvent, uiLanguage);
 
-  const moreActive = MORE_ITEMS.some((item) => isActive(pathname, item.href));
+  const permissions = useAuthStore((state) => state.permissions);
+  const visibleMoreItems = MORE_ITEMS.filter((item) => {
+    if (item.href === "/finance" && !permissions.canViewFinance) return false;
+    if (item.href === "/employees" && !permissions.canViewEmployees) return false;
+    if (item.href === "/site-manager" && !permissions.canViewWebsite) return false;
+    return true;
+  });
+  const moreActive = visibleMoreItems.some((item) => isActive(pathname, item.href));
 
   return (
     <>
@@ -102,23 +100,6 @@ export function MobileBottomNav({ onAddEvent }: { onAddEvent: () => void }) {
             <Plus size={24} />
           </span>
         </button>
-        {AFTER_TABS.map((item) => {
-          const Icon = item.icon;
-          const active = isActive(pathname, item.href);
-          return (
-            <Link
-              key={item.href}
-              href={item.href}
-              className={`mobile-bottom-nav__item${active ? " mobile-bottom-nav__item--active" : ""}`}
-              aria-current={active ? "page" : undefined}
-            >
-              <Icon size={20} />
-              <span className="mobile-bottom-nav__label">
-                <Bilingual label={item.label} />
-              </span>
-            </Link>
-          );
-        })}
         <button
           type="button"
           className={`mobile-bottom-nav__item${moreActive ? " mobile-bottom-nav__item--active" : ""}`}
@@ -142,7 +123,7 @@ export function MobileBottomNav({ onAddEvent }: { onAddEvent: () => void }) {
         }}
       >
         <Stack gap={0}>
-          {MORE_ITEMS.map((item) => {
+          {visibleMoreItems.map((item) => {
             const Icon = item.icon;
             const active = isActive(pathname, item.href);
             return (
@@ -169,7 +150,7 @@ export function MobileBottomNav({ onAddEvent }: { onAddEvent: () => void }) {
               void logout();
             }}
           >
-            <LogOut size={20} />
+            <LogOut size={20} aria-hidden />
             <span>
               <Bilingual label={ui.auth.logout} />
             </span>

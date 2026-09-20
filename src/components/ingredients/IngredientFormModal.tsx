@@ -8,9 +8,10 @@ import { useEffect } from "react";
 
 import { Bilingual } from "@/components/Bilingual";
 import { ui, preferredText } from "@/lib/i18n";
+import { lookupIngredient } from "@/lib/ingredientTranslations";
+import { INGREDIENT_TAGS } from "@/lib/ingredientTags";
 import { useSettingsStore } from "@/store/settings";
 import { useMobileSheet } from "@/hooks/useMobileSheet";
-import { lookupTamilName } from "@/lib/ingredientTranslations";
 import { UNITS, normalizeUnit } from "@/lib/units";
 import {
   useIngredientsStore,
@@ -21,11 +22,9 @@ import {
 const ingredientSchema = z.object({
   name: z.string().trim().min(1, "Name is required"),
   tamilName: z.string().trim(),
+  tag: z.enum(INGREDIENT_TAGS),
   unit: z.string().trim().min(1, "Unit is required"),
-  qty: z.coerce.number().min(0, "Qty must be 0 or more"),
   globalPrice: z.coerce.number().min(0, "Price must be 0 or more"),
-  openingStock: z.coerce.number().min(0, "Qty must be 0 or more"),
-  lowStockThreshold: z.coerce.number().min(0, "Qty must be 0 or more"),
 });
 
 type IngredientFormValues = z.infer<typeof ingredientSchema>;
@@ -54,11 +53,9 @@ export function IngredientFormModal({ opened, ingredient, onClose }: IngredientF
     defaultValues: {
       name: "",
       tamilName: "",
+      tag: "grocery",
       unit: "",
-      qty: 0,
       globalPrice: 0,
-      openingStock: 0,
-      lowStockThreshold: 0,
     },
   });
 
@@ -69,11 +66,9 @@ export function IngredientFormModal({ opened, ingredient, onClose }: IngredientF
     reset({
       name: ingredient?.name ?? "",
       tamilName: ingredient?.tamilName ?? "",
+      tag: ingredient?.tag ?? "grocery",
       unit: normalizeUnit(ingredient?.unit) || UNITS[0],
-      qty: ingredient?.qty ?? 0,
       globalPrice: ingredient?.globalPrice ?? 0,
-      openingStock: ingredient?.openingStock ?? 0,
-      lowStockThreshold: ingredient?.lowStockThreshold ?? 0,
     });
   }, [opened, ingredient, reset]);
 
@@ -81,16 +76,26 @@ export function IngredientFormModal({ opened, ingredient, onClose }: IngredientF
     if (ingredient) return;
     const name = watchedName?.trim();
     if (!name) return;
-    const translation = lookupTamilName(name);
-    if (!translation) return;
-    if (dirtyFields.tamilName) return;
-    setValue("tamilName", translation);
-  }, [watchedName, ingredient, dirtyFields.tamilName, setValue]);
+    const suggestion = lookupIngredient(name);
+    if (!suggestion) return;
+    if (!dirtyFields.tamilName) {
+      setValue("tamilName", suggestion.tamilName);
+    }
+    if (!dirtyFields.tag) {
+      setValue("tag", suggestion.tag);
+    }
+  }, [watchedName, ingredient, dirtyFields.tamilName, dirtyFields.tag, setValue]);
 
   const onSubmit = (values: IngredientFormValues) => {
     const input: IngredientInput = {
-      ...values,
+      name: values.name,
+      tamilName: values.tamilName,
+      tag: values.tag,
       unit: normalizeUnit(values.unit),
+      qty: 0,
+      globalPrice: values.globalPrice,
+      openingStock: 0,
+      lowStockThreshold: 0,
     };
     if (ingredient) {
       updateIngredient(ingredient.id, input);
@@ -110,7 +115,8 @@ export function IngredientFormModal({ opened, ingredient, onClose }: IngredientF
       <form onSubmit={handleSubmit(onSubmit)}>
         <Stack gap="md">
           <TextInput
-            label={<Bilingual label={ui.common.name} />}
+            label={<Bilingual label={ui.ingredients.englishName} />}
+            description={<Bilingual label={ui.ingredients.autoFillHint} />}
             placeholder={preferredText(ui.ingredients.namePlaceholder, uiLanguage)}
             withAsterisk
             {...register("name")}
@@ -121,6 +127,24 @@ export function IngredientFormModal({ opened, ingredient, onClose }: IngredientF
             placeholder={preferredText(ui.ingredients.tamilNamePlaceholder, uiLanguage)}
             {...register("tamilName")}
             error={errors.tamilName?.message}
+          />
+          <Controller
+            name="tag"
+            control={control}
+            render={({ field }) => (
+              <Select
+                label={<Bilingual label={ui.ingredients.category} />}
+                placeholder={preferredText(ui.ingredients.selectTag, uiLanguage)}
+                data={INGREDIENT_TAGS.map((tag) => ({
+                  value: tag,
+                  label: preferredText(ui.ingredients.tags[tag], uiLanguage),
+                }))}
+                allowDeselect={false}
+                withAsterisk
+                {...field}
+                error={errors.tag?.message}
+              />
+            )}
           />
           <Group gap="sm" align="flex-end" wrap="wrap">
             <Controller
@@ -140,80 +164,22 @@ export function IngredientFormModal({ opened, ingredient, onClose }: IngredientF
               )}
             />
             <Controller
-              name="qty"
+              name="globalPrice"
               control={control}
               render={({ field }) => (
                 <NumberInput
-                  label={<Bilingual label={ui.common.qty} />}
-                  placeholder={preferredText(ui.ingredients.qtyPlaceholder, uiLanguage)}
+                  label={<Bilingual label={ui.ingredients.globalPrice} />}
+                  placeholder={preferredText(ui.ingredients.globalPricePlaceholder, uiLanguage)}
                   min={0}
                   allowNegative={false}
                   decimalScale={2}
-                  style={{ flex: "1 1 120px" }}
+                  leftSection="₹"
+                  style={{ flex: "1 1 160px" }}
                   {...field}
                   onKeyDown={(e) => {
                     if (e.key === "ArrowUp" || e.key === "ArrowDown") e.preventDefault();
                   }}
-                  error={errors.qty?.message}
-                />
-              )}
-            />
-          </Group>
-          <Controller
-            name="globalPrice"
-            control={control}
-            render={({ field }) => (
-              <NumberInput
-                label={<Bilingual label={ui.ingredients.globalPrice} />}
-                placeholder={preferredText(ui.ingredients.globalPricePlaceholder, uiLanguage)}
-                min={0}
-                allowNegative={false}
-                decimalScale={2}
-                leftSection="₹"
-                {...field}
-                onKeyDown={(e) => {
-                  if (e.key === "ArrowUp" || e.key === "ArrowDown") e.preventDefault();
-                }}
-                error={errors.globalPrice?.message}
-              />
-            )}
-          />
-          <Group gap="sm" align="flex-end" wrap="wrap">
-            <Controller
-              name="openingStock"
-              control={control}
-              render={({ field }) => (
-                <NumberInput
-                  label={<Bilingual label={ui.ingredients.openingStock} />}
-                  placeholder={preferredText(ui.ingredients.openingStockPlaceholder, uiLanguage)}
-                  min={0}
-                  allowNegative={false}
-                  decimalScale={2}
-                  style={{ flex: "1 1 140px" }}
-                  {...field}
-                  onKeyDown={(e) => {
-                    if (e.key === "ArrowUp" || e.key === "ArrowDown") e.preventDefault();
-                  }}
-                  error={errors.openingStock?.message}
-                />
-              )}
-            />
-            <Controller
-              name="lowStockThreshold"
-              control={control}
-              render={({ field }) => (
-                <NumberInput
-                  label={<Bilingual label={ui.ingredients.lowStockThreshold} />}
-                  placeholder={preferredText(ui.ingredients.thresholdPlaceholder, uiLanguage)}
-                  min={0}
-                  allowNegative={false}
-                  decimalScale={2}
-                  style={{ flex: "1 1 140px" }}
-                  {...field}
-                  onKeyDown={(e) => {
-                    if (e.key === "ArrowUp" || e.key === "ArrowDown") e.preventDefault();
-                  }}
-                  error={errors.lowStockThreshold?.message}
+                  error={errors.globalPrice?.message}
                 />
               )}
             />

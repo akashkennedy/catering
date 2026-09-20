@@ -30,10 +30,10 @@ export default function DevSeedPage() {
   const loadMockData = () => {
     // Ingredients
     const addIngredient = useIngredientsStore.getState().addIngredient;
-    addIngredient({ name: "Rice", tamilName: "அரிசி", unit: "kg", qty: 0, globalPrice: 65, openingStock: 50, lowStockThreshold: 10 });
-    addIngredient({ name: "Chicken", tamilName: "கோழி", unit: "kg", qty: 0, globalPrice: 220, openingStock: 5, lowStockThreshold: 8 });
-    addIngredient({ name: "Oil", tamilName: "எண்ணெய்", unit: "litre", qty: 0, globalPrice: 140, openingStock: 20, lowStockThreshold: 5 });
-    addIngredient({ name: "Milk", tamilName: "பால்", unit: "litre", qty: 0, globalPrice: 60, openingStock: 10, lowStockThreshold: 4 });
+    addIngredient({ name: "Rice", tamilName: "அரிசி", tag: "grocery", unit: "kg", qty: 0, globalPrice: 65, openingStock: 50, lowStockThreshold: 10 });
+    addIngredient({ name: "Chicken", tamilName: "கோழி", tag: "meat-fish", unit: "kg", qty: 0, globalPrice: 220, openingStock: 5, lowStockThreshold: 8 });
+    addIngredient({ name: "Oil", tamilName: "எண்ணெய்", tag: "grocery", unit: "litre", qty: 0, globalPrice: 140, openingStock: 20, lowStockThreshold: 5 });
+    addIngredient({ name: "Milk", tamilName: "பால்", tag: "grocery", unit: "litre", qty: 0, globalPrice: 60, openingStock: 10, lowStockThreshold: 4 });
     const ingredients = useIngredientsStore.getState().ingredients;
     const byName = new Map(ingredients.map((i) => [i.name, i.id]));
     const riceId = byName.get("Rice") ?? "";
@@ -42,11 +42,13 @@ export default function DevSeedPage() {
 
     // Template
     useTemplatesStore.getState().addTemplate({
-      name: "Wedding lunch",
+      nameEn: "Wedding lunch",
+      nameTa: "திருமண மதிய உணவு",
       dishes: [
         {
           id: crypto.randomUUID(),
-          name: "Chicken biryani",
+          nameEn: "Chicken biryani",
+          nameTa: "சிக்கன் பிரியாணி",
           ingredients: [
             { ingredientId: riceId, qtyPer100: 12 },
             { ingredientId: chickenId, qtyPer100: 10 },
@@ -55,7 +57,8 @@ export default function DevSeedPage() {
         },
         {
           id: crypto.randomUUID(),
-          name: "Payasam",
+          nameEn: "Payasam",
+          nameTa: "பாயசம்",
           ingredients: [{ ingredientId: byName.get("Milk") ?? "", qtyPer100: 5 }],
         },
       ],
@@ -85,6 +88,9 @@ export default function DevSeedPage() {
       date: isoPlusDays(5),
       status: "confirmed",
       templateId,
+      mealGroups: templateId
+        ? [{ id: crypto.randomUUID(), templateId, headcount: 300, selectedDishIds: [] }]
+        : [],
       ratePerPerson: 250,
       totalAmount: 75000,
       totalAmountOverridden: false,
@@ -111,6 +117,7 @@ export default function DevSeedPage() {
       date: isoPlusDays(12),
       status: "enquiry",
       templateId: null,
+      mealGroups: [],
       ratePerPerson: 150,
       totalAmount: 12000,
       totalAmountOverridden: false,
@@ -129,6 +136,9 @@ export default function DevSeedPage() {
       date: isoPlusDays(-10),
       status: "paid",
       templateId,
+      mealGroups: templateId
+        ? [{ id: crypto.randomUUID(), templateId, headcount: 150, selectedDishIds: [] }]
+        : [],
       ratePerPerson: 200,
       totalAmount: 30000,
       totalAmountOverridden: false,
@@ -155,7 +165,7 @@ export default function DevSeedPage() {
       notified: false,
     });
 
-    setStatus("Mock data loaded. Open /, /events, /finance, /follow-ups, /inventory, /utensils to test.");
+    setStatus("Mock data loaded. Open /, /events, /finance, /follow-ups, /ingredients to test.");
   };
 
   const clearAllData = () => {
@@ -182,6 +192,7 @@ export default function DevSeedPage() {
     finance.otherIncomes.forEach((o) => finance.deleteOtherIncome(o.id));
     const reminders = useRemindersStore.getState();
     reminders.reminders.forEach((r) => reminders.removeReminder(r.id));
+    void import("@/lib/outbox").then(({ clearOutbox }) => clearOutbox());
     setStatus("All data cleared.");
   };
 
@@ -189,7 +200,7 @@ export default function DevSeedPage() {
     <Stack gap="md" p="xl">
       <Title order={2}>Demo Data</Title>
       <Text c="dimmed" size="sm">
-        Load sample events, inventory, employees, utensils, expenses and reminders to explore the app.
+        Load sample events, ingredients, employees, utensils, expenses and reminders to explore the app.
       </Text>
       <Group>
         <Button onClick={loadMockData}>Load demo data</Button>

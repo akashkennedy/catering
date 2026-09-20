@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import {
   Button,
   Group,
@@ -18,10 +18,10 @@ import { EventCards } from "./EventCards";
 import { EventFormModal } from "./EventFormModal";
 import { EventTable } from "./EventTable";
 import { Bilingual } from "@/components/Bilingual";
+import { ListPageSkeleton } from "@/components/LoadingSkeletons";
 import { ui, preferredText } from "@/lib/i18n";
 import { useSettingsStore } from "@/store/settings";
 import { useEventsStore, type CateringEvent, type EventStatus } from "@/store/events";
-import { useEventDraftStore } from "@/store/eventDraft";
 
 type StatusFilter = "all" | EventStatus;
 
@@ -44,10 +44,14 @@ export function EventsManager() {
   const [searchQuery, setSearchQuery] = useState("");
   const [dateFilter, setDateFilter] = useState("");
   const [statusFilter, setStatusFilter] = useState<StatusFilter>("all");
+  const loadEvents = useEventsStore((state) => state.loadEvents);
+  const loaded = useEventsStore((state) => state.loaded);
 
-  const draftPrefill = useEventDraftStore((state) => state.prefill);
-  const clearDraftPrefill = useEventDraftStore((state) => state.clearPrefill);
-  const formOpened = manualOpen || draftPrefill !== null;
+  useEffect(() => {
+    void loadEvents();
+  }, [loadEvents]);
+
+  const formOpened = manualOpen;
 
   const filteredEvents = events.filter((event) => {
     const matchesName = event.name.toLowerCase().includes(searchQuery.trim().toLowerCase());
@@ -67,7 +71,6 @@ export function EventsManager() {
           onClick={() => {
             setEditingEvent(null);
             setManualOpen(true);
-            clearDraftPrefill();
           }}
         >
           <Bilingual label={ui.events.addEvent} />
@@ -97,7 +100,9 @@ export function EventsManager() {
         </Group>
       </Stack>
 
-      {events.length === 0 ? (
+      {!loaded ? (
+        <ListPageSkeleton />
+      ) : events.length === 0 ? (
         <Text c="dimmed">
           <Bilingual label={ui.events.empty} />
         </Text>
@@ -112,7 +117,6 @@ export function EventsManager() {
             onEdit={(event) => {
               setEditingEvent(event);
               setManualOpen(true);
-              clearDraftPrefill();
             }}
             onDelete={setDeletingEvent}
           />
@@ -121,7 +125,6 @@ export function EventsManager() {
             onEdit={(event) => {
               setEditingEvent(event);
               setManualOpen(true);
-              clearDraftPrefill();
             }}
             onDelete={setDeletingEvent}
           />
@@ -131,10 +134,8 @@ export function EventsManager() {
       <EventFormModal
         opened={formOpened}
         event={editingEvent}
-        createPrefill={draftPrefill ?? undefined}
         onClose={() => {
           setManualOpen(false);
-          clearDraftPrefill();
         }}
       />
 

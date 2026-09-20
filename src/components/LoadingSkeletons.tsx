@@ -1,41 +1,31 @@
 "use client";
 
-import { Skeleton, Stack } from "@mantine/core";
+import { Loader, Stack } from "@mantine/core";
+
+/**
+ * App-wide loading indicator: a centered spinner, no text. The legacy
+ * `*Skeleton` exports below keep their names/props so existing callers
+ * (managers, widgets, route loading files) need no changes.
+ */
+export function LoadingSpinner() {
+  return (
+    <Stack align="center" justify="center" py="xl">
+      <Loader size="lg" variant="oval" aria-label="Loading" />
+    </Stack>
+  );
+}
 
 export function CardSkeleton({ lines = 4 }: { lines?: number }) {
-  return (
-    <div className="dash-card">
-      <Stack gap="md">
-        <Skeleton height={16} width="40%" radius="sm" />
-        {Array.from({ length: lines }).map((_, i) => (
-          <Skeleton key={i} height={20} radius="sm" />
-        ))}
-      </Stack>
-    </div>
-  );
+  void lines;
+  return <LoadingSpinner />;
 }
 
 export function StackedCardsSkeleton({ count = 3 }: { count?: number }) {
-  return (
-    <Stack gap={40}>
-      {Array.from({ length: count }).map((_, i) => (
-        <CardSkeleton key={i} />
-      ))}
-    </Stack>
-  );
+  void count;
+  return <LoadingSpinner />;
 }
 
 export function ListPageSkeleton({ rows = 6 }: { rows?: number }) {
-  return (
-    <Stack gap="lg">
-      <Skeleton height={36} width="60%" radius="sm" />
-      <div className="dash-card">
-        <Stack gap="md">
-          {Array.from({ length: rows }).map((_, i) => (
-            <Skeleton key={i} height={20} radius="sm" />
-          ))}
-        </Stack>
-      </div>
-    </Stack>
-  );
+  void rows;
+  return <LoadingSpinner />;
 }

@@ -28,13 +28,6 @@ export const ui = {
     clientPending: lab("Client pending", "வாடிக்கையாளர் நிலுவை"),
     employeePending: lab("Employee pending", "ஊழியர் நிலுவை"),
     paymentEmpty: lab("No pending payments.", "நிலுவை கட்டணங்கள் இல்லை."),
-    inventoryAlerts: lab("Inventory alerts", "பொருள் எச்சரிக்கைகள்"),
-    inventoryEmpty: lab(
-      "All ingredients and vessels are above their low-stock thresholds.",
-      "அனைத்து பொருட்களும் பாத்திரங்களும் குறைந்த இருப்பு எல்லைக்கு மேல் உள்ளன."
-    ),
-    utensilsNotReturned: lab("Utensils not yet returned", "திரும்பப் பெறாத பாத்திரங்கள்"),
-    utensilsEmpty: lab("No outstanding rentals.", "நிலுவையில் உள்ள வாடகை இல்லை."),
     customerFollowUp: lab("Customer follow-up", "வாடிக்கையாளர் தொடர்பு"),
     remindersEmpty: lab("No reminders.", "நினைவூட்டல்கள் இல்லை."),
     notificationNote: lab(
@@ -59,10 +52,9 @@ export const ui = {
     dashboard: lab("Dashboard", "டாஷ்போர்டு"),
     events: lab("Events", "நிகழ்வுகள்"),
     templates: lab("Templates", "டெம்ப்ளேட்டுகள்"),
-    ingredients: lab("Inventory", "சரக்கிருப்பு"),
+    ingredients: lab("Ingredients", "பொருட்கள்"),
     employees: lab("Employees", "ஊழியர்கள்"),
-    rental: lab("Rental", "வாடகை"),
-    calculator: lab("Calculator", "கணக்கீட்டாளர்"),
+    website: lab("Website", "இணையதளம்"),
     finance: lab("Income & Expense", "வருமானம் & செலவு"),
     settings: lab("Settings", "அமைப்புகள்"),
     more: lab("More", "மேலும்"),
@@ -85,28 +77,9 @@ export const ui = {
     actions: lab("Actions", "செயல்கள்"),
     template: lab("Template", "டெம்ப்ளேட்"),
     noDate: lab("No date", "தேதி இல்லை"),
-  },
-  calculator: {
-    title: lab("Pricing calculator", "விலை கணக்கீடு"),
-    subtitle: lab(
-      "Estimate raw ingredient cost and a suggested quote price from a template. Nothing is saved until you convert.",
-      "டெம்ப்ளேட்டிலிருந்து மூலப் பொருள் செலவு மற்றும் பரிந்துரைக்கப்பட்ட மேற்கோள் விலையை மதிப்பிடவும்."
-    ),
-    markup: lab("Markup %", "லாப சதவீதம் %"),
-    rawCost: lab("Raw ingredient cost", "மூலப் பொருள் செலவு"),
-    suggestedQuote: lab("Suggested quote price", "பரிந்துரைக்கப்பட்ட மேற்கோள் விலை"),
-    convertToEvent: lab("Convert to event", "நிகழ்வாக மாற்று"),
-    convertNote: lab(
-      "Picks these values into a new event form — add the remaining details there.",
-      "இந்த மதிப்புகளை புதிய நிகழ்வு படிவத்தில் நிரப்பும் — மீதமுள்ள விவரங்களை அங்கு சேர்க்கவும்."
-    ),
-    noTemplate: lab(
-      "Select a template and enter a headcount to see the estimate.",
-      "மதிப்பீட்டைக் காண டெம்ப்ளேட்டைத் தேர்ந்தெடுத்து நபர்களை உள்ளிடவும்."
-    ),
-    markupNote: lab(
-      "Quoted price = raw cost × (1 + markup %).",
-      "மேற்கோள் விலை = மூல செலவு × (1 + லாபம் %)."
+    noAccess: lab(
+      "You don't have access to this section. Ask your admin.",
+      "இந்தப் பிரிவை அணுக உங்களுக்கு அனுமதி இல்லை. நிர்வாகியைத் தொடர்புகொள்ளவும்."
     ),
   },
   events: {
@@ -177,6 +150,33 @@ export const ui = {
     tabIngredients: lab("Ingredients", "பொருட்கள்"),
     tabEmployees: lab("Employees", "ஊழியர்கள்"),
     tabRental: lab("Rental", "வாடகை"),
+    meals: lab("Meals", "உணவுகள்"),
+    mealNumber: (n: number): Label => ({
+      en: `Meal ${n}`,
+      ta: `உணவு ${n}`,
+    }),
+    addMeal: lab("Add meal", "உணவு சேர்க்க"),
+    removeMeal: lab("Remove meal", "உணவை நீக்கு"),
+    noMeals: lab(
+      "No meals yet. Add one to plan courses for this event.",
+      "இன்னும் உணவுகள் இல்லை. இந்த நிகழ்வுக்கு உணவுகளைத் திட்டமிட ஒன்றைச் சேர்க்கவும்."
+    ),
+    includeCourses: lab("Include courses", "சேர்க்க வேண்டிய உணவுகள்"),
+    searchCourses: lab("Search courses…", "உணவுகளைத் தேடு…"),
+    selectAllCourses: lab("Select all", "அனைத்தும்"),
+    clearCourses: lab("Clear", "நீக்கு"),
+    selectedCount: (selected: number, total: number): Label => ({
+      en: `${selected} of ${total} selected`,
+      ta: `${total}-இல் ${selected} தேர்வு`,
+    }),
+    printPreview: lab("Print preview", "அச்சு முன்னோட்டம்"),
+    printCategories: lab("Print categories", "அச்சிட வேண்டிய வகைகள்"),
+    buyListPdf: lab("Buy list (qty only)", "வாங்கும் பட்டியல் (அளவு மட்டும்)"),
+    detailedPdf: lab("Detailed (with price)", "விரிவானது (விலையுடன்)"),
+    printNote: lab(
+      "Quantity and price edits here are saved to the event. Unchecked categories are left out of the PDF.",
+      "இங்கு அளவு மற்றும் விலை திருத்தங்கள் நிகழ்வில் சேமிக்கப்படும். தேர்வு நீக்கிய வகைகள் PDF-இல் வராது."
+    ),
     invoice: lab("Invoice", "விலைப்பட்டியல்"),
     editEvent: lab("Edit Event", "நிகழ்வைத் திருத்து"),
     nameRequired: lab("Name is required", "பெயர் தேவை"),
@@ -187,8 +187,6 @@ export const ui = {
     namePlaceholder: lab("e.g. Ravi's wedding", "எ.கா. ரவியின் திருமணம்"),
     phonePlaceholder: lab("e.g. 9876543210", "எ.கா. 9876543210"),
     headcountPlaceholder: lab("e.g. 300", "எ.கா. 300"),
-    used: lab("Used", "பயன்படுத்தப்பட்டது"),
-    markUsed: lab("Mark used", "பயன்படுத்தப்பட்டதாகக் குறி"),
     unknownIngredient: lab("Unknown ingredient", "அறியப்படாத பொருள்"),
     toPay: lab("To pay", "செலுத்த வேண்டியது"),
     paid: lab("Paid", "செலுத்தியது"),
@@ -223,6 +221,65 @@ export const ui = {
     startDateRequired: lab("Start date is required", "தொடக்க தேதி தேவை"),
     endDateRequired: lab("End date is required", "இறுதி தேதி தேவை"),
   },
+  site: {
+    manager: lab("Site manager", "தள மேலாளர்"),
+    business: lab("Contact", "தொடர்பு"),
+    phoneNumbers: lab("Phone numbers", "தொலைபேசி எண்கள்"),
+    phonePlaceholder: lab("e.g. +91 94432 10000", "எ.கா. +91 94432 10000"),
+    whatsapp: lab("WhatsApp number (digits only)", "வாட்ஸ்அப் எண் (எண்கள் மட்டும்)"),
+    addPhone: lab("Add phone", "தொலைபேசி சேர்க்க"),
+    menus: lab("Menus", "மெனுக்கள்"),
+    gallery: lab("Gallery", "புகைப்படங்கள்"),
+    testimonials: lab("Testimonials", "வாடிக்கையாளர் கருத்துகள்"),
+    address: lab("Office address", "அலுவலக முகவரி"),
+    kindPhoto: lab("Photo link", "புகைப்பட இணைப்பு"),
+    kindInstagram: lab("Instagram post", "இன்ஸ்டாகிராம் பதிவு"),
+    itemUrl: lab("Link", "இணைப்பு"),
+    instagramHint: lab(
+      "Paste the post's Share → Copy link URL. The post must be public. Offline visitors see a link instead of the preview.",
+      "பதிவின் Share → Copy link இணைப்பை ஒட்டவும். பதிவு பொதுவில் இருக்க வேண்டும்."
+    ),
+    invalidLink: lab("Enter a valid link.", "சரியான இணைப்பை உள்ளிடவும்."),
+    photo: lab("Photo link", "புகைப்பட இணைப்பு"),
+    photoPlaceholder: lab("https://…", "https://…"),
+    rating: lab("Stars (1–5)", "நட்சத்திரங்கள் (1–5)"),
+    source: lab("Source", "ஆதாரம்"),
+    sourceManual: lab("Direct / manual", "நேரடி"),
+    sourceGoogle: lab("Google review", "கூகுள் மதிப்புரை"),
+    quote: lab("Review text (English)", "மதிப்புரை (ஆங்கிலம்)"),
+    quoteTa: lab("Review text (Tamil, optional)", "மதிப்புரை (தமிழ்)"),
+    author: lab("Author name", "எழுதியவர் பெயர்"),
+    occasion: lab("Occasion", "நிகழ்வு"),
+    place: lab("Place", "இடம்"),
+    price: lab("Price per leaf (₹, 0 hides price)", "இலை விலை (₹, 0 எனில் மறைக்கும்)"),
+    courses: lab("Courses", "உணவு வகைகள்"),
+    itemsOnePerLine: lab("Items, one per line (English | Tamil)", "உணவுகள், வரிக்கு ஒன்று (ஆங்கிலம் | தமிழ்)"),
+    caption: lab("Caption", "தலைப்பு"),
+    category: lab("Category", "வகை"),
+    tag: lab("Tagline", "குறிச்சொல்"),
+    description: lab("Description", "விளக்கம்"),
+    linkedTemplate: lab("Linked event template (optional)", "இணைக்கப்பட்ட டெம்ப்ளேட்"),
+    preview: lab("Live preview (what visitors see)", "நேரடி முன்னோட்டம்"),
+    publish: lab("Publish to website", "இணையதளத்தில் வெளியிடு"),
+    pull: lab("Load from database", "தரவுத்தளத்திலிருந்து ஏற்று"),
+    lastPublished: lab("Last published", "கடைசியாக வெளியிட்டது"),
+    neverPublished: lab("Not published yet.", "இன்னும் வெளியிடவில்லை."),
+    pullTitle: lab("Load from database", "தரவுத்தளத்திலிருந்து ஏற்று"),
+    pullMessage: lab(
+      "Replace local edits with the live website content? Unsaved local changes will be lost.",
+      "உள்ளூர் திருத்தங்களை நேரடி உள்ளடக்கத்தால் மாற்றவா?"
+    ),
+    publishFailed: lab("Publish failed. Try again.", "வெளியிட முடியவில்லை. மீண்டும் முயற்சிக்கவும்."),
+    dbMissing: lab(
+      "Database not connected. Add DATABASE_URL on the server first.",
+      "தரவுத்தளம் இணைக்கப்படவில்லை. முதலில் சர்வரில் DATABASE_URL சேர்க்கவும்."
+    ),
+    profileUrl: lab("Google profile link (optional)", "கூகுள் சுயவிவர இணைப்பு"),
+    invalidPhoneList: lab("Fix highlighted phone numbers.", "தொலைபேசி எண்களைச் சரிசெய்க."),
+    emptyMenus: lab("No menus yet. Add one to get started.", "இன்னும் மெனுக்கள் இல்லை."),
+    emptyGallery: lab("No photos yet. Add one to get started.", "இன்னும் புகைப்படங்கள் இல்லை."),
+    emptyTestimonials: lab("No testimonials yet. Add one to get started.", "இன்னும் கருத்துகள் இல்லை."),
+  },
   reminders: {
     title: lab("Reminders", "நினைவூட்டல்கள்"),
     phone: lab("Phone", "தொலைபேசி"),
@@ -241,37 +298,32 @@ export const ui = {
   ingredients: {
     addIngredient: lab("Add Ingredient", "பொருள் சேர்க்க"),
     empty: lab("No ingredients yet. Add one to get started.", "இன்னும் பொருட்கள் இல்லை. தொடங்க ஒன்றைச் சேர்க்கவும்."),
+    noMatch: lab("No ingredients match your search.", "உங்கள் தேடலுடன் எந்தப் பொருளும் பொருந்தவில்லை."),
     deleteTitle: lab("Delete ingredient", "பொருளை நீக்கு"),
     editTitle: lab("Edit Ingredient", "பொருளைத் திருத்து"),
-    nameRequired: lab("Name is required", "பெயர் தேவை"),
+    searchIngredients: lab("Search ingredients", "பொருட்களைத் தேடு"),
     tamilName: lab("Tamil name", "தமிழ் பெயர்"),
     tamilNamePlaceholder: lab("e.g. அரிசி", "எ.கா. அரிசி"),
     namePlaceholder: lab("e.g. Rice", "எ.கா. அரிசி"),
     selectUnit: lab("Select a unit", "அலகைத் தேர்ந்தெடுக்கவும்"),
-    unitRequired: lab("Unit is required", "அலகு தேவை"),
-    qtyPlaceholder: lab("e.g. 5", "எ.கா. 5"),
-    qtyMin: lab("Qty must be 0 or more", "அளவு 0 அல்லது அதற்கு மேல் இருக்க வேண்டும்"),
     globalPrice: lab("Global price", "உலகளாவிய விலை"),
     globalPricePlaceholder: lab("e.g. 150", "எ.கா. 150"),
-    priceMin: lab("Price must be 0 or more", "விலை 0 அல்லது அதற்கு மேல் இருக்க வேண்டும்"),
     unitPrefix: lab("Unit:", "அலகு:"),
-    pricePrefix: lab("Price:", "விலை:"),
-    openingStock: lab("Opening stock", "ஆரம்ப இருப்பு"),
-    lowStockThreshold: lab("Low stock threshold", "குறைந்த இருப்பு எல்லை"),
-    openingStockPlaceholder: lab("e.g. 0", "எ.கா. 0"),
-    thresholdPlaceholder: lab("e.g. 5", "எ.கா. 5"),
-    inStock: lab("In stock:", "இருப்பில்:"),
-    remaining: lab("Remaining", "மீதமுள்ள"),
-    lowStock: lab("Low stock", "குறைந்த இருப்பு"),
-    logPurchase: lab("Log purchase", "வாங்குதலைப் பதிவுசெய்"),
-    purchaseTitle: lab("Log purchased quantity", "வாங்கிய அளவைப் பதிவுசெய்"),
-    purchaseQty: lab("Purchased qty", "வாங்கிய அளவு"),
     note: lab("Note", "குறிப்பு"),
     notePlaceholder: lab("e.g. Market, vendor", "எ.கா. சந்தை, விற்பனையாளர்"),
-    purchaseNote: lab(
-      "Adds to the ingredient's remaining stock.",
-      "பொருளின் மீதமுள்ள இருப்பை அதிகரிக்கிறது."
-    ),
+    englishName: lab("English name", "ஆங்கிலப் பெயர்"),
+    category: lab("Category", "வகை"),
+    selectTag: lab("Select a category", "வகையைத் தேர்ந்தெடுக்கவும்"),
+    autoFillHint: lab("Typing an English or Tanglish name fills the Tamil name automatically.", "ஆங்கிலம் அல்லது டாங்லிஷ் பெயரைத் தட்டச்சு செய்தால் தமிழ் பெயர் தானாக நிரம்பும்."),
+    tags: {
+      all: lab("All", "அனைத்தும்"),
+      grocery: lab("Grocery", "மளிகை"),
+      vegetables: lab("Vegetables", "காய்கறிகள்"),
+      "masala-spices": lab("Masala / Spices", "மசாலா / மசாலாப் பொருட்கள்"),
+      vessel: lab("Vessel", "பாத்திரங்கள்"),
+      "meat-fish": lab("Meat & Fish", "இறைச்சி & மீன்"),
+      fuel: lab("Fuel", "எரிபொருள்"),
+    },
   },
   templates: {
     addTemplate: lab("Add Template", "டெம்ப்ளேட் சேர்க்க"),
@@ -280,6 +332,25 @@ export const ui = {
     editTitle: lab("Edit Template", "டெம்ப்ளேட்டைத் திருத்து"),
     nameRequired: lab("Name is required", "பெயர் தேவை"),
     namePlaceholder: lab("e.g. Wedding lunch", "எ.கா. திருமண மதிய உணவு"),
+    englishName: lab("English name", "ஆங்கிலப் பெயர்"),
+    tamilName: lab("Tamil name", "தமிழ் பெயர்"),
+    englishNamePlaceholder: lab("e.g. Saapadu", "எ.கா. சாப்பாடு"),
+    tamilNamePlaceholder: lab("e.g. சாப்பாடு", "எ.கா. சாப்பாடு"),
+    dishEnglishPlaceholder: lab("e.g. Sambar", "எ.கா. சாம்பார்"),
+    dishTamilPlaceholder: lab("e.g. சாம்பார்", "எ.கா. சாம்பார்"),
+    searchTemplates: lab(
+      "Search templates or dishes inside them…",
+      "டெம்ப்ளேட் அல்லது அதிலுள்ள உணவுகளைத் தேடு…"
+    ),
+    noMatch: lab(
+      "No templates match your search.",
+      "உங்கள் தேடலுடன் எந்த டெம்ப்ளேட்டும் பொருந்தவில்லை."
+    ),
+    importLegacy: lab("Import old app", "பழைய செயலியிலிருந்து இறக்கு"),
+    importLegacyNote: lab(
+      "Adds every meal, course and ingredient from the old app. Existing entries are skipped, never duplicated.",
+      "பழைய செயலியிலிருந்து அனைத்து உணவு, வகை மற்றும் பொருட்களைச் சேர்க்கிறது. ஏற்கனவே உள்ளவை தவிர்க்கப்படும்."
+    ),
     dish: lab("Dish", "உணவு"),
     dishes: lab("Dishes", "உணவுகள்"),
     ingredients: lab("Ingredients", "பொருட்கள்"),
@@ -313,49 +384,22 @@ export const ui = {
     ratePlaceholder: lab("e.g. 1500", "எ.கா. 1500"),
     rateMin: lab("Rate must be 0 or more", "விகிதம் 0 அல்லது அதற்கு மேல் இருக்க வேண்டும்"),
     ratePrefix: lab("Rate:", "விகிதம்:"),
-  },
-  utensils: {
-    addUtensil: lab("Add Utensil", "பாத்திரம் சேர்க்க"),
-    empty: lab("No utensils yet. Add one to get started.", "இன்னும் பாத்திரங்கள் இல்லை. தொடங்க ஒன்றைச் சேர்க்கவும்."),
-    deleteTitle: lab("Delete utensil", "பாத்திரத்தை நீக்கு"),
-    editTitle: lab("Edit Utensil", "பாத்திரத்தைத் திருத்து"),
-    namePlaceholder: lab("e.g. Steel plate", "எ.கா. இரும்புத் தட்டு"),
-    nameRequired: lab("Name is required", "பெயர் தேவை"),
-    rentPrice: lab("Reference rent price", "குறிப்பு வாடகை விலை"),
-    rentPricePlaceholder: lab("e.g. 20", "எ.கா. 20"),
-    rentPriceMin: lab("Price must be 0 or more", "விலை 0 அல்லது அதற்கு மேல் இருக்க வேண்டும்"),
-    refPricePrefix: lab("Reference rent price:", "குறிப்பு வாடகை விலை:"),
-    openingStock: lab("Opening stock (owned)", "ஆரம்ப இருப்பு (சொந்தம்)"),
-    lowStockThreshold: lab("Low stock threshold", "குறைந்த இருப்பு எல்லை"),
-    openingStockPlaceholder: lab("e.g. 100", "எ.கா. 100"),
-    thresholdPlaceholder: lab("e.g. 10", "எ.கா. 10"),
-    available: lab("Available:", "கிடைக்கும்:"),
-    availableColumn: lab("Available", "கிடைக்கும்"),
-    lowStock: lab("Low stock", "குறைந்த இருப்பு"),
-    logRentIn: lab("Log rented in", "வாடகைக்கு வாங்கியதைப் பதிவுசெய்"),
-    rentInTitle: lab("Log rented-in quantity", "வாடகைக்கு வாங்கிய அளவைப் பதிவுசெய்"),
-    rentInQty: lab("Rented-in qty", "வாடகைக்கு வாங்கிய அளவு"),
-    rentInNote: lab(
-      "Adds to the utensil's available count. Records vessels taken on rent from outside.",
-      "பாத்திரத்தின் கிடைக்கும் எண்ணிக்கையை அதிகரிக்கிறது. வெளியில் இருந்து வாடகைக்கு எடுக்கப்பட்ட பாத்திரங்களைப் பதிவுசெய்கிறது."
-    ),
-    rentInEvent: lab("Event (optional)", "நிகழ்வு (விருப்பம்)"),
-    assignToEvent: lab("Assign to event", "நிகழ்வுக்கு ஒதுக்கு"),
-    assignTitle: lab("Assign vessels to an event", "நிகழ்வுக்கு பாத்திரங்களை ஒதுக்கு"),
-    assignEvent: lab("Event", "நிகழ்வு"),
-    assignEventPlaceholder: lab("Pick an event", "நிகழ்வைத் தேர்ந்தெடுக்கவும்"),
-    assignQty: lab("Quantity", "அளவு"),
-    assignNote: lab(
-      "Reduces available stock — these vessels will be used for this event.",
-      "கிடைக்கும் இருப்பைக் குறைக்கிறது — இந்த பாத்திரங்கள் இந்த நிகழ்வுக்குப் பயன்படும்."
-    ),
-    stockBreakdownPrefix: lab("Owned", "சொந்தம்"),
-    stockRentedInPrefix: lab("Rented in", "வாடகைக்கு"),
-    stockAssignedPrefix: lab("Assigned", "ஒதுக்கப்பட்டது"),
-    neededForEvents: (count: number): Label => ({
-      en: `needs ${count}`,
-      ta: `${count} தேவை`,
-    }),
+    accounts: lab("Logins & access", "உள்நுழைவுகள் & அணுகல்"),
+    createLogin: lab("Create login", "உள்நுழைவு உருவாக்கு"),
+    loginUsername: lab("Login username", "உள்நுழைவு பயனர் பெயர்"),
+    tempPassword: lab("Temporary password (min 8)", "தற்காலிக கடவுச்சொல் (குறைந்தது 8)"),
+    linkEmployee: lab("Link to employee (optional)", "ஊழியருடன் இணை (விருப்பம்)"),
+    noEmployeeLink: lab("Standalone login", "தனி உள்நுழைவு"),
+    adminBadge: lab("Admin", "நிர்வாகி"),
+    permViewFinance: lab("See income & expenses", "வருமானம் & செலவு பார்க்க"),
+    permViewRates: lab("See others' pay", "மற்றவர் ஊதியம் பார்க்க"),
+    permViewEmployees: lab("See employees", "ஊழியர்களைப் பார்க்க"),
+    permViewWebsite: lab("See website", "இணையதளம் பார்க்க"),
+    permExportExcel: lab("Export to Excel", "எக்செல் ஏற்றுமதி"),
+    permManageEmployees: lab("Manage employees & logins", "ஊழியர்கள் & உள்நுழைவுகள்"),
+    permManageSettings: lab("Manage settings", "அமைப்புகள்"),
+    removeLogin: lab("Remove login", "உள்நுழைவை நீக்கு"),
+    noLogins: lab("No employee logins yet.", "இன்னும் ஊழியர் உள்நுழைவுகள் இல்லை."),
   },
   settings: {
     uiLanguage: lab("UI language", "இடைமுக மொழி"),
@@ -370,14 +414,17 @@ export const ui = {
       "Used for exported PDF documents.",
       "ஏற்றுமதி செய்யப்படும் PDF ஆவணங்களுக்குப் பயன்படுகிறது."
     ),
-    ingredientPrices: lab("Ingredient prices", "பொருள் விலைகள்"),
-    ingredientPricesNote: lab(
-      "Edit the global price used as the default when planning events.",
-      "நிகழ்வு திட்டமிடும்போது இயல்பாகப் பயன்படும் உலகளாவிய விலையைத் திருத்தவும்."
+    exportExcel: lab("Export to Excel", "எக்செல் ஏற்றுமதி"),
+    exportExcelNote: lab(
+      "Download the whole database as one .xlsx file, one sheet per section.",
+      "முழு தரவுத்தளத்தையும் ஒரு .xlsx கோப்பாகப் பதிவிறக்கவும், ஒவ்வொரு பிரிவிற்கும் ஒரு தாள்."
     ),
-    noIngredients: lab(
-      "No ingredients yet. Add them from the Inventory page.",
-      "இன்னும் பொருட்கள் இல்லை. சரக்கிருப்பு பக்கத்திலிருந்து சேர்க்கவும்."
+    exportExcelButton: lab("Download Excel", "எக்செல் பதிவிறக்கு"),
+    exportExcelWorking: lab("Preparing download…", "பதிவிறக்கம் தயாராகிறது…"),
+    exportExcelDone: lab("Excel file downloaded.", "எக்செல் கோப்பு பதிவிறக்கப்பட்டது."),
+    exportExcelFailed: lab(
+      "Export failed. Please try again.",
+      "ஏற்றுமதி தோல்வியடைந்தது. மீண்டும் முயற்சிக்கவும்."
     ),
     dark: lab("Dark", "இருள்"),
   },
@@ -409,6 +456,10 @@ export const ui = {
       "இந்தக் காலத்தில் மற்ற வருமானம் இல்லை."
     ),
     deleteEntry: lab("Delete entry", "பதிவை நீக்கு"),
+    noAccess: lab(
+      "You don't have access to income & expenses. Ask the admin for access.",
+      "வருமானம் & செலவுகளைப் பார்க்க உங்களுக்கு அணுகல் இல்லை. நிர்வாகியைத் தொடர்பு கொள்ளவும்."
+    ),
     entries: (count: number): Label => ({
       en: `${count} ${count === 1 ? "entry" : "entries"}`,
       ta: `${count} பதிவுகள்`,

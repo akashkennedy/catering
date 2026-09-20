@@ -1,10 +1,12 @@
 "use client";
 
-import { ActionIcon, NumberInput, Switch, Table, Text } from "@mantine/core";
+import { ActionIcon, NumberInput, Table, Text } from "@mantine/core";
 import { X } from "lucide-react";
 
 import { Bilingual } from "@/components/Bilingual";
-import { ui } from "@/lib/i18n";
+import { ToggleSwitch } from "@/components/CheckRow";
+import { preferredText, ui } from "@/lib/i18n";
+import { useSettingsStore } from "@/store/settings";
 import { formatIndianDate } from "@/lib/date";
 import type { EventUtensilLine } from "@/store/events";
 
@@ -24,6 +26,7 @@ export function EventUtensilTable({
   onToggleReturned,
   onRemove,
 }: EventUtensilTableProps) {
+  const uiLanguage = useSettingsStore((state) => state.uiLanguage);
   return (
     <div className="hidden sm:block">
       <Table striped highlightOnHover withTableBorder>
@@ -84,10 +87,10 @@ export function EventUtensilTable({
                 </Text>
               </Table.Td>
               <Table.Td>
-                <Switch
+                <ToggleSwitch
                   checked={line.returned}
                   onChange={() => onToggleReturned(line.id)}
-                  size="sm"
+                  ariaLabel={preferredText(ui.events.returned, uiLanguage)}
                 />
               </Table.Td>
               <Table.Td>

@@ -14,13 +14,13 @@ import { ArrowLeft, Search } from "lucide-react";
 import { useRouter } from "next/navigation";
 
 import { preferredText, ui, type Label } from "@/lib/i18n";
+import { useAuthStore } from "@/store/auth";
 import { useHydrated } from "@/hooks/useHydrated";
 import { useSettingsStore } from "@/store/settings";
 import { useEventsStore } from "@/store/events";
-import { useTemplatesStore } from "@/store/templates";
+import { templateDisplayName, templateMatchesQuery, useTemplatesStore } from "@/store/templates";
 import { useIngredientsStore } from "@/store/ingredients";
 import { useEmployeesStore } from "@/store/employees";
-import { useUtensilsStore } from "@/store/utensils";
 
 const MAX_PER_TYPE = 6;
 
@@ -52,7 +52,7 @@ export function MobileSearchOverlay({ opened, onClose }: MobileSearchOverlayProp
   const templates = useTemplatesStore((state) => state.templates);
   const ingredients = useIngredientsStore((state) => state.ingredients);
   const employees = useEmployeesStore((state) => state.employees);
-  const utensils = useUtensilsStore((state) => state.utensils);
+  const canViewEmployees = useAuthStore((state) => state.permissions.canViewEmployees);
 
   if (!hydrated || !opened) {
     return null;
@@ -71,11 +71,11 @@ export function MobileSearchOverlay({ opened, onClose }: MobileSearchOverlayProp
         href: `/events/${event.id}`,
       })),
     ...templates
-      .filter((template) => matches(template.name))
+      .filter((template) => query && templateMatchesQuery(template, value))
       .slice(0, MAX_PER_TYPE)
       .map((template) => ({
         key: `template:${template.id}`,
-        name: template.name,
+        name: templateDisplayName(template, uiLanguage),
         typeLabel: ui.nav.templates,
         href: "/templates",
       })),
@@ -89,26 +89,19 @@ export function MobileSearchOverlay({ opened, onClose }: MobileSearchOverlayProp
         key: `ingredient:${ingredient.id}`,
         name: ingredient.name,
         typeLabel: ui.nav.ingredients,
-        href: "/inventory",
+        href: "/ingredients",
       })),
-    ...employees
-      .filter((employee) => matches(employee.name))
-      .slice(0, MAX_PER_TYPE)
-      .map((employee) => ({
-        key: `employee:${employee.id}`,
-        name: employee.name,
-        typeLabel: ui.nav.employees,
-        href: "/employees",
-      })),
-    ...utensils
-      .filter((utensil) => matches(utensil.name))
-      .slice(0, MAX_PER_TYPE)
-      .map((utensil) => ({
-        key: `utensil:${utensil.id}`,
-        name: utensil.name,
-        typeLabel: ui.nav.rental,
-        href: "/utensils",
-      })),
+    ...(canViewEmployees
+      ? employees
+          .filter((employee) => matches(employee.name))
+          .slice(0, MAX_PER_TYPE)
+          .map((employee) => ({
+            key: `employee:${employee.id}`,
+            name: employee.name,
+            typeLabel: ui.nav.employees,
+            href: "/employees",
+          }))
+      : []),
   ];
 
   const options = results.length > 0;

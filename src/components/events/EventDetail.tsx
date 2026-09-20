@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useParams } from "next/navigation";
 import Link from "next/link";
 import {
@@ -10,7 +10,6 @@ import {
   Group,
   NumberInput,
   Paper,
-  SegmentedControl,
   Select,
   Stack,
   Tabs,
@@ -28,19 +27,27 @@ import { EventUtensilCards } from "./EventUtensilCards";
 import { EventUtensilFormModal } from "./EventUtensilFormModal";
 import { EventUtensilTable } from "./EventUtensilTable";
 import { Bilingual } from "@/components/Bilingual";
+import { ListPageSkeleton } from "@/components/LoadingSkeletons";
 import { ui, preferredText } from "@/lib/i18n";
 import { formatIndianDate } from "@/lib/date";
 import { formatINR } from "@/lib/format";
 import { formatPhone } from "@/lib/phone";
-import { useEventsStore, buildScaledIngredients, type CateringEventInput } from "@/store/events";
+import {
+  useEventsStore,
+  buildScaledIngredients,
+  buildScaledIngredientsForGroups,
+  type CateringEventInput,
+  type EventMealGroup,
+} from "@/store/events";
+import { MealGroupsEditor } from "./MealGroupsEditor";
 import { useEmployeesStore } from "@/store/employees";
 import { useIngredientsStore } from "@/store/ingredients";
+import { useAuthStore } from "@/store/auth";
 import { useSettingsStore } from "@/store/settings";
-import { useStockLedgerStore } from "@/store/stockLedger";
+import { useVesselStockLedgerStore } from "@/store/vesselStockLedger";
 import { useTemplatesStore } from "@/store/templates";
 import { useVendorSuggestionsStore } from "@/store/vendorSuggestions";
-import { generateEventPdf } from "@/lib/pdf";
-import { todayLocalISO } from "@/lib/date";
+import { PrintPreviewModal } from "./PrintPreviewModal";
 import { EVENT_STATUS_OPTIONS } from "./EventFormModal";
 import {
   eventBalance,
@@ -61,18 +68,40 @@ export function EventDetail() {
   const masterEmployees = useEmployeesStore((state) => state.employees);
   const vendorSuggestions = useVendorSuggestionsStore((state) => state.vendorSuggestions);
   const addVendorSuggestion = useVendorSuggestionsStore((state) => state.addVendorSuggestion);
-  const defaultLanguage = useSettingsStore((state) => state.defaultLanguage);
   const uiLanguage = useSettingsStore((state) => state.uiLanguage);
-  const addUsedEntry = useStockLedgerStore((state) => state.addUsedEntry);
-  const ledgerEntries = useStockLedgerStore((state) => state.entries);
   const [employeeFormOpened, setEmployeeFormOpened] = useState(false);
   const [utensilFormOpened, setUtensilFormOpened] = useState(false);
   const [assignValue, setAssignValue] = useState<string | null>(null);
   const [utensilVendorName, setUtensilVendorName] = useState("");
-  const [pdfLang, setPdfLang] = useState<"en" | "ta">(defaultLanguage);
-  const [generatingPdf, setGeneratingPdf] = useState(false);
+  const [printOpened, setPrintOpened] = useState(false);
+  const canViewAllPay = useAuthStore(
+    (state) => state.isAdmin || state.permissions.canViewOtherEmployeeRates
+  );
+  const ownEmployeeId = useAuthStore((state) => state.employeeId);
+  // Null = full pay visibility; otherwise only the viewer's own linked lines.
+  const visiblePayFor =
+    canViewAllPay || !ownEmployeeId ? null : new Set<string>([ownEmployeeId]);
+  const loadEvents = useEventsStore((state) => state.loadEvents);
+  const eventsLoaded = useEventsStore((state) => state.loaded);
+  const loadTemplates = useTemplatesStore((state) => state.loadTemplates);
+  const loadIngredients = useIngredientsStore((state) => state.loadIngredients);
+  const loadVesselLedger = useVesselStockLedgerStore((state) => state.loadVesselLedger);
+  const loadVendorSuggestions = useVendorSuggestionsStore(
+    (state) => state.loadVendorSuggestions
+  );
+
+  useEffect(() => {
+    void loadEvents();
+    void loadTemplates();
+    void loadIngredients();
+    void loadVesselLedger();
+    void loadVendorSuggestions();
+  }, [loadEvents, loadTemplates, loadIngredients, loadVesselLedger, loadVendorSuggestions]);
 
   if (!event) {
+    if (!eventsLoaded) {
+      return <ListPageSkeleton />;
+    }
     return (
       <Stack gap="md">
         <Title order={1}>Event Detail</Title>
@@ -84,14 +113,10 @@ export function EventDetail() {
     );
   }
 
-  const templateOptions = templates.map((template) => ({
-    value: template.id,
-    label: template.name,
-  }));
-
   const eventIngredients = event.ingredients ?? [];
   const eventEmployees = event.employees ?? [];
   const eventUtensils = event.utensils ?? [];
+  const mealGroups = event.mealGroups ?? [];
 
   const update = (patch: Partial<CateringEventInput>) => {
     updateEvent(event.id, {
@@ -104,6 +129,7 @@ export function EventDetail() {
       date: event.date,
       status: event.status,
       templateId: event.templateId,
+      mealGroups,
       ratePerPerson: event.ratePerPerson,
       totalAmount: event.totalAmount,
       totalAmountOverridden: event.totalAmountOverridden,
@@ -117,23 +143,26 @@ export function EventDetail() {
 
   const roundMoney = (value: number) => Math.round(value * 100) / 100;
 
+  const rescaleForGroups = (groups: EventMealGroup[]) =>
+    buildScaledIngredientsForGroups(groups, templates, ingredients);
+
   const handleHeadcountChange = (headcount: number) => {
-    const template = templates.find((item) => item.id === event.templateId) ?? null;
-    const patch: Partial<CateringEventInput> = {
-      headcount,
-      ingredients: buildScaledIngredients(template, ingredients, headcount),
-    };
+    const patch: Partial<CateringEventInput> = { headcount };
+    if (mealGroups.length === 0) {
+      const template = templates.find((item) => item.id === event.templateId) ?? null;
+      patch.ingredients = buildScaledIngredients(template, ingredients, headcount);
+    }
     if (!event.totalAmountOverridden) {
       patch.totalAmount = roundMoney(event.ratePerPerson * headcount);
     }
     update(patch);
   };
 
-  const handleTemplateChange = (templateId: string | null) => {
-    const template = templates.find((item) => item.id === templateId) ?? null;
+  const handleGroupsChange = (groups: EventMealGroup[]) => {
     update({
-      templateId,
-      ingredients: buildScaledIngredients(template, ingredients, event.headcount),
+      mealGroups: groups,
+      templateId: groups[0]?.templateId ?? null,
+      ingredients: rescaleForGroups(groups),
     });
   };
 
@@ -170,25 +199,6 @@ export function EventDetail() {
       ),
     });
   };
-
-  const handleMarkUsed = (lineId: string) => {
-    const line = eventIngredients.find((item) => item.id === lineId);
-    if (!line || line.qty <= 0) return;
-    addUsedEntry({
-      ingredientId: line.ingredientId,
-      qty: line.qty,
-      date: event.date || todayLocalISO(),
-      eventId: event.id,
-      note: event.name,
-    });
-  };
-
-  const usedIngredientIds = new Set<string>();
-  for (const entry of ledgerEntries) {
-    if (entry.type === "used" && entry.eventId === event.id) {
-      usedIngredientIds.add(entry.ingredientId);
-    }
-  }
 
   const assignableEmployees = masterEmployees.filter(
     (employee) => !eventEmployees.some((line) => line.employeeId === employee.id)
@@ -297,15 +307,6 @@ export function EventDetail() {
     update({ utensils: eventUtensils.filter((line) => line.id !== lineId) });
   };
 
-  const handleGeneratePdf = async () => {
-    setGeneratingPdf(true);
-    try {
-      await generateEventPdf(event, ingredients, pdfLang);
-    } finally {
-      setGeneratingPdf(false);
-    }
-  };
-
   const runningTotal = eventIngredientCost(event);
   const totalToPay = eventEmployeeToPay(event);
   const totalPaid = eventEmployeePaid(event);
@@ -331,23 +332,19 @@ export function EventDetail() {
 
       <Paper withBorder p="md">
         <Group gap="md" align="flex-end" wrap="wrap">
-          <SegmentedControl
-            value={pdfLang}
-            onChange={(value) => setPdfLang(value as "en" | "ta")}
-            data={[
-              { label: <Bilingual label={ui.settings.english} />, value: "en" },
-              { label: <Bilingual label={ui.settings.tamil} />, value: "ta" },
-            ]}
-          />
-          <Button
-            leftSection={<Download size={18} />}
-            onClick={handleGeneratePdf}
-            loading={generatingPdf}
-          >
+          <Button leftSection={<Download size={18} />} onClick={() => setPrintOpened(true)}>
             <Bilingual label={ui.events.invoice} />
           </Button>
         </Group>
       </Paper>
+
+      <PrintPreviewModal
+        opened={printOpened}
+        event={event}
+        ingredients={ingredients}
+        onLineChange={handleLineChange}
+        onClose={() => setPrintOpened(false)}
+      />
 
       <Paper withBorder p="md">
         <Stack gap="md">
@@ -366,16 +363,17 @@ export function EventDetail() {
               }}
               onChange={(value) => handleHeadcountChange(typeof value === "number" ? value : 1)}
             />
-            <Select
-              label={<Bilingual label={ui.common.template} />}
-              placeholder={preferredText(ui.events.selectTemplate, uiLanguage)}
-              data={templateOptions}
-              searchable
-              clearable
-              w={{ base: "100%", sm: 260 }}
-              value={event.templateId ?? null}
-              onChange={(value) => handleTemplateChange(value ?? null)}
-            />
+            <div style={{ flex: "1 1 100%" }}>
+              <Text fw={500} size="sm" mb={4}>
+                <Bilingual label={ui.events.meals} />
+              </Text>
+              <MealGroupsEditor
+                groups={mealGroups}
+                templates={templates}
+                defaultHeadcount={event.headcount}
+                onChange={handleGroupsChange}
+              />
+            </div>
             <Select
               label={<Bilingual label={ui.common.status} />}
               data={EVENT_STATUS_OPTIONS.map((option) => ({
@@ -468,15 +466,11 @@ export function EventDetail() {
               <EventIngredientTable
                 lines={eventIngredients}
                 ingredients={ingredients}
-                usedIngredientIds={usedIngredientIds}
-                onMarkUsed={handleMarkUsed}
                 onLineChange={handleLineChange}
               />
               <EventIngredientCards
                 lines={eventIngredients}
                 ingredients={ingredients}
-                usedIngredientIds={usedIngredientIds}
-                onMarkUsed={handleMarkUsed}
                 onLineChange={handleLineChange}
               />
               <Paper withBorder p="md">
@@ -534,12 +528,15 @@ export function EventDetail() {
                   lines={eventEmployees}
                   onLineChange={handleEmployeeLineChange}
                   onRemove={handleEmployeeRemove}
+                  visiblePayFor={visiblePayFor}
                 />
                 <EventEmployeeCards
                   lines={eventEmployees}
                   onLineChange={handleEmployeeLineChange}
                   onRemove={handleEmployeeRemove}
+                  visiblePayFor={visiblePayFor}
                 />
+                {canViewAllPay && (
                 <Paper withBorder p="md">
                   <Stack gap={6}>
                     <Group justify="space-between" wrap="nowrap">
@@ -562,6 +559,7 @@ export function EventDetail() {
                     </Group>
                   </Stack>
                 </Paper>
+                )}
               </Stack>
             )}
 

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import {
   Badge,
   Button,
@@ -16,6 +16,7 @@ import {
 import { IndianRupee, Plus, TrendingDown, TrendingUp } from "lucide-react";
 
 import { Bilingual } from "@/components/Bilingual";
+import { ListPageSkeleton } from "@/components/LoadingSkeletons";
 import { ui, preferredText } from "@/lib/i18n";
 import { useSettingsStore } from "@/store/settings";
 import { formatINR } from "@/lib/format";
@@ -54,6 +55,12 @@ export function FinanceReport() {
   const [expenseModalOpened, setExpenseModalOpened] = useState(false);
   const [otherIncomeModalOpened, setOtherIncomeModalOpened] = useState(false);
   const [deleteTarget, setDeleteTarget] = useState<DeleteTarget | null>(null);
+  const loadFinance = useFinanceStore((state) => state.loadFinance);
+  const financeLoaded = useFinanceStore((state) => state.loaded);
+
+  useEffect(() => {
+    void loadFinance();
+  }, [loadFinance]);
 
   const activeMonthKey = filter === "month" ? monthKey : null;
   const visibleExpenses = filteredExpenses(expenses, activeMonthKey);
@@ -194,7 +201,9 @@ export function FinanceReport() {
         <Text size="xs" c="dimmed">
           <Bilingual label={ui.finance.salaryNote} />
         </Text>
-        {visibleExpenses.length === 0 ? (
+        {!financeLoaded ? (
+          <ListPageSkeleton />
+        ) : visibleExpenses.length === 0 ? (
           <Text size="sm" c="dimmed">
             <Bilingual label={ui.finance.noExpenses} />
           </Text>
@@ -236,7 +245,9 @@ export function FinanceReport() {
             <Bilingual label={ui.finance.addOtherIncome} />
           </Button>
         </Group>
-        {visibleOtherIncomes.length === 0 ? (
+        {!financeLoaded ? (
+          <ListPageSkeleton />
+        ) : visibleOtherIncomes.length === 0 ? (
           <Text size="sm" c="dimmed">
             <Bilingual label={ui.finance.noOtherIncome} />
           </Text>

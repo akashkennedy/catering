@@ -1,6 +1,8 @@
 import { create } from "zustand";
 import { createJSONStorage, persist } from "zustand/middleware";
 
+import { fetchJson, newClientId, syncOrQueue } from "@/lib/storeSync";
+
 export type Reminder = {
   id: string;
   customerName: string | null;
@@ -16,50 +18,75 @@ export type ReminderInput = Omit<Reminder, "id">;
 
 type RemindersState = {
   reminders: Reminder[];
+  loaded: boolean;
   addReminder: (input: ReminderInput) => string;
   dismissReminder: (id: string) => void;
   dismissAll: () => void;
   markNotified: (id: string) => void;
   removeReminder: (id: string) => void;
+  loadReminders: () => Promise<void>;
 };
 
 export const useRemindersStore = create<RemindersState>()(
   persist(
     (set) => ({
       reminders: [],
+      loaded: false,
       addReminder: (input) => {
-        const id = crypto.randomUUID();
+        const id = newClientId();
         set((state) => ({
           reminders: [...state.reminders, { id, ...input }],
         }));
+        void syncOrQueue("POST", "/api/reminders", { id, ...input });
         return id;
       },
-      dismissReminder: (id) =>
+      dismissReminder: (id) => {
         set((state) => ({
           reminders: state.reminders.map((reminder) =>
             reminder.id === id ? { ...reminder, dismissed: true } : reminder
           ),
-        })),
-      dismissAll: () =>
+        }));
+        void syncOrQueue("PATCH", `/api/reminders/${encodeURIComponent(id)}`, {
+          dismissed: true,
+        });
+      },
+      dismissAll: () => {
         set((state) => ({
           reminders: state.reminders.map((reminder) =>
             reminder.dismissed ? reminder : { ...reminder, dismissed: true }
           ),
-        })),
-      markNotified: (id) =>
+        }));
+        void syncOrQueue("POST", "/api/reminders/dismiss-all", {});
+      },
+      markNotified: (id) => {
         set((state) => ({
           reminders: state.reminders.map((reminder) =>
             reminder.id === id ? { ...reminder, notified: true } : reminder
           ),
-        })),
-      removeReminder: (id) =>
+        }));
+        void syncOrQueue("PATCH", `/api/reminders/${encodeURIComponent(id)}`, {
+          notified: true,
+        });
+      },
+      removeReminder: (id) => {
         set((state) => ({
           reminders: state.reminders.filter((reminder) => reminder.id !== id),
-        })),
+        }));
+        void syncOrQueue("DELETE", `/api/reminders/${encodeURIComponent(id)}`);
+      },
+      loadReminders: async () => {
+        const { flushOutbox } = await import("@/lib/outbox");
+        await flushOutbox();
+        const body = await fetchJson<{ reminders?: Reminder[] }>("/api/reminders");
+        if (body && Array.isArray(body.reminders)) {
+          set({ reminders: body.reminders, loaded: true });
+        }
+      },
     }),
     {
       name: "catering-reminders",
       storage: createJSONStorage(() => localStorage),
+      partialize: (state) => ({ reminders: state.reminders }),
       version: 2,
       migrate: (persistedState) => {
         const state = persistedState as {

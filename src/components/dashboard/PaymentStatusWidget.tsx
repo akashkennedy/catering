@@ -5,6 +5,7 @@ import Link from "next/link";
 import { CreditCard } from "lucide-react";
 
 import { Bilingual } from "@/components/Bilingual";
+import { LoadingSpinner } from "@/components/LoadingSkeletons";
 import { ui } from "@/lib/i18n";
 import { formatINR } from "@/lib/format";
 import { clientPendingAmount, eventEmployeePending } from "@/lib/eventFinances";
@@ -12,6 +13,7 @@ import { useEventsStore } from "@/store/events";
 
 export function PaymentStatusWidget() {
   const events = useEventsStore((state) => state.events);
+  const loaded = useEventsStore((state) => state.loaded);
 
   const eligible = events;
   const withPending = eligible
@@ -40,7 +42,9 @@ export function PaymentStatusWidget() {
           </span>
         ) : null}
       </Group>
-      {withPending.length === 0 ? (
+      {!loaded ? (
+        <LoadingSpinner />
+      ) : withPending.length === 0 ? (
         <Text size="sm" c="dimmed">
           <Bilingual label={ui.dashboard.paymentEmpty} />
         </Text>

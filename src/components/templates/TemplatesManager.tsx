@@ -1,22 +1,36 @@
 "use client";
 
-import { useState } from "react";
-import { Button, Group, Modal, Stack, Text, Title } from "@mantine/core";
-import { Plus } from "lucide-react";
+import { useEffect, useState } from "react";
+import { Button, Group, Modal, Stack, Text, TextInput, Title } from "@mantine/core";
+import { Plus, Search } from "lucide-react";
 
 import { TemplateCards } from "./TemplateCards";
 import { TemplateFormModal } from "./TemplateFormModal";
 import { TemplateTable } from "./TemplateTable";
 import { Bilingual } from "@/components/Bilingual";
-import { ui } from "@/lib/i18n";
-import { useTemplatesStore, type FoodTemplate } from "@/store/templates";
+import { ListPageSkeleton } from "@/components/LoadingSkeletons";
+import { preferredText, ui } from "@/lib/i18n";
+import { useSettingsStore } from "@/store/settings";
+import { templateDisplayName, templateMatchesQuery, useTemplatesStore, type FoodTemplate } from "@/store/templates";
 
 export function TemplatesManager() {
   const templates = useTemplatesStore((state) => state.templates);
   const deleteTemplate = useTemplatesStore((state) => state.deleteTemplate);
+  const uiLanguage = useSettingsStore((state) => state.uiLanguage);
   const [formOpened, setFormOpened] = useState(false);
   const [editingTemplate, setEditingTemplate] = useState<FoodTemplate | null>(null);
   const [deletingTemplate, setDeletingTemplate] = useState<FoodTemplate | null>(null);
+  const [query, setQuery] = useState("");
+  const loadTemplates = useTemplatesStore((state) => state.loadTemplates);
+  const loaded = useTemplatesStore((state) => state.loaded);
+
+  useEffect(() => {
+    void loadTemplates();
+  }, [loadTemplates]);
+
+  const filtered = query.trim()
+    ? templates.filter((template) => templateMatchesQuery(template, query))
+    : templates;
 
   return (
     <div className="dash-card" style={{ padding: 0 }}>
@@ -36,14 +50,31 @@ export function TemplatesManager() {
           </Button>
         </Group>
 
-        {templates.length === 0 ? (
+        {templates.length > 0 && (
+          <TextInput
+            leftSection={<Search size={16} aria-hidden />}
+            placeholder={preferredText(ui.templates.searchTemplates, uiLanguage)}
+            aria-label={preferredText(ui.templates.searchTemplates, uiLanguage)}
+            value={query}
+            onChange={(event) => setQuery(event.currentTarget.value)}
+            mb="md"
+          />
+        )}
+
+        {!loaded ? (
+          <ListPageSkeleton />
+        ) : templates.length === 0 ? (
           <Text c="dimmed">
             <Bilingual label={ui.templates.empty} />
+          </Text>
+        ) : filtered.length === 0 ? (
+          <Text c="dimmed">
+            <Bilingual label={ui.templates.noMatch} />
           </Text>
         ) : (
           <>
             <TemplateTable
-              templates={templates}
+              templates={filtered}
               onEdit={(template) => {
                 setEditingTemplate(template);
                 setFormOpened(true);
@@ -51,7 +82,7 @@ export function TemplatesManager() {
               onDelete={setDeletingTemplate}
             />
             <TemplateCards
-              templates={templates}
+              templates={filtered}
               onEdit={(template) => {
                 setEditingTemplate(template);
                 setFormOpened(true);
@@ -71,15 +102,15 @@ export function TemplatesManager() {
         centered
       >
         <Stack gap="md">
-          <Text>
-            <Bilingual
-              label={
-                deletingTemplate
-                  ? ui.deleteConfirm(deletingTemplate.name)
-                  : { en: "", ta: "" }
-              }
-            />
-          </Text>
+            <Text>
+              <Bilingual
+                label={
+                  deletingTemplate
+                    ? ui.deleteConfirm(templateDisplayName(deletingTemplate, uiLanguage))
+                    : { en: "", ta: "" }
+                }
+              />
+            </Text>
           <Group justify="flex-end">
             <Button variant="default" onClick={() => setDeletingTemplate(null)}>
               <Bilingual label={ui.common.cancel} />

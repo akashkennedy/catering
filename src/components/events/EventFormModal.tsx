@@ -4,7 +4,6 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import {
   Autocomplete,
   Button,
-  Group,
   Modal,
   NumberInput,
   Select,
@@ -27,12 +26,15 @@ import { formatINR } from "@/lib/format";
 import { Bilingual } from "@/components/Bilingual";
 import {
   buildScaledIngredients,
+  buildScaledIngredientsForGroups,
   EVENT_STATUS_PIPELINE,
   useEventsStore,
   type CateringEvent,
   type CateringEventInput,
+  type EventMealGroup,
   type EventStatus,
 } from "@/store/events";
+import { emptyMealGroup, MealGroupsEditor } from "./MealGroupsEditor";
 
 export const EVENT_STATUS_OPTIONS: { value: EventStatus; label: Label }[] = [
   { value: "enquiry", label: ui.events.statusEnquiry },
@@ -110,12 +112,11 @@ type EventFormModalProps = {
   opened: boolean;
   event: CateringEvent | null;
   onClose: () => void;
-  createPrefill?: Partial<EventFormValues>;
 };
 
-export function EventFormModal({ opened, event, onClose, createPrefill }: EventFormModalProps) {
+export function EventFormModal({ opened, event, onClose }: EventFormModalProps) {
   const uiLanguage = useSettingsStore((state) => state.uiLanguage);
-  const sheet = useMobileSheet("full", "lg");
+  const sheet = useMobileSheet("full", "xl");
   const statusData = EVENT_STATUS_OPTIONS.map((o) => ({
     value: o.value,
     label: preferredText(o.label, uiLanguage),
@@ -156,6 +157,7 @@ export function EventFormModal({ opened, event, onClose, createPrefill }: EventF
   const totalAmount = watch("totalAmount");
   const advancePaid = watch("advancePaid");
   const [amountOverridden, setAmountOverridden] = useState(false);
+  const [mealGroups, setMealGroups] = useState<EventMealGroup[]>([]);
   const balance = roundMoney(asNumber(totalAmount) - asNumber(advancePaid));
 
   useEffect(() => {
@@ -168,39 +170,57 @@ export function EventFormModal({ opened, event, onClose, createPrefill }: EventF
 
   useEffect(() => {
     if (!opened) return;
-    setAmountOverridden(
-      event?.totalAmountOverridden ?? (createPrefill?.totalAmount ? true : false)
-    );
+    setAmountOverridden(event?.totalAmountOverridden ?? false);
+    const initialHeadcount = event?.headcount ?? 100;
+    const initialTemplateId = event?.templateId ?? null;
+    const initialGroups =
+      event?.mealGroups && event.mealGroups.length > 0
+        ? event.mealGroups
+        : initialTemplateId
+          ? [
+              {
+                ...emptyMealGroup(initialHeadcount),
+                templateId: initialTemplateId,
+                selectedDishIds: [],
+              },
+            ]
+          : [{ ...emptyMealGroup(initialHeadcount), templateId: null }];
+    setMealGroups(initialGroups);
     reset({
-      name: event?.name ?? createPrefill?.name ?? "",
-      phone: event?.phone ?? createPrefill?.phone ?? "",
-      venue: event?.venue ?? createPrefill?.venue ?? "",
-      address: event?.address ?? createPrefill?.address ?? "",
-      functionType: event?.functionType ?? createPrefill?.functionType ?? "",
-      headcount: event?.headcount ?? createPrefill?.headcount ?? 100,
-      date: event?.date ?? createPrefill?.date ?? "",
-      status: event?.status ?? createPrefill?.status ?? "enquiry",
-      templateId: event?.templateId ?? createPrefill?.templateId ?? null,
-      ratePerPerson: event?.ratePerPerson ?? createPrefill?.ratePerPerson ?? 0,
-      totalAmount: event?.totalAmount ?? createPrefill?.totalAmount ?? 0,
-      advancePaid: event?.advancePaid ?? createPrefill?.advancePaid ?? 0,
+      name: event?.name ?? "",
+      phone: event?.phone ?? "",
+      venue: event?.venue ?? "",
+      address: event?.address ?? "",
+      functionType: event?.functionType ?? "",
+      headcount: initialHeadcount,
+      date: event?.date ?? "",
+      status: event?.status ?? "enquiry",
+      templateId: initialTemplateId,
+      ratePerPerson: event?.ratePerPerson ?? 0,
+      totalAmount: event?.totalAmount ?? 0,
+      advancePaid: event?.advancePaid ?? 0,
     });
-  }, [opened, event, createPrefill, reset]);
+  }, [opened, event, reset]);
 
-  const templateOptions = templates.map((template) => ({
-    value: template.id,
-    label: template.name,
-  }));
+  const handleGroupsChange = (groups: EventMealGroup[]) => {
+    setMealGroups(groups);
+    setValue("templateId", groups[0]?.templateId ?? null, { shouldValidate: false });
+  };
 
   const onSubmit = (values: EventFormValues) => {
+    const groups = mealGroups;
+    const hasGroupTemplate = groups.some((group) => group.templateId);
     const selectedTemplate = templates.find((template) => template.id === values.templateId) ?? null;
-    const scaledIngredients = buildScaledIngredients(
-      selectedTemplate,
-      ingredients,
-      values.headcount
-    );
+    const scaledIngredients = hasGroupTemplate
+      ? buildScaledIngredientsForGroups(groups, templates, ingredients)
+      : buildScaledIngredients(selectedTemplate, ingredients, values.headcount);
+    const resolvedTemplateId = hasGroupTemplate
+      ? (groups[0]?.templateId ?? null)
+      : values.templateId;
     const input: CateringEventInput = {
       ...values,
+      templateId: resolvedTemplateId,
+      mealGroups: groups,
       phone: formatPhone(values.phone),
       totalAmount: roundMoney(values.totalAmount),
       totalAmountOverridden: amountOverridden,
@@ -209,14 +229,16 @@ export function EventFormModal({ opened, event, onClose, createPrefill }: EventF
       utensils: [],
     };
     if (event) {
-      const templateChanged = event.templateId !== values.templateId;
+      const templateChanged = event.templateId !== resolvedTemplateId;
       const headcountChanged = event.headcount !== values.headcount;
+      const groupsChanged =
+        JSON.stringify(event.mealGroups ?? []) !== JSON.stringify(groups);
       updateEvent(event.id, {
         ...input,
         employees: event.employees ?? [],
         utensils: event.utensils ?? [],
         ingredients:
-          templateChanged || headcountChanged
+          templateChanged || headcountChanged || groupsChanged
             ? scaledIngredients
             : event.ingredients ?? [],
       });
@@ -295,22 +317,20 @@ export function EventFormModal({ opened, event, onClose, createPrefill }: EventF
                     />
                   )}
                 />
-                <Controller
-                  name="templateId"
-                  control={control}
-                  render={({ field }) => (
-                    <Select
-                      label={<Bilingual label={ui.common.template} />}
-                      placeholder={preferredText(ui.events.selectTemplate, uiLanguage)}
-                      data={templateOptions}
-                      searchable
-                      clearable
-                      {...field}
-                      value={field.value ?? null}
-                      onChange={(value) => field.onChange(value ?? null)}
-                    />
-                  )}
-                />
+                <div style={{ gridColumn: "1 / -1" }}>
+                  <Text fw={500} size="sm" mb={4}>
+                    <Bilingual label={ui.events.meals} />
+                  </Text>
+                  <MealGroupsEditor
+                    groups={mealGroups}
+                    templates={templates}
+                    defaultHeadcount={typeof headcount === "number" ? headcount : 100}
+                    onChange={handleGroupsChange}
+                  />
+                  <Text size="xs" c="dimmed" mt="xs">
+                    <Bilingual label={ui.events.headcountNote} />
+                  </Text>
+                </div>
                 <Controller
                   name="headcount"
                   control={control}

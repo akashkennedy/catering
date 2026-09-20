@@ -4,14 +4,26 @@ export const SESSION_COOKIE_NAME = "catering-session";
 export const SESSION_MAX_AGE_SECONDS = 60 * 60 * 24 * 7;
 
 function getSecret(): string {
-  return process.env.AUTH_SESSION_SECRET ?? "dev-only-secret-change-me";
+  const secret = process.env.AUTH_SESSION_SECRET;
+  if (!secret) {
+    if (process.env.NODE_ENV === "production") {
+      throw new Error("AUTH_SESSION_SECRET environment variable is required");
+    }
+    return "dev-only-secret";
+  }
+  return secret;
 }
 
 function getExpectedCredentials(): { username: string; password: string } {
-  return {
-    username: process.env.AUTH_USERNAME ?? "admin",
-    password: process.env.AUTH_PASSWORD ?? "admin",
-  };
+  const username = process.env.AUTH_USERNAME;
+  const password = process.env.AUTH_PASSWORD;
+  if (!username || !password) {
+    if (process.env.NODE_ENV === "production") {
+      throw new Error("AUTH_USERNAME and AUTH_PASSWORD environment variables are required");
+    }
+    return { username: username ?? "admin", password: password ?? "admin" };
+  }
+  return { username, password };
 }
 
 function safeEqual(a: string, b: string): boolean {

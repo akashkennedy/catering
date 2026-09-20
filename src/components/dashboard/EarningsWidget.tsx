@@ -5,15 +5,19 @@ import { Group, SegmentedControl, Stack, Text } from "@mantine/core";
 import { IndianRupee } from "lucide-react";
 
 import { Bilingual } from "@/components/Bilingual";
+import { LoadingSpinner } from "@/components/LoadingSkeletons";
 import { ui } from "@/lib/i18n";
 import { formatINR } from "@/lib/format";
 import { currentMonthKey, eventCollected } from "@/lib/financeReport";
+import { useAuthStore } from "@/store/auth";
 import { useEventsStore } from "@/store/events";
 
 type EarningsFilter = "month" | "all";
 
 export function EarningsWidget() {
   const events = useEventsStore((state) => state.events);
+  const loaded = useEventsStore((state) => state.loaded);
+  const canViewFinance = useAuthStore((state) => state.permissions.canViewFinance);
   const [filter, setFilter] = useState<EarningsFilter>("month");
 
   const monthKey = filter === "month" ? currentMonthKey() : null;
@@ -21,6 +25,10 @@ export function EarningsWidget() {
     ? events.filter((event) => (event.date ?? "").startsWith(monthKey))
     : [...events];
   const total = filtered.reduce((sum, event) => sum + eventCollected(event), 0);
+
+  if (!canViewFinance) {
+    return null;
+  }
 
   return (
     <div className="dash-card" style={{ display: "flex", flexDirection: "column", gap: 24, height: "100%" }}>
@@ -41,7 +49,9 @@ export function EarningsWidget() {
           ]}
         />
       </Group>
-      {filtered.length === 0 ? (
+      {!loaded ? (
+        <LoadingSpinner />
+      ) : filtered.length === 0 ? (
         <Text size="sm" c="dimmed">
           <Bilingual label={ui.dashboard.earningsEmpty} />
         </Text>

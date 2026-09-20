@@ -5,6 +5,7 @@ import Link from "next/link";
 import { CalendarDays, MapPin, Users } from "lucide-react";
 
 import { Bilingual } from "@/components/Bilingual";
+import { LoadingSpinner } from "@/components/LoadingSkeletons";
 import { ui } from "@/lib/i18n";
 import { formatIndianDate } from "@/lib/date";
 import { useEventsStore } from "@/store/events";
@@ -20,6 +21,7 @@ function todayAtMidnight(): string {
 
 export function UpcomingEventsWidget() {
   const events = useEventsStore((state) => state.events);
+  const loaded = useEventsStore((state) => state.loaded);
   const today = todayAtMidnight();
 
   const upcoming = events
@@ -43,7 +45,9 @@ export function UpcomingEventsWidget() {
           {upcoming.length}
         </span>
       </Group>
-      {upcoming.length === 0 ? (
+      {!loaded ? (
+        <LoadingSpinner />
+      ) : upcoming.length === 0 ? (
         <Text size="sm" c="dimmed">
           <Bilingual label={ui.dashboard.upcomingEmpty} />
         </Text>

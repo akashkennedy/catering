@@ -19,6 +19,7 @@ import {
   get,
   useFieldArray,
   useForm,
+  useWatch,
   type Control,
   type FieldErrors,
 } from "react-hook-form";
@@ -29,8 +30,10 @@ import { Bilingual } from "@/components/Bilingual";
 import { ui, preferredText } from "@/lib/i18n";
 import { useSettingsStore } from "@/store/settings";
 import { useMobileSheet } from "@/hooks/useMobileSheet";
-import { useIngredientsStore } from "@/store/ingredients";
+import { useIngredientsStore, type Ingredient } from "@/store/ingredients";
+import { formatINR } from "@/lib/format";
 import { normalizeUnit } from "@/lib/units";
+import { suggestTamilName } from "@/lib/ingredientTranslations";
 import {
   useTemplatesStore,
   type FoodTemplate,
@@ -45,24 +48,31 @@ const dishIngredientSchema = z.object({
 
 const dishSchema = z.object({
   id: z.string(),
-  name: z.string().trim().min(1, "Dish name is required"),
+  nameEn: z.string().trim().min(1, "Dish name is required"),
+  nameTa: z.string(),
+});
+
+const dishFullSchema = dishSchema.extend({
   ingredients: z.array(dishIngredientSchema),
 });
 
 const templateSchema = z.object({
-  name: z.string().trim().min(1, "Name is required"),
-  dishes: z.array(dishSchema),
+  nameEn: z.string().trim().min(1, "Name is required"),
+  nameTa: z.string(),
+  dishes: z.array(dishFullSchema),
 });
 
 type TemplateFormValues = z.infer<typeof templateSchema>;
 
 function toFormValues(template: FoodTemplate | null): TemplateFormValues {
   return {
-    name: template?.name ?? "",
+    nameEn: template?.nameEn ?? "",
+    nameTa: template?.nameTa ?? "",
     dishes:
       template?.dishes.map((dish) => ({
         id: dish.id,
-        name: dish.name,
+        nameEn: dish.nameEn,
+        nameTa: dish.nameTa,
         ingredients: dish.ingredients.map((ingredient) => ({
           id: crypto.randomUUID(),
           ingredientId: ingredient.ingredientId,
@@ -83,6 +93,7 @@ type DishIngredientFieldsProps = {
   errors: FieldErrors<TemplateFormValues>;
   dishIndex: number;
   ingredients: { value: string; label: string }[];
+  master: Ingredient[];
 };
 
 function DishIngredientFields({
@@ -90,12 +101,15 @@ function DishIngredientFields({
   errors,
   dishIndex,
   ingredients,
+  master,
 }: DishIngredientFieldsProps) {
   const uiLanguage = useSettingsStore((state) => state.uiLanguage);
   const { fields, append, remove } = useFieldArray({
     control,
     name: `dishes.${dishIndex}.ingredients`,
   });
+  const rows = useWatch({ control, name: `dishes.${dishIndex}.ingredients` }) ?? [];
+  const masterById = new Map(master.map((item) => [item.id, item]));
 
   return (
     <Stack gap="xs">
@@ -113,52 +127,65 @@ function DishIngredientFields({
           errors,
           `dishes.${dishIndex}.ingredients.${fieldIndex}.qtyPer100`
         ) as { message?: string } | undefined;
+        const row = rows[fieldIndex] as { ingredientId?: string; qtyPer100?: number } | undefined;
+        const masterItem = row?.ingredientId ? masterById.get(row.ingredientId) : undefined;
+        const qty = Number(row?.qtyPer100) || 0;
+        const lineCost = masterItem ? Math.round(qty * masterItem.globalPrice * 100) / 100 : null;
 
         return (
-          <Group key={field.id} align="flex-end" gap="xs" wrap="wrap">
-            <Controller
-              name={`dishes.${dishIndex}.ingredients.${fieldIndex}.ingredientId`}
-              control={control}
-              render={({ field: selectField }) => (
-                <Select
-                  label={fieldIndex === 0 ? <Bilingual label={ui.templates.ingredient} /> : undefined}
-                  placeholder={preferredText(ui.templates.selectIngredient, uiLanguage)}
-                  data={ingredients}
-                  searchable
-                  clearable
-                  style={{ flex: 1, minWidth: 140 }}
-                  {...selectField}
-                  error={ingredientError?.message}
-                />
-              )}
-            />
-            <Controller
-              name={`dishes.${dishIndex}.ingredients.${fieldIndex}.qtyPer100`}
-              control={control}
-              render={({ field: qtyField }) => (
-                <NumberInput
-                  label={fieldIndex === 0 ? <Bilingual label={ui.templates.qtyPer100} /> : undefined}
-                  placeholder={preferredText(ui.templates.qtyPlaceholder, uiLanguage)}
-                  min={0}
-                  allowNegative={false}
-                  style={{ width: "100%", maxWidth: 110 }}
-                  {...qtyField}
-                  onKeyDown={(e) => {
-                    if (e.key === "ArrowUp" || e.key === "ArrowDown") e.preventDefault();
-                  }}
-                  error={qtyError?.message}
-                />
-              )}
-            />
-            <ActionIcon
-              variant="subtle"
-              color="kumkum"
-              aria-label="Remove ingredient"
-              onClick={() => remove(fieldIndex)}
-            >
-              <Trash size={16} />
-            </ActionIcon>
-          </Group>
+          <Stack key={field.id} gap={2}>
+            <Group align="flex-end" gap="xs" wrap="wrap">
+              <Controller
+                name={`dishes.${dishIndex}.ingredients.${fieldIndex}.ingredientId`}
+                control={control}
+                render={({ field: selectField }) => (
+                  <Select
+                    label={fieldIndex === 0 ? <Bilingual label={ui.templates.ingredient} /> : undefined}
+                    placeholder={preferredText(ui.templates.selectIngredient, uiLanguage)}
+                    data={ingredients}
+                    searchable
+                    clearable
+                    style={{ flex: 1, minWidth: 140 }}
+                    {...selectField}
+                    error={ingredientError?.message}
+                  />
+                )}
+              />
+              <Controller
+                name={`dishes.${dishIndex}.ingredients.${fieldIndex}.qtyPer100`}
+                control={control}
+                render={({ field: qtyField }) => (
+                  <NumberInput
+                    label={fieldIndex === 0 ? <Bilingual label={ui.templates.qtyPer100} /> : undefined}
+                    placeholder={preferredText(ui.templates.qtyPlaceholder, uiLanguage)}
+                    min={0}
+                    allowNegative={false}
+                    style={{ width: "100%", maxWidth: 110 }}
+                    {...qtyField}
+                    onKeyDown={(e) => {
+                      if (e.key === "ArrowUp" || e.key === "ArrowDown") e.preventDefault();
+                    }}
+                    error={qtyError?.message}
+                  />
+                )}
+              />
+              <ActionIcon
+                variant="subtle"
+                color="kumkum"
+                aria-label="Remove ingredient"
+                onClick={() => remove(fieldIndex)}
+              >
+                <Trash size={16} />
+              </ActionIcon>
+            </Group>
+            {masterItem && (
+              <Text size="xs" c="dimmed">
+                {normalizeUnit(masterItem.unit)} · {formatINR(masterItem.globalPrice)}/
+                {normalizeUnit(masterItem.unit)}
+                {lineCost !== null && qty > 0 ? ` · ≈ ${formatINR(lineCost)} / 100` : ""}
+              </Text>
+            )}
+          </Stack>
         );
       })}
       <Button
@@ -185,6 +212,8 @@ export function TemplateFormModal({ opened, template, onClose }: TemplateFormMod
     handleSubmit,
     reset,
     control,
+    setValue,
+    getValues,
     formState: { errors, isSubmitting },
   } = useForm<TemplateFormValues>({
     resolver: zodResolver(templateSchema),
@@ -211,16 +240,27 @@ export function TemplateFormModal({ opened, template, onClose }: TemplateFormMod
       ? `${ingredient.name} (${normalizeUnit(ingredient.unit)})`
       : ingredient.name,
   }));
+  const masterById = new Map(ingredients.map((ingredient) => [ingredient.id, ingredient]));
+  const watchedDishes = useWatch({ control, name: "dishes" }) ?? [];
+
+  const autoFillTamil = (path: "nameTa" | `dishes.${number}.nameTa`, englishValue: string) => {
+    const current = getValues(path);
+    if (current && current.trim()) return;
+    const suggestion = suggestTamilName(englishValue);
+    if (suggestion) setValue(path, suggestion, { shouldValidate: false });
+  };
 
   const onSubmit = (values: TemplateFormValues) => {
     const input: FoodTemplateInput = {
-      name: values.name.trim(),
+      nameEn: values.nameEn.trim(),
+      nameTa: values.nameTa.trim(),
       dishes: values.dishes
         .map((dish) => ({
           ...dish,
-          name: dish.name.trim(),
+          nameEn: dish.nameEn.trim(),
+          nameTa: dish.nameTa.trim(),
         }))
-        .filter((dish) => dish.name !== ""),
+        .filter((dish) => dish.nameEn !== ""),
     };
     if (template) {
       updateTemplate(template.id, input);
@@ -230,10 +270,14 @@ export function TemplateFormModal({ opened, template, onClose }: TemplateFormMod
     onClose();
   };
 
-  const dishNameError = (index: number) => {
-    const error = get(errors, `dishes.${index}.name`) as { message?: string } | undefined;
+  const dishNameEnError = (index: number) => {
+    const error = get(errors, `dishes.${index}.nameEn`) as { message?: string } | undefined;
     return error?.message;
   };
+
+  const templateNameEnRegister = register("nameEn", {
+    onChange: (e) => autoFillTamil("nameTa", e.target.value),
+  });
 
   return (
     <Modal
@@ -244,13 +288,22 @@ export function TemplateFormModal({ opened, template, onClose }: TemplateFormMod
     >
       <form onSubmit={handleSubmit(onSubmit)}>
         <Stack gap="md">
-          <TextInput
-            label={<Bilingual label={ui.common.name} />}
-            placeholder={preferredText(ui.templates.namePlaceholder, uiLanguage)}
-            withAsterisk
-            {...register("name")}
-            error={errors.name?.message}
-          />
+          <Group grow align="flex-start">
+            <TextInput
+              label={<Bilingual label={ui.templates.englishName} />}
+              placeholder={preferredText(ui.templates.englishNamePlaceholder, uiLanguage)}
+              withAsterisk
+              {...templateNameEnRegister}
+              error={errors.nameEn?.message}
+            />
+            <TextInput
+              label={<Bilingual label={ui.templates.tamilName} />}
+              placeholder={preferredText(ui.templates.tamilNamePlaceholder, uiLanguage)}
+              dir="auto"
+              {...register("nameTa")}
+              error={errors.nameTa?.message}
+            />
+          </Group>
 
           {dishFields.length === 0 && (
             <Text size="sm" c="dimmed">
@@ -258,44 +311,77 @@ export function TemplateFormModal({ opened, template, onClose }: TemplateFormMod
             </Text>
           )}
 
-          {dishFields.map((field, dishIndex) => (
-            <Card key={field.id} withBorder padding="sm">
-              <Stack gap="sm">
-                <Group justify="space-between">
-                  <Text fw={600}>
-                    <Bilingual label={ui.dishNumber(dishIndex + 1)} />
-                  </Text>
-                  <ActionIcon
-                    variant="subtle"
-                    color="kumkum"
-                    aria-label="Remove dish"
-                    onClick={() => removeDish(dishIndex)}
-                  >
-                    <Trash size={16} />
-                  </ActionIcon>
-                </Group>
-                <TextInput
-                  label={<Bilingual label={ui.templates.dishName} />}
-                  placeholder={preferredText(ui.templates.dishNamePlaceholder, uiLanguage)}
-                  withAsterisk
-                  {...register(`dishes.${dishIndex}.name`)}
-                  error={dishNameError(dishIndex)}
-                />
-                <DishIngredientFields
-                  control={control}
-                  errors={errors}
-                  dishIndex={dishIndex}
-                  ingredients={ingredientOptions}
-                />
-              </Stack>
-            </Card>
-          ))}
+          {dishFields.map((field, dishIndex) => {
+            const dishNameRegister = register(`dishes.${dishIndex}.nameEn`, {
+              onChange: (e) =>
+                autoFillTamil(`dishes.${dishIndex}.nameTa`, e.target.value),
+            });
+            const liveDish = watchedDishes?.[dishIndex] as
+              | { ingredients?: { ingredientId?: string; qtyPer100?: number }[] }
+              | undefined;
+            const liveRows = liveDish?.ingredients ?? [];
+            const dishCount = liveRows.length;
+            const dishCost = liveRows.reduce((sum, row) => {
+              const masterItem = row?.ingredientId
+                ? masterById.get(row.ingredientId)
+                : undefined;
+              if (!masterItem) return sum;
+              return sum + (Number(row?.qtyPer100) || 0) * masterItem.globalPrice;
+            }, 0);
+            return (
+              <Card key={field.id} withBorder padding="sm">
+                <Stack gap="sm">
+                  <Group justify="space-between" align="flex-start">
+                    <Stack gap={0}>
+                      <Text fw={600}>
+                        <Bilingual label={ui.dishNumber(dishIndex + 1)} />
+                      </Text>
+                      <Text size="xs" c="dimmed">
+                        <Bilingual label={ui.ingredientsCount(dishCount)} />
+                        {dishCost > 0 ? ` · ≈ ${formatINR(Math.round(dishCost * 100) / 100)} / 100` : ""}
+                      </Text>
+                    </Stack>
+                    <ActionIcon
+                      variant="subtle"
+                      color="kumkum"
+                      aria-label="Remove dish"
+                      onClick={() => removeDish(dishIndex)}
+                    >
+                      <Trash size={16} />
+                    </ActionIcon>
+                  </Group>
+                  <Group grow align="flex-start">
+                    <TextInput
+                      label={<Bilingual label={ui.templates.englishName} />}
+                      placeholder={preferredText(ui.templates.dishEnglishPlaceholder, uiLanguage)}
+                      withAsterisk
+                      {...dishNameRegister}
+                      error={dishNameEnError(dishIndex)}
+                    />
+                    <TextInput
+                      label={<Bilingual label={ui.templates.tamilName} />}
+                      placeholder={preferredText(ui.templates.dishTamilPlaceholder, uiLanguage)}
+                      dir="auto"
+                      {...register(`dishes.${dishIndex}.nameTa`)}
+                    />
+                  </Group>
+                  <DishIngredientFields
+                    control={control}
+                    errors={errors}
+                    dishIndex={dishIndex}
+                    ingredients={ingredientOptions}
+                    master={ingredients}
+                  />
+                </Stack>
+              </Card>
+            );
+          })}
 
           <Button
             variant="light"
             leftSection={<Plus size={16} />}
             onClick={() =>
-              appendDish({ id: crypto.randomUUID(), name: "", ingredients: [] })
+              appendDish({ id: crypto.randomUUID(), nameEn: "", nameTa: "", ingredients: [] })
             }
           >
             <Bilingual label={ui.templates.addDish} />

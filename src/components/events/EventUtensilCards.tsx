@@ -6,13 +6,14 @@ import {
   Group,
   NumberInput,
   Stack,
-  Switch,
   Text,
 } from "@mantine/core";
 import { X } from "lucide-react";
 
 import { Bilingual } from "@/components/Bilingual";
-import { ui } from "@/lib/i18n";
+import { ToggleSwitch } from "@/components/CheckRow";
+import { preferredText, ui } from "@/lib/i18n";
+import { useSettingsStore } from "@/store/settings";
 import { formatIndianDate } from "@/lib/date";
 import type { EventUtensilLine } from "@/store/events";
 
@@ -32,6 +33,7 @@ export function EventUtensilCards({
   onToggleReturned,
   onRemove,
 }: EventUtensilCardsProps) {
+  const uiLanguage = useSettingsStore((state) => state.uiLanguage);
   return (
     <Stack gap="sm" className="sm:hidden">
       {lines.map((line) => (
@@ -88,12 +90,16 @@ export function EventUtensilCards({
                 }
               />
             </Group>
-            <Switch
-              label={<Bilingual label={ui.events.returned} />}
-              checked={line.returned}
-              onChange={() => onToggleReturned(line.id)}
-              size="sm"
-            />
+            <Group gap="xs">
+              <ToggleSwitch
+                checked={line.returned}
+                onChange={() => onToggleReturned(line.id)}
+                ariaLabel={preferredText(ui.events.returned, uiLanguage)}
+              />
+              <Text size="sm">
+                <Bilingual label={ui.events.returned} />
+              </Text>
+            </Group>
           </Stack>
         </Card>
       ))}

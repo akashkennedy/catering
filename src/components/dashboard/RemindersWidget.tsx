@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import {
   ActionIcon,
   Button,
@@ -13,6 +13,7 @@ import {
 import { Bell, Check, Plus } from "lucide-react";
 
 import { Bilingual } from "@/components/Bilingual";
+import { ListPageSkeleton } from "@/components/LoadingSkeletons";
 import { ui, preferredText } from "@/lib/i18n";
 import { useSettingsStore } from "@/store/settings";
 import { formatPhone, validatePhone } from "@/lib/phone";
@@ -55,6 +56,12 @@ export function RemindersWidget() {
   const reminders = useRemindersStore((state) => state.reminders);
   const addReminder = useRemindersStore((state) => state.addReminder);
   const dismissReminder = useRemindersStore((state) => state.dismissReminder);
+  const loadReminders = useRemindersStore((state) => state.loadReminders);
+  const remindersLoaded = useRemindersStore((state) => state.loaded);
+
+  useEffect(() => {
+    void loadReminders();
+  }, [loadReminders]);
 
   const [phone, setPhone] = useState("");
   const [note, setNote] = useState("");
@@ -156,7 +163,9 @@ export function RemindersWidget() {
         </Group>
       </Stack>
 
-      {active.length === 0 ? (
+      {!remindersLoaded ? (
+        <ListPageSkeleton />
+      ) : active.length === 0 ? (
         <Text size="sm" c="dimmed">
           <Bilingual label={ui.dashboard.remindersEmpty} />
         </Text>

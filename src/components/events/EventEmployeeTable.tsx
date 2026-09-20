@@ -13,9 +13,16 @@ type EventEmployeeTableProps = {
   lines: EventEmployeeLine[];
   onLineChange: (lineId: string, patch: { toPay?: number; paid?: number }) => void;
   onRemove: (lineId: string) => void;
+  /** Null = viewer may see every line's pay; otherwise only these employeeIds. */
+  visiblePayFor: Set<string> | null;
 };
 
-export function EventEmployeeTable({ lines, onLineChange, onRemove }: EventEmployeeTableProps) {
+function canSeePay(line: EventEmployeeLine, visiblePayFor: Set<string> | null): boolean {
+  if (visiblePayFor === null) return true;
+  return !!line.employeeId && visiblePayFor.has(line.employeeId);
+}
+
+export function EventEmployeeTable({ lines, onLineChange, onRemove, visiblePayFor }: EventEmployeeTableProps) {
   return (
     <div className="hidden sm:block">
       <Table striped highlightOnHover withTableBorder>
@@ -30,13 +37,16 @@ export function EventEmployeeTable({ lines, onLineChange, onRemove }: EventEmplo
           </Table.Tr>
         </Table.Thead>
         <Table.Tbody>
-          {lines.map((line) => (
+          {lines.map((line) => {
+            const showPay = canSeePay(line, visiblePayFor);
+            return (
             <Table.Tr key={line.id}>
               <Table.Td>
                 <Text fw={500}>{line.name}</Text>
               </Table.Td>
               <Table.Td>{line.phone ? formatPhone(line.phone) : "—"}</Table.Td>
               <Table.Td>
+                {showPay ? (
                 <NumberInput
                   value={line.toPay}
                   min={0}
@@ -51,8 +61,12 @@ export function EventEmployeeTable({ lines, onLineChange, onRemove }: EventEmplo
                     onLineChange(line.id, { toPay: typeof value === "number" ? value : 0 })
                   }
                 />
+                ) : (
+                  "—"
+                )}
               </Table.Td>
               <Table.Td>
+                {showPay ? (
                 <NumberInput
                   value={line.paid}
                   min={0}
@@ -67,9 +81,12 @@ export function EventEmployeeTable({ lines, onLineChange, onRemove }: EventEmplo
                     onLineChange(line.id, { paid: typeof value === "number" ? value : 0 })
                   }
                 />
+                ) : (
+                  "—"
+                )}
               </Table.Td>
               <Table.Td>
-                <Text fw={600}>{formatINR(line.toPay - line.paid)}</Text>
+                <Text fw={600}>{showPay ? formatINR(line.toPay - line.paid) : "—"}</Text>
               </Table.Td>
               <Table.Td>
                 <ActionIcon
@@ -82,7 +99,8 @@ export function EventEmployeeTable({ lines, onLineChange, onRemove }: EventEmplo
                 </ActionIcon>
               </Table.Td>
             </Table.Tr>
-          ))}
+            );
+          })}
         </Table.Tbody>
       </Table>
     </div>

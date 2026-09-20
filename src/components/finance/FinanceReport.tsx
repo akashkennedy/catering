@@ -131,7 +131,7 @@ export function FinanceReport() {
         ) : null}
       </Group>
 
-      <SimpleGrid cols={{ base: 1, sm: 3 }} spacing="lg">
+      <SimpleGrid cols={{ base: 1, sm: 3 }} spacing="xl" mb="xl">
         <div className="dash-card" style={{ display: "flex", flexDirection: "column", gap: 16 }}>
           <Group gap="xs" justify="space-between">
             <Group gap="xs">
@@ -163,7 +163,10 @@ export function FinanceReport() {
           <div className="dash-stat">
             <span className="dash-stat__value">{formatINR(summary.expense)}</span>
             <span className="dash-stat__label">
-              <Bilingual label={ui.finance.entries(visibleExpenses.length)} />
+              <Bilingual label={ui.finance.eventCosts} />: {formatINR(summary.eventCost)}
+            </span>
+            <span className="dash-stat__label">
+              <Bilingual label={ui.finance.manualExpenses} />: {formatINR(summary.manualExpense)}
             </span>
           </div>
         </div>
@@ -186,18 +189,9 @@ export function FinanceReport() {
       </SimpleGrid>
 
       <Stack gap="md">
-        <Group justify="space-between" wrap="wrap" gap="sm">
-          <Title order={2} size="h4">
-            <Bilingual label={ui.finance.expenses} />
-          </Title>
-          <Button
-            size="compact-sm"
-            leftSection={<Plus size={16} />}
-            onClick={() => setExpenseModalOpened(true)}
-          >
-            <Bilingual label={ui.finance.addExpense} />
-          </Button>
-        </Group>
+        <Title order={2} size="h4">
+          <Bilingual label={ui.finance.expenses} />
+        </Title>
         <Text size="xs" c="dimmed">
           <Bilingual label={ui.finance.salaryNote} />
         </Text>
@@ -233,18 +227,9 @@ export function FinanceReport() {
       </Stack>
 
       <Stack gap="md">
-        <Group justify="space-between" wrap="wrap" gap="sm">
-          <Title order={2} size="h4">
-            <Bilingual label={ui.finance.otherIncome} />
-          </Title>
-          <Button
-            size="compact-sm"
-            leftSection={<Plus size={16} />}
-            onClick={() => setOtherIncomeModalOpened(true)}
-          >
-            <Bilingual label={ui.finance.addOtherIncome} />
-          </Button>
-        </Group>
+        <Title order={2} size="h4">
+          <Bilingual label={ui.finance.otherIncome} />
+        </Title>
         {!financeLoaded ? (
           <ListPageSkeleton />
         ) : visibleOtherIncomes.length === 0 ? (

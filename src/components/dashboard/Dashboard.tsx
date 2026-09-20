@@ -4,7 +4,7 @@ import { useEffect } from "react";
 import { Stack } from "@mantine/core";
 
 import { UpcomingEventsWidget } from "./UpcomingEventsWidget";
-import { EarningsWidget } from "./EarningsWidget";
+import { OverviewGrid } from "./OverviewGrid";
 import { PaymentStatusWidget } from "./PaymentStatusWidget";
 import { useEventsStore } from "@/store/events";
 
@@ -17,8 +17,8 @@ export function Dashboard() {
 
   return (
     <Stack gap={40}>
+      <OverviewGrid />
       <UpcomingEventsWidget />
-      <EarningsWidget />
       <PaymentStatusWidget />
     </Stack>
   );

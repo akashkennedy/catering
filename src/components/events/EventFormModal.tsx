@@ -69,7 +69,7 @@ function buildEventSchema(isNew: boolean, currentDate?: string) {
     name: z.string().trim().min(1, "Name is required"),
     phone: z.string().trim().refine(
       (val) => val === "" || validatePhone(val),
-      "Enter a valid 10-digit Indian mobile number"
+      "Enter a valid 10-digit phone number"
     ),
     venue: z.string().trim(),
     address: z.string().trim(),

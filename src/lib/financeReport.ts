@@ -1,6 +1,6 @@
 import type { CateringEvent } from "@/store/events";
 import type { Expense, OtherIncome } from "@/store/finance";
-import { eventTotalAmount } from "@/lib/eventFinances";
+import { eventTotalAmount, eventTotalCost } from "@/lib/eventFinances";
 
 export function currentMonthKey(): string {
   const now = new Date();
@@ -46,13 +46,16 @@ export type FinanceSummary = {
   eventIncome: number;
   otherIncome: number;
   expense: number;
+  manualExpense: number;
+  eventCost: number;
   profit: number;
 };
 
 /**
- * Business-level report rollup filtered by month the same way the Total
- * Earnings dashboard widget filters (event/entry date within the selected
- * month). Income = event collections + other income; Profit = Income − Expenses.
+ * Business-level report rollup filtered by month (event/entry date within
+ * the selected month). Income = event collections + other income.
+ * Expense = manual expenses + event costs (ingredients + staff pay +
+ * rentals, attributed by event date). Profit = Income − Expense.
  */
 export function financeSummary(
   events: readonly CateringEvent[],
@@ -60,7 +63,8 @@ export function financeSummary(
   expenses: readonly Expense[],
   monthKey: string | null
 ): FinanceSummary {
-  const eventIncome = withinMonth(events, monthKey).reduce(
+  const monthEvents = withinMonth(events, monthKey);
+  const eventIncome = monthEvents.reduce(
     (sum, event) => sum + eventCollected(event),
     0
   );
@@ -68,10 +72,15 @@ export function financeSummary(
     (sum, entry) => sum + entry.amount,
     0
   );
-  const expense = filteredExpenses(expenses, monthKey).reduce(
+  const manualExpense = filteredExpenses(expenses, monthKey).reduce(
     (sum, entry) => sum + entry.amount,
     0
   );
+  const eventCost = monthEvents.reduce(
+    (sum, event) => sum + eventTotalCost(event),
+    0
+  );
   const income = eventIncome + otherIncome;
-  return { income, eventIncome, otherIncome, expense, profit: income - expense };
+  const expense = manualExpense + eventCost;
+  return { income, eventIncome, otherIncome, expense, manualExpense, eventCost, profit: income - expense };
 }

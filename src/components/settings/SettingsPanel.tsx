@@ -1,12 +1,12 @@
 "use client";
 
-import { Anchor, Box, Group, NumberInput, SegmentedControl, Stack, Text, Title } from "@mantine/core";
-import Link from "next/link";
+import { useState } from "react";
+import { Box, Button, SegmentedControl, Stack, Text, Title } from "@mantine/core";
 
 import { Bilingual } from "@/components/Bilingual";
 import { ThemeControl } from "@/components/ThemeControl";
+import { exportDatabaseToExcel } from "@/lib/exportExcel";
 import { ui } from "@/lib/i18n";
-import { useIngredientsStore } from "@/store/ingredients";
 import {
   useSettingsStore,
   type DefaultLanguage,
@@ -18,8 +18,29 @@ export function SettingsPanel() {
   const setUiLanguage = useSettingsStore((state) => state.setUiLanguage);
   const defaultLanguage = useSettingsStore((state) => state.defaultLanguage);
   const setDefaultLanguage = useSettingsStore((state) => state.setDefaultLanguage);
-  const ingredients = useIngredientsStore((state) => state.ingredients);
-  const setIngredientPrice = useIngredientsStore((state) => state.setIngredientPrice);
+  const [exporting, setExporting] = useState(false);
+  const [exportStatus, setExportStatus] = useState<"idle" | "done" | "failed">("idle");
+
+  const runExport = () => {
+    setExporting(true);
+    setExportStatus("idle");
+    try {
+      // Let the button paint its loading state before the synchronous export.
+      setTimeout(() => {
+        try {
+          exportDatabaseToExcel();
+          setExportStatus("done");
+        } catch {
+          setExportStatus("failed");
+        } finally {
+          setExporting(false);
+        }
+      }, 50);
+    } catch {
+      setExportStatus("failed");
+      setExporting(false);
+    }
+  };
 
   return (
     <Stack gap="lg">
@@ -75,70 +96,32 @@ export function SettingsPanel() {
       </div>
 
       <div className="dash-card">
-        <Stack gap="md">
-          <div>
-            <Text fw={600} size="sm">
-              <Bilingual label={ui.settings.ingredientPrices} />
-            </Text>
-            <Text size="xs" c="dimmed">
-              <Bilingual label={ui.settings.ingredientPricesNote} />
-            </Text>
-          </div>
-          {ingredients.length === 0 ? (
-            <Text c="dimmed">
-              <Bilingual label={ui.settings.noIngredients} />
-            </Text>
-          ) : (
-            ingredients.map((ingredient) => (
-              <Group key={ingredient.id} justify="space-between" wrap="nowrap" gap="md" style={{ borderTop: "1px solid var(--border)", paddingTop: 12 }}>
-                <Stack gap={0}>
-                  <Text fw={500} style={{ color: "var(--ink)" }}>{ingredient.name}</Text>
-                  {ingredient.tamilName && (
-                    <Text size="xs" c="dimmed">
-                      {ingredient.tamilName}
-                    </Text>
-                  )}
-                </Stack>
-                <NumberInput
-                  w={120}
-                  value={ingredient.globalPrice}
-                  min={0}
-                  allowNegative={false}
-                  decimalScale={2}
-                  leftSection="₹"
-                  onKeyDown={(e) => {
-                    if (e.key === "ArrowUp" || e.key === "ArrowDown") e.preventDefault();
-                  }}
-                  onChange={(value) =>
-                    setIngredientPrice(ingredient.id, typeof value === "number" ? value : 0)
-                  }
-                />
-              </Group>
-            ))
-          )}
-        </Stack>
-      </div>
-
-      <div className="dash-card">
         <Stack gap="sm">
           <Text fw={600} size="sm">
-            <Bilingual
-              label={{ en: "Database", ta: "தரவுத்தளம்" }}
-            />
+            <Bilingual label={ui.settings.exportExcel} />
           </Text>
           <Text size="xs" c="dimmed">
-            <Bilingual
-              label={{
-                en: "Copy this device's saved data into the shared database.",
-                ta: "இந்த சாதனத்தின் தரவைப் பகிரப்பட்ட தரவுத்தளத்திற்கு நகலெடுக்கவும்.",
-              }}
-            />
+            <Bilingual label={ui.settings.exportExcelNote} />
           </Text>
-          <Anchor component={Link} href="/migrate" size="sm">
-            <Bilingual
-              label={{ en: "Move data to database", ta: "தரவை தரவுத்தளத்திற்கு மாற்று" }}
-            />
-          </Anchor>
+          <div>
+            <Button onClick={runExport} loading={exporting}>
+              <Bilingual
+                label={
+                  exporting ? ui.settings.exportExcelWorking : ui.settings.exportExcelButton
+                }
+              />
+            </Button>
+          </div>
+          {exportStatus === "done" ? (
+            <Text size="sm" c="green">
+              <Bilingual label={ui.settings.exportExcelDone} />
+            </Text>
+          ) : null}
+          {exportStatus === "failed" ? (
+            <Text size="sm" c="red">
+              <Bilingual label={ui.settings.exportExcelFailed} />
+            </Text>
+          ) : null}
         </Stack>
       </div>
     </Stack>

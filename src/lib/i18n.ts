@@ -453,14 +453,17 @@ export const ui = {
       "Used for exported PDF documents.",
       "ஏற்றுமதி செய்யப்படும் PDF ஆவணங்களுக்குப் பயன்படுகிறது."
     ),
-    ingredientPrices: lab("Ingredient prices", "பொருள் விலைகள்"),
-    ingredientPricesNote: lab(
-      "Edit the global price used as the default when planning events.",
-      "நிகழ்வு திட்டமிடும்போது இயல்பாகப் பயன்படும் உலகளாவிய விலையைத் திருத்தவும்."
+    exportExcel: lab("Export to Excel", "எக்செல் ஏற்றுமதி"),
+    exportExcelNote: lab(
+      "Download the whole database as one .xlsx file, one sheet per section.",
+      "முழு தரவுத்தளத்தையும் ஒரு .xlsx கோப்பாகப் பதிவிறக்கவும், ஒவ்வொரு பிரிவிற்கும் ஒரு தாள்."
     ),
-    noIngredients: lab(
-      "No ingredients yet. Add them from the Ingredients page.",
-      "இன்னும் பொருட்கள் இல்லை. பொருட்கள் பக்கத்திலிருந்து சேர்க்கவும்."
+    exportExcelButton: lab("Download Excel", "எக்செல் பதிவிறக்கு"),
+    exportExcelWorking: lab("Preparing download…", "பதிவிறக்கம் தயாராகிறது…"),
+    exportExcelDone: lab("Excel file downloaded.", "எக்செல் கோப்பு பதிவிறக்கப்பட்டது."),
+    exportExcelFailed: lab(
+      "Export failed. Please try again.",
+      "ஏற்றுமதி தோல்வியடைந்தது. மீண்டும் முயற்சிக்கவும்."
     ),
     dark: lab("Dark", "இருள்"),
   },

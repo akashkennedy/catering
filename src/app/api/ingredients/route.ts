@@ -66,6 +66,16 @@ export async function POST(request: Request) {
   const sql = db();
   const id = parsed.data.id ?? newId();
   const d = parsed.data;
+  // Names are unique (case-insensitive): reject duplicates at creation so
+  // the catalog can't accumulate same-name rows under different ids.
+  const nameClash =
+    (await sql`SELECT id FROM ingredients WHERE LOWER(name) = ${d.name.trim().toLowerCase()} AND id <> ${id} LIMIT 1`) as IngredientRow[];
+  if (nameClash.length > 0) {
+    return NextResponse.json(
+      { error: "An ingredient with that name already exists." },
+      { status: 409 }
+    );
+  }
   const inserted = (await sql`
     INSERT INTO ingredients
       (id, name, tamil_name, tag, unit, qty, global_price, opening_stock, low_stock_threshold, updated_at)

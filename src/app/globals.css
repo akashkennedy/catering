@@ -301,6 +301,18 @@ body {
   }
 }
 
+/* Course checkboxes flow into two columns on wider screens so long
+   templates (40+ dishes) don't make the event form endlessly tall. */
+@media (min-width: 900px) {
+  /* Doubled class beats Mantine's runtime flex rule on specificity. */
+  .course-check-list.course-check-list {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 4px 16px;
+    align-content: start;
+  }
+}
+
 .mobile-bottom-nav {
   display: none;
 }

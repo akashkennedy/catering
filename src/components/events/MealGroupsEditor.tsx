@@ -75,7 +75,9 @@ function MealGroupCard({
   }));
 
   const allDishIds = (template?.dishes ?? []).map((dish) => dish.id);
-  const checkedIds = group.selectedDishIds.length > 0 ? group.selectedDishIds : allDishIds;
+  // Explicit selection only — nothing is preselected. Stale ids (dishes
+  // removed from the template since) are dropped from the display.
+  const checkedIds = group.selectedDishIds.filter((id) => allDishIds.includes(id));
   const q = courseQuery.trim().toLowerCase();
   const visibleDishes = (template?.dishes ?? []).filter((dish) => {
     if (!q) return true;
@@ -148,8 +150,33 @@ function MealGroupCard({
 
         {template && template.dishes.length > 0 && (
           <div>
-            <Text size="sm" fw={500} mb={4}>
-              <Bilingual label={ui.events.includeCourses} />
+            <Group justify="space-between" gap="xs" mb={4}>
+              <Text size="sm" fw={500}>
+                <Bilingual label={ui.events.includeCourses} />
+              </Text>
+              <Group gap={4}>
+                <Button
+                  variant="subtle"
+                  size="compact-xs"
+                  onClick={() => onChange({ ...group, selectedDishIds: allDishIds })}
+                >
+                  <Bilingual label={ui.events.selectAllCourses} />
+                </Button>
+                <Button
+                  variant="subtle"
+                  size="compact-xs"
+                  color="kumkum"
+                  disabled={checkedIds.length === 0}
+                  onClick={() => onChange({ ...group, selectedDishIds: [] })}
+                >
+                  <Bilingual label={ui.events.clearCourses} />
+                </Button>
+              </Group>
+            </Group>
+            <Text size="xs" c="dimmed" mb="xs">
+              <Bilingual
+                label={ui.events.selectedCount(checkedIds.length, allDishIds.length)}
+              />
             </Text>
             {template.dishes.length > 6 && (
               <TextInput
@@ -160,7 +187,7 @@ function MealGroupCard({
                 mb="xs"
               />
             )}
-            <Stack gap={4}>
+            <Stack gap={4} className="course-check-list">
               {visibleDishes.map((dish) => {
                 const dishChecked = checkedIds.includes(dish.id);
                 return (
@@ -171,11 +198,7 @@ function MealGroupCard({
                       const nextIds = next
                         ? [...checkedIds, dish.id]
                         : checkedIds.filter((id) => id !== dish.id);
-                      onChange({
-                        ...group,
-                        selectedDishIds:
-                          nextIds.length === allDishIds.length ? [] : nextIds,
-                      });
+                      onChange({ ...group, selectedDishIds: nextIds });
                     }}
                     label={`${dishDisplayName(dish, uiLanguage)} (${dish.ingredients.length})`}
                   />

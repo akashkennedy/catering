@@ -116,7 +116,7 @@ type EventFormModalProps = {
 
 export function EventFormModal({ opened, event, onClose }: EventFormModalProps) {
   const uiLanguage = useSettingsStore((state) => state.uiLanguage);
-  const sheet = useMobileSheet("full", "lg");
+  const sheet = useMobileSheet("full", "xl");
   const statusData = EVENT_STATUS_OPTIONS.map((o) => ({
     value: o.value,
     label: preferredText(o.label, uiLanguage),

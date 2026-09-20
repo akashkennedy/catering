@@ -46,7 +46,8 @@ export type EventUtensilLine = {
 /**
  * One meal (template) within an event — the "course meals" model ported
  * from the old site's Plan-a-Meal (`mealGroups[]`).
- * `selectedDishIds: []` means every dish in the template is included.
+ * `selectedDishIds` lists the dishes the user picked one by one — an empty
+ * array means no dish is included. Nothing is ever preselected.
  */
 export type EventMealGroup = {
   id: string;
@@ -146,10 +147,9 @@ export function resolveGroupDishes(
   selectedDishIds: string[]
 ): FoodTemplate["dishes"] {
   if (!template) return [];
-  if (selectedDishIds.length === 0) return template.dishes;
+  if (selectedDishIds.length === 0) return [];
   const selected = new Set(selectedDishIds);
-  const matched = template.dishes.filter((dish) => selected.has(dish.id));
-  return matched.length > 0 ? matched : template.dishes;
+  return template.dishes.filter((dish) => selected.has(dish.id));
 }
 
 /**

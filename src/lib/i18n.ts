@@ -159,10 +159,12 @@ export const ui = {
     ),
     includeCourses: lab("Include courses", "சேர்க்க வேண்டிய உணவுகள்"),
     searchCourses: lab("Search courses…", "உணவுகளைத் தேடு…"),
-    allCoursesIncluded: lab(
-      "All courses included.",
-      "அனைத்து உணவுகளும் சேர்க்கப்பட்டுள்ளன."
-    ),
+    selectAllCourses: lab("Select all", "அனைத்தும்"),
+    clearCourses: lab("Clear", "நீக்கு"),
+    selectedCount: (selected: number, total: number): Label => ({
+      en: `${selected} of ${total} selected`,
+      ta: `${total}-இல் ${selected} தேர்வு`,
+    }),
     printPreview: lab("Print preview", "அச்சு முன்னோட்டம்"),
     printCategories: lab("Print categories", "அச்சிட வேண்டிய வகைகள்"),
     buyListPdf: lab("Buy list (qty only)", "வாங்கும் பட்டியல் (அளவு மட்டும்)"),

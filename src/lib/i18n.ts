@@ -180,6 +180,7 @@ export const ui = {
       "இங்கு அளவு மற்றும் விலை திருத்தங்கள் நிகழ்வில் சேமிக்கப்படும். தேர்வு நீக்கிய வகைகள் PDF-இல் வராது."
     ),
     invoice: lab("Invoice", "விலைப்பட்டியல்"),
+    invoiceNo: lab("Invoice no", "விலைப்பட்டியல் எண்"),
     thankYou: lab("Thank You", "நன்றி"),
     editEvent: lab("Edit Event", "நிகழ்வைத் திருத்து"),
     nameRequired: lab("Name is required", "பெயர் தேவை"),

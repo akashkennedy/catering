@@ -1,11 +1,12 @@
 import React from "react";
-import { pdf, Font, Document, Page, Text, View, StyleSheet } from "@react-pdf/renderer";
+import { pdf, Font, Document, Image, Page, Text, View, StyleSheet } from "@react-pdf/renderer";
 import type { DocumentProps } from "@react-pdf/renderer";
-import type { CateringEvent, EventIngredientLine, EventStatus } from "@/store/events";
+import type { CateringEvent, EventIngredientLine } from "@/store/events";
 import type { Ingredient } from "@/store/ingredients";
 import { formatINR } from "@/lib/format";
 import { normalizeUnit } from "@/lib/units";
 import { formatIndianDate } from "@/lib/date";
+import { formatPhone } from "@/lib/phone";
 import { eventBalance } from "@/lib/eventFinances";
 import { ui, preferredText } from "@/lib/i18n";
 import { INGREDIENT_TAGS, type IngredientTag } from "@/lib/ingredientTags";
@@ -13,7 +14,18 @@ import { INGREDIENT_TAGS, type IngredientTag } from "@/lib/ingredientTags";
 const TAMIL_FAMILY = "NotoSansTamil";
 
 const BRAND_NAME = "Mampalli Catering";
-const BRAND_PHONE = "9025350666";
+const BRAND_PHONES = ["9025350666", "9488073555"];
+
+/**
+ * Unique invoice number from the event date + id slice, e.g. 20261010-A3F9C2.
+ * Deterministic from stored data so reprints keep the same number.
+ */
+export function makeInvoiceNumber(event: { date: string; id: string }): string {
+  const day = (event.date ?? "").replace(/\D/g, "").slice(0, 8) || "NODATE";
+  const short =
+    (event.id ?? "").replace(/[^a-zA-Z0-9]/g, "").slice(0, 6).toUpperCase() || "XXXXXX";
+  return `${day}-${short}`;
+}
 
 let fontRegistered = false;
 
@@ -24,21 +36,6 @@ function ensureFont(): void {
     src: "/fonts/NotoSansTamil-Regular.ttf",
   });
   fontRegistered = true;
-}
-
-function statusDual(status: EventStatus): string {
-  switch (status) {
-    case "confirmed":
-      return `${preferredText(ui.events.statusConfirmed, "en")} / ${preferredText(ui.events.statusConfirmed, "ta")}`;
-    case "preparing":
-      return `${preferredText(ui.events.statusPreparing, "en")} / ${preferredText(ui.events.statusPreparing, "ta")}`;
-    case "completed":
-      return `${preferredText(ui.events.statusCompleted, "en")} / ${preferredText(ui.events.statusCompleted, "ta")}`;
-    case "paid":
-      return `${preferredText(ui.events.statusPaid, "en")} / ${preferredText(ui.events.statusPaid, "ta")}`;
-    default:
-      return `${preferredText(ui.events.statusEnquiry, "en")} / ${preferredText(ui.events.statusEnquiry, "ta")}`;
-  }
 }
 
 function tagHeading(tag: IngredientTag): string {
@@ -61,6 +58,7 @@ const styles = StyleSheet.create({
   rowEven: { backgroundColor: "#f9f9f9" },
   brandTitle: { fontSize: 22, fontWeight: "bold", textAlign: "center", marginBottom: 2 },
   brandPhone: { fontSize: 11, textAlign: "center", marginBottom: 12 },
+  brandLogo: { width: 110, height: 108, marginHorizontal: "auto", marginBottom: 6 },
   thankYou: { fontSize: 13, fontWeight: "bold", textAlign: "center", marginTop: 18 },
 });
 
@@ -114,15 +112,28 @@ function groupLines(
  * page so no space is reserved there.
  */
 function BrandHeader() {
+  const phones = BRAND_PHONES.map((number) => formatPhone(number)).join(" · ");
   return (
     <>
       <Text
         style={styles.brandTitle}
-        render={({ pageNumber }) => (pageNumber === 1 ? BRAND_NAME : "")}
+        render={({ pageNumber }: { pageNumber: number }) =>
+          pageNumber === 1 ? BRAND_NAME : ""
+        }
+      />
+      <View
+        render={({ pageNumber }: { pageNumber: number }) =>
+          pageNumber === 1 ? (
+            <View style={{ alignItems: "center" }}>
+              {/* eslint-disable-next-line jsx-a11y/alt-text -- PDF output, not HTML */}
+              <Image src="/logo.png" style={styles.brandLogo} />
+            </View>
+          ) : null
+        }
       />
       <Text
         style={styles.brandPhone}
-        render={({ pageNumber }) => (pageNumber === 1 ? BRAND_PHONE : "")}
+        render={({ pageNumber }: { pageNumber: number }) => (pageNumber === 1 ? phones : "")}
       />
     </>
   );
@@ -159,16 +170,12 @@ function EventHeader({ event }: { event: CateringEvent }) {
         {preferredText(ui.events.invoice, "ta")} / {preferredText(ui.events.invoice, "en")}: {event.name}
       </Text>
       <Text style={styles.detail}>
+        {preferredText(ui.events.invoiceNo, "ta")} / {preferredText(ui.events.invoiceNo, "en")}:{" "}
+        {makeInvoiceNumber(event)}
+      </Text>
+      <Text style={styles.detail}>
         {preferredText(ui.common.date, "ta")} / {preferredText(ui.common.date, "en")}:{" "}
         {event.date ? formatIndianDate(event.date) : "—"}
-      </Text>
-      <Text style={styles.detail}>
-        {preferredText(ui.common.headcount, "ta")} / {preferredText(ui.common.headcount, "en")}:{" "}
-        {event.headcount}
-      </Text>
-      <Text style={styles.detail}>
-        {preferredText(ui.common.status, "ta")} / {preferredText(ui.common.status, "en")}:{" "}
-        {statusDual(event.status)}
       </Text>
     </View>
   );
@@ -324,7 +331,7 @@ export async function generateBuyListPdf(
   selectedTags: IngredientTag[]
 ): Promise<void> {
   const element = buildDocument(event, ingredients, lines, selectedTags, false);
-  await downloadDocument(element, `${fileStem(event.name)}_buy-list.pdf`);
+  await downloadDocument(element, `${makeInvoiceNumber(event)}_${fileStem(event.name)}.pdf`);
 }
 
 /** Detailed invoice: names + quantities + prices with totals, grouped by category. */
@@ -335,5 +342,5 @@ export async function generateDetailedPdf(
   selectedTags: IngredientTag[]
 ): Promise<void> {
   const element = buildDocument(event, ingredients, lines, selectedTags, true);
-  await downloadDocument(element, `${fileStem(event.name)}_detailed.pdf`);
+  await downloadDocument(element, `${makeInvoiceNumber(event)}_${fileStem(event.name)}.pdf`);
 }

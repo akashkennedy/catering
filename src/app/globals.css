@@ -653,6 +653,77 @@ body {
   }
 }
 
+/* Public site (/site) — minimal landing styles on app theme tokens. */
+.site-header {
+  position: sticky;
+  top: 0;
+  z-index: 50;
+  background: var(--surface);
+  border-bottom: 1px solid var(--border);
+}
+
+.site-header__inner {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding-top: 10px;
+  padding-bottom: 10px;
+}
+
+.site-header__brand {
+  font-weight: 800;
+  font-size: 1.125rem;
+  color: var(--ink);
+  text-decoration: none;
+  margin-right: auto;
+}
+
+.site-header__nav {
+  display: none;
+  gap: 14px;
+}
+
+@media (min-width: 900px) {
+  .site-header__nav {
+    display: flex;
+  }
+}
+
+.site-header__link {
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: var(--ink-muted);
+  text-decoration: none;
+}
+
+.site-hero {
+  padding: 48px 0;
+}
+
+.site-section {
+  padding: 40px 0;
+}
+
+.site-band {
+  background: var(--surface);
+  border-top: 1px solid var(--border);
+  border-bottom: 1px solid var(--border);
+}
+
+.site-photo {
+  width: 100%;
+  height: auto;
+  border-radius: 10px;
+  border: 1px solid var(--border);
+  display: block;
+}
+
+.site-footer {
+  padding: 40px 0 32px;
+  background: var(--surface);
+  border-top: 1px solid var(--border);
+}
+
 /* CheckRow — native-input-free checkbox (see CheckRow.tsx). */
 .check-row {
   display: flex;

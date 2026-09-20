@@ -19,6 +19,11 @@ type TagFilter = "all" | IngredientTag;
 export function IngredientsManager() {
   const ingredients = useIngredientsStore((state) => state.ingredients);
   const deleteIngredient = useIngredientsStore((state) => state.deleteIngredient);
+  const loadIngredients = useIngredientsStore((state) => state.loadIngredients);
+
+  useEffect(() => {
+    void loadIngredients();
+  }, [loadIngredients]);
   const [formOpened, setFormOpened] = useState(false);
   const [editingIngredient, setEditingIngredient] = useState<Ingredient | null>(null);
   const [deletingIngredient, setDeletingIngredient] = useState<Ingredient | null>(null);

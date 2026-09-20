@@ -1,6 +1,7 @@
 "use client";
 
-import { Box, Group, NumberInput, SegmentedControl, Stack, Text, Title } from "@mantine/core";
+import { Anchor, Box, Group, NumberInput, SegmentedControl, Stack, Text, Title } from "@mantine/core";
+import Link from "next/link";
 
 import { Bilingual } from "@/components/Bilingual";
 import { ThemeControl } from "@/components/ThemeControl";
@@ -115,6 +116,29 @@ export function SettingsPanel() {
               </Group>
             ))
           )}
+        </Stack>
+      </div>
+
+      <div className="dash-card">
+        <Stack gap="sm">
+          <Text fw={600} size="sm">
+            <Bilingual
+              label={{ en: "Database", ta: "தரவுத்தளம்" }}
+            />
+          </Text>
+          <Text size="xs" c="dimmed">
+            <Bilingual
+              label={{
+                en: "Copy this device's saved data into the shared database.",
+                ta: "இந்த சாதனத்தின் தரவைப் பகிரப்பட்ட தரவுத்தளத்திற்கு நகலெடுக்கவும்.",
+              }}
+            />
+          </Text>
+          <Anchor component={Link} href="/migrate" size="sm">
+            <Bilingual
+              label={{ en: "Move data to database", ta: "தரவை தரவுத்தளத்திற்கு மாற்று" }}
+            />
+          </Anchor>
         </Stack>
       </div>
     </Stack>

@@ -8,12 +8,14 @@ import { Bilingual } from "@/components/Bilingual";
 import { ui } from "@/lib/i18n";
 import { formatINR } from "@/lib/format";
 import { currentMonthKey, eventCollected } from "@/lib/financeReport";
+import { useAuthStore } from "@/store/auth";
 import { useEventsStore } from "@/store/events";
 
 type EarningsFilter = "month" | "all";
 
 export function EarningsWidget() {
   const events = useEventsStore((state) => state.events);
+  const canViewFinance = useAuthStore((state) => state.permissions.canViewFinance);
   const [filter, setFilter] = useState<EarningsFilter>("month");
 
   const monthKey = filter === "month" ? currentMonthKey() : null;
@@ -21,6 +23,10 @@ export function EarningsWidget() {
     ? events.filter((event) => (event.date ?? "").startsWith(monthKey))
     : [...events];
   const total = filtered.reduce((sum, event) => sum + eventCollected(event), 0);
+
+  if (!canViewFinance) {
+    return null;
+  }
 
   return (
     <div className="dash-card" style={{ display: "flex", flexDirection: "column", gap: 24, height: "100%" }}>

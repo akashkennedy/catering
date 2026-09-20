@@ -13,12 +13,21 @@ type EventEmployeeCardsProps = {
   lines: EventEmployeeLine[];
   onLineChange: (lineId: string, patch: { toPay?: number; paid?: number }) => void;
   onRemove: (lineId: string) => void;
+  /** Null = viewer may see every line's pay; otherwise only these employeeIds. */
+  visiblePayFor: Set<string> | null;
 };
 
-export function EventEmployeeCards({ lines, onLineChange, onRemove }: EventEmployeeCardsProps) {
+function canSeePay(line: EventEmployeeLine, visiblePayFor: Set<string> | null): boolean {
+  if (visiblePayFor === null) return true;
+  return !!line.employeeId && visiblePayFor.has(line.employeeId);
+}
+
+export function EventEmployeeCards({ lines, onLineChange, onRemove, visiblePayFor }: EventEmployeeCardsProps) {
   return (
     <Stack gap="sm" className="sm:hidden">
-      {lines.map((line) => (
+      {lines.map((line) => {
+        const showPay = canSeePay(line, visiblePayFor);
+        return (
         <Card key={line.id} withBorder padding="sm">
           <Stack gap="xs">
             <Group justify="space-between" align="flex-start" wrap="nowrap">
@@ -39,40 +48,45 @@ export function EventEmployeeCards({ lines, onLineChange, onRemove }: EventEmplo
                 <X size={16} />
               </ActionIcon>
             </Group>
-            <NumberInput
-              label={<Bilingual label={ui.events.toPay} />}
-              value={line.toPay}
-              min={0}
-              allowNegative={false}
-              decimalScale={2}
-              leftSection="₹"
-              onKeyDown={(e) => {
-                if (e.key === "ArrowUp" || e.key === "ArrowDown") e.preventDefault();
-              }}
-              onChange={(value) =>
-                onLineChange(line.id, { toPay: typeof value === "number" ? value : 0 })
-              }
-            />
-            <NumberInput
-              label={<Bilingual label={ui.events.paid} />}
-              value={line.paid}
-              min={0}
-              allowNegative={false}
-              decimalScale={2}
-              leftSection="₹"
-              onKeyDown={(e) => {
-                if (e.key === "ArrowUp" || e.key === "ArrowDown") e.preventDefault();
-              }}
-              onChange={(value) =>
-                onLineChange(line.id, { paid: typeof value === "number" ? value : 0 })
-              }
-            />
-            <Text size="sm" fw={600}>
-              <Bilingual label={ui.events.pending} />: {formatINR(line.toPay - line.paid)}
-            </Text>
+            {showPay && (
+              <>
+                <NumberInput
+                  label={<Bilingual label={ui.events.toPay} />}
+                  value={line.toPay}
+                  min={0}
+                  allowNegative={false}
+                  decimalScale={2}
+                  leftSection="₹"
+                  onKeyDown={(e) => {
+                    if (e.key === "ArrowUp" || e.key === "ArrowDown") e.preventDefault();
+                  }}
+                  onChange={(value) =>
+                    onLineChange(line.id, { toPay: typeof value === "number" ? value : 0 })
+                  }
+                />
+                <NumberInput
+                  label={<Bilingual label={ui.events.paid} />}
+                  value={line.paid}
+                  min={0}
+                  allowNegative={false}
+                  decimalScale={2}
+                  leftSection="₹"
+                  onKeyDown={(e) => {
+                    if (e.key === "ArrowUp" || e.key === "ArrowDown") e.preventDefault();
+                  }}
+                  onChange={(value) =>
+                    onLineChange(line.id, { paid: typeof value === "number" ? value : 0 })
+                  }
+                />
+                <Text size="sm" fw={600}>
+                  <Bilingual label={ui.events.pending} />: {formatINR(line.toPay - line.paid)}
+                </Text>
+              </>
+            )}
           </Stack>
         </Card>
-      ))}
+        );
+      })}
     </Stack>
   );
 }

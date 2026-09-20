@@ -192,6 +192,7 @@ export default function DevSeedPage() {
     finance.otherIncomes.forEach((o) => finance.deleteOtherIncome(o.id));
     const reminders = useRemindersStore.getState();
     reminders.reminders.forEach((r) => reminders.removeReminder(r.id));
+    void import("@/lib/outbox").then(({ clearOutbox }) => clearOutbox());
     setStatus("All data cleared.");
   };
 

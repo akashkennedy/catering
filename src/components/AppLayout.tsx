@@ -26,9 +26,11 @@ import {
   PhoneCall,
   UserRound,
   Wallet,
+  Globe,
 } from "lucide-react";
 
 import { Bilingual } from "@/components/Bilingual";
+import { isPublicSitePath } from "@/components/auth/AuthGate";
 import { MobileBottomNav } from "@/components/MobileBottomNav";
 import { MobileSearchOverlay } from "@/components/MobileSearchOverlay";
 import { NotificationCenter } from "@/components/NotificationCenter";
@@ -53,6 +55,7 @@ const NAV_ITEMS: NavItem[] = [
   { label: ui.nav.ingredients, href: "/ingredients", icon: ShoppingBasket },
   { label: ui.nav.employees, href: "/employees", icon: UserRound },
   { label: ui.nav.rental, href: "/utensils", icon: CookingPot },
+  { label: ui.nav.website, href: "/site-manager", icon: Globe },
   { label: ui.nav.finance, href: "/finance", icon: Wallet },
 ];
 
@@ -66,8 +69,16 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
   const [searchOpened, setSearchOpened] = useState(false);
   const [newEventOpened, setNewEventOpened] = useState(false);
   const logout = useAuthStore((state) => state.logout);
+  const canViewFinance = useAuthStore((state) => state.permissions.canViewFinance);
   const pathname = usePathname();
   const uiLanguage = useSettingsStore((state) => state.uiLanguage);
+  const visibleNavItems = canViewFinance
+    ? NAV_ITEMS
+    : NAV_ITEMS.filter((item) => item.href !== "/finance");
+
+  if (isPublicSitePath(pathname ?? "")) {
+    return <>{children}</>;
+  }
 
   return (
     <AppShell
@@ -112,7 +123,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
               <Bilingual label={ui.events.addEvent} />
             </Button>
             <Stack gap={4} style={{ flex: 1, minHeight: 0, overflowY: "auto" }}>
-              {NAV_ITEMS.map((item) => {
+              {visibleNavItems.map((item) => {
                 const Icon = item.icon;
                 const active = isActive(pathname, item.href);
                 return (

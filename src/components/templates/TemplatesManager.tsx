@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Button, Group, Modal, Stack, Text, TextInput, Title } from "@mantine/core";
 import { Plus, Search } from "lucide-react";
 
@@ -20,6 +20,12 @@ export function TemplatesManager() {
   const [editingTemplate, setEditingTemplate] = useState<FoodTemplate | null>(null);
   const [deletingTemplate, setDeletingTemplate] = useState<FoodTemplate | null>(null);
   const [query, setQuery] = useState("");
+  const loadTemplates = useTemplatesStore((state) => state.loadTemplates);
+
+  useEffect(() => {
+    void loadTemplates();
+  }, [loadTemplates]);
+
   const filtered = query.trim()
     ? templates.filter((template) => templateMatchesQuery(template, query))
     : templates;

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import {
   ActionIcon,
   Button,
@@ -55,6 +55,11 @@ export function RemindersWidget() {
   const reminders = useRemindersStore((state) => state.reminders);
   const addReminder = useRemindersStore((state) => state.addReminder);
   const dismissReminder = useRemindersStore((state) => state.dismissReminder);
+  const loadReminders = useRemindersStore((state) => state.loadReminders);
+
+  useEffect(() => {
+    void loadReminders();
+  }, [loadReminders]);
 
   const [phone, setPhone] = useState("");
   const [note, setNote] = useState("");

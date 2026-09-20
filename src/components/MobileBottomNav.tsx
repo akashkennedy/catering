@@ -18,6 +18,7 @@ import {
   LogOut,
   UserRound,
   Wallet,
+  Globe,
   Settings,
   PhoneCall,
 } from "lucide-react";
@@ -44,6 +45,7 @@ const MORE_ITEMS: MobileNavItem[] = [
   { label: ui.nav.ingredients, href: "/ingredients", icon: ShoppingBasket },
   { label: ui.nav.employees, href: "/employees", icon: UserRound },
   { label: ui.dashboard.customerFollowUp, href: "/follow-ups", icon: PhoneCall },
+  { label: ui.nav.website, href: "/site-manager", icon: Globe },
   { label: ui.nav.finance, href: "/finance", icon: Wallet },
   { label: ui.nav.settings, href: "/settings", icon: Settings },
 ];
@@ -61,7 +63,11 @@ export function MobileBottomNav({ onAddEvent }: { onAddEvent: () => void }) {
   const logout = useAuthStore((state) => state.logout);
   const addEventLabel = preferredText(ui.events.addEvent, uiLanguage);
 
-  const moreActive = MORE_ITEMS.some((item) => isActive(pathname, item.href));
+  const canViewFinance = useAuthStore((state) => state.permissions.canViewFinance);
+  const visibleMoreItems = canViewFinance
+    ? MORE_ITEMS
+    : MORE_ITEMS.filter((item) => item.href !== "/finance");
+  const moreActive = visibleMoreItems.some((item) => isActive(pathname, item.href));
 
   return (
     <>
@@ -116,7 +122,7 @@ export function MobileBottomNav({ onAddEvent }: { onAddEvent: () => void }) {
         }}
       >
         <Stack gap={0}>
-          {MORE_ITEMS.map((item) => {
+          {visibleMoreItems.map((item) => {
             const Icon = item.icon;
             const active = isActive(pathname, item.href);
             return (

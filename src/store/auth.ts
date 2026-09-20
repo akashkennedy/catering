@@ -7,15 +7,67 @@ type SessionResponse = {
   username: string | null;
 };
 
+export type SessionPermissions = {
+  canViewFinance: boolean;
+  canViewOtherEmployeeRates: boolean;
+  canManageEmployees: boolean;
+  canManageSettings: boolean;
+};
+
+type MeResponse = {
+  authenticated: boolean;
+  user?: {
+    id: string;
+    email: string;
+    isAdmin: boolean;
+    employeeId: string | null;
+  };
+  permissions?: SessionPermissions;
+};
+
+const FULL_PERMISSIONS: SessionPermissions = {
+  canViewFinance: true,
+  canViewOtherEmployeeRates: true,
+  canManageEmployees: true,
+  canManageSettings: true,
+};
+
 type AuthState = {
   status: AuthStatus;
   /** Mirrors status === "authenticated"; kept for existing consumers. */
   authed: boolean;
   username: string | null;
+  userId: string | null;
+  isAdmin: boolean;
+  employeeId: string | null;
+  permissions: SessionPermissions;
   login: (username: string, password: string) => Promise<boolean>;
   logout: () => Promise<void>;
   checkSession: () => Promise<boolean>;
 };
+
+async function loadIdentity(): Promise<Pick<
+  AuthState,
+  "userId" | "isAdmin" | "employeeId" | "permissions"
+> | null> {
+  try {
+    const response = await fetch("/api/auth/me", {
+      credentials: "same-origin",
+      cache: "no-store",
+    });
+    if (!response.ok) return null;
+    const data = (await response.json()) as MeResponse;
+    if (!data.authenticated || !data.user) return null;
+    return {
+      userId: data.user.id,
+      isAdmin: data.user.isAdmin,
+      employeeId: data.user.employeeId,
+      permissions: data.permissions ?? FULL_PERMISSIONS,
+    };
+  } catch {
+    return null;
+  }
+}
 
 function clearLegacyPersistedAuth(): void {
   try {
@@ -29,10 +81,24 @@ function clearLegacyPersistedAuth(): void {
 
 clearLegacyPersistedAuth();
 
+const signedOutState = {
+  status: "unauthenticated" as AuthStatus,
+  authed: false,
+  username: null as string | null,
+  userId: null as string | null,
+  isAdmin: false,
+  employeeId: null as string | null,
+  permissions: FULL_PERMISSIONS,
+};
+
 export const useAuthStore = create<AuthState>()((set) => ({
   status: "loading",
   authed: false,
   username: null,
+  userId: null,
+  isAdmin: false,
+  employeeId: null,
+  permissions: FULL_PERMISSIONS,
   login: async (username, password) => {
     set({ status: "loading" });
     try {
@@ -43,17 +109,26 @@ export const useAuthStore = create<AuthState>()((set) => ({
         body: JSON.stringify({ username, password }),
       });
       if (!response.ok) {
-        set({ status: "unauthenticated", authed: false, username: null });
+        set({ ...signedOutState });
         return false;
       }
       const data = (await response.json()) as { username?: string };
       const sessionUsername =
         typeof data.username === "string" ? data.username : username.trim();
       clearLegacyPersistedAuth();
-      set({ status: "authenticated", authed: true, username: sessionUsername });
+      const identity = await loadIdentity();
+      set({
+        status: "authenticated",
+        authed: true,
+        username: sessionUsername,
+        userId: identity?.userId ?? null,
+        isAdmin: identity?.isAdmin ?? false,
+        employeeId: identity?.employeeId ?? null,
+        permissions: identity?.permissions ?? FULL_PERMISSIONS,
+      });
       return true;
     } catch {
-      set({ status: "unauthenticated", authed: false, username: null });
+      set({ ...signedOutState });
       return false;
     }
   },
@@ -68,7 +143,7 @@ export const useAuthStore = create<AuthState>()((set) => ({
       return;
     }
     clearLegacyPersistedAuth();
-    set({ status: "unauthenticated", authed: false, username: null });
+    set({ ...signedOutState });
   },
   checkSession: async () => {
     try {
@@ -77,22 +152,31 @@ export const useAuthStore = create<AuthState>()((set) => ({
         cache: "no-store",
       });
       if (!response.ok) {
-        set({ status: "unauthenticated", authed: false, username: null });
+        set({ ...signedOutState });
         return false;
       }
       const data = (await response.json()) as SessionResponse;
       if (!data.authenticated) {
-        set({ status: "unauthenticated", authed: false, username: null });
+        set({ ...signedOutState });
         return false;
       }
-      set({ status: "authenticated", authed: true, username: data.username });
+      const identity = await loadIdentity();
+      set({
+        status: "authenticated",
+        authed: true,
+        username: data.username,
+        userId: identity?.userId ?? null,
+        isAdmin: identity?.isAdmin ?? false,
+        employeeId: identity?.employeeId ?? null,
+        permissions: identity?.permissions ?? FULL_PERMISSIONS,
+      });
       return true;
     } catch {
       const current = useAuthStore.getState();
       if (current.status === "authenticated") {
         return true;
       }
-      set({ status: "unauthenticated", authed: false, username: null });
+      set({ ...signedOutState });
       return false;
     }
   },

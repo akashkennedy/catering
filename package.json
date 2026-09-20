@@ -6,14 +6,21 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "eslint"
+    "lint": "eslint",
+    "db:migrate": "node --env-file=.env scripts/db-migrate.mjs",
+    "db:check": "node --env-file=.env scripts/db-check.mjs",
+    "db:seed-admin": "node --env-file=.env scripts/db-seed-admin.mjs"
   },
   "dependencies": {
     "@hookform/resolvers": "^5.9.1",
     "@mantine/core": "^9.6.1",
     "@mantine/hooks": "^9.6.1",
+    "@neon/config": "^1.7.2",
+    "@neon/env": "^1.4.3",
+    "@neondatabase/serverless": "^1.1.0",
     "@react-pdf/renderer": "^4.9.0",
     "@serwist/turbopack": "^9.5.12",
+    "bcryptjs": "^3.0.3",
     "lucide-react": "^1.46.0",
     "next": "16.3.5",
     "react": "19.2.8",

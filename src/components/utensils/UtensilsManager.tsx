@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Button, Group, Modal, Stack, Text, Title } from "@mantine/core";
 import { Plus } from "lucide-react";
 
@@ -18,6 +18,13 @@ import { useVesselStockLedgerStore } from "@/store/vesselStockLedger";
 export function UtensilsManager() {
   const utensils = useUtensilsStore((state) => state.utensils);
   const deleteUtensil = useUtensilsStore((state) => state.deleteUtensil);
+  const loadUtensils = useUtensilsStore((state) => state.loadUtensils);
+  const loadVesselLedger = useVesselStockLedgerStore((state) => state.loadVesselLedger);
+
+  useEffect(() => {
+    void loadUtensils();
+    void loadVesselLedger();
+  }, [loadUtensils, loadVesselLedger]);
   const removeEntriesForUtensil = useVesselStockLedgerStore(
     (state) => state.removeEntriesForUtensil
   );

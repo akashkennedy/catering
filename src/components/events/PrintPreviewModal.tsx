@@ -25,8 +25,6 @@ type PrintPreviewModalProps = {
   opened: boolean;
   event: CateringEvent;
   ingredients: Ingredient[];
-  usedIngredientIds: Set<string>;
-  onMarkUsed: (lineId: string) => void;
   onLineChange: (lineId: string, patch: { qty?: number; price?: number }) => void;
   onClose: () => void;
 };
@@ -35,8 +33,6 @@ export function PrintPreviewModal({
   opened,
   event,
   ingredients,
-  usedIngredientIds,
-  onMarkUsed,
   onLineChange,
   onClose,
 }: PrintPreviewModalProps) {
@@ -121,15 +117,11 @@ export function PrintPreviewModal({
             <EventIngredientTable
               lines={visibleLines}
               ingredients={ingredients}
-              usedIngredientIds={usedIngredientIds}
-              onMarkUsed={onMarkUsed}
               onLineChange={onLineChange}
             />
             <EventIngredientCards
               lines={visibleLines}
               ingredients={ingredients}
-              usedIngredientIds={usedIngredientIds}
-              onMarkUsed={onMarkUsed}
               onLineChange={onLineChange}
             />
           </>

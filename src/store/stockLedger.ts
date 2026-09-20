@@ -23,19 +23,10 @@ export type PurchaseEntryInput = {
   note?: string;
 };
 
-export type UsedEntryInput = {
-  ingredientId: string;
-  qty: number;
-  date: string;
-  eventId: string;
-  note?: string;
-};
-
 type StockLedgerState = {
   entries: StockLedgerEntry[];
   loaded: boolean;
   addPurchaseEntry: (input: PurchaseEntryInput) => void;
-  addUsedEntry: (input: UsedEntryInput) => void;
   removeEntriesForIngredient: (ingredientId: string) => void;
   loadStockLedger: () => Promise<void>;
 };
@@ -65,19 +56,6 @@ export const useStockLedgerStore = create<StockLedgerState>()(
           qty: input.qty,
           date: input.date,
           eventId: null,
-          note: input.note ?? "",
-        };
-        set((state) => ({ entries: [...state.entries, entry] }));
-        void syncOrQueue("POST", "/api/stock-entries", toRecord(entry));
-      },
-      addUsedEntry: (input) => {
-        const entry: StockLedgerEntry = {
-          id: newClientId(),
-          ingredientId: input.ingredientId,
-          type: "used",
-          qty: input.qty,
-          date: input.date,
-          eventId: input.eventId,
           note: input.note ?? "",
         };
         set((state) => ({ entries: [...state.entries, entry] }));

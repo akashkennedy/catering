@@ -43,12 +43,10 @@ import { useEmployeesStore } from "@/store/employees";
 import { useIngredientsStore } from "@/store/ingredients";
 import { useAuthStore } from "@/store/auth";
 import { useSettingsStore } from "@/store/settings";
-import { useStockLedgerStore } from "@/store/stockLedger";
 import { useVesselStockLedgerStore } from "@/store/vesselStockLedger";
 import { useTemplatesStore } from "@/store/templates";
 import { useVendorSuggestionsStore } from "@/store/vendorSuggestions";
 import { PrintPreviewModal } from "./PrintPreviewModal";
-import { todayLocalISO } from "@/lib/date";
 import { EVENT_STATUS_OPTIONS } from "./EventFormModal";
 import {
   eventBalance,
@@ -70,8 +68,6 @@ export function EventDetail() {
   const vendorSuggestions = useVendorSuggestionsStore((state) => state.vendorSuggestions);
   const addVendorSuggestion = useVendorSuggestionsStore((state) => state.addVendorSuggestion);
   const uiLanguage = useSettingsStore((state) => state.uiLanguage);
-  const addUsedEntry = useStockLedgerStore((state) => state.addUsedEntry);
-  const ledgerEntries = useStockLedgerStore((state) => state.entries);
   const [employeeFormOpened, setEmployeeFormOpened] = useState(false);
   const [utensilFormOpened, setUtensilFormOpened] = useState(false);
   const [assignValue, setAssignValue] = useState<string | null>(null);
@@ -87,7 +83,6 @@ export function EventDetail() {
   const loadEvents = useEventsStore((state) => state.loadEvents);
   const loadTemplates = useTemplatesStore((state) => state.loadTemplates);
   const loadIngredients = useIngredientsStore((state) => state.loadIngredients);
-  const loadStockLedger = useStockLedgerStore((state) => state.loadStockLedger);
   const loadVesselLedger = useVesselStockLedgerStore((state) => state.loadVesselLedger);
   const loadVendorSuggestions = useVendorSuggestionsStore(
     (state) => state.loadVendorSuggestions
@@ -97,10 +92,9 @@ export function EventDetail() {
     void loadEvents();
     void loadTemplates();
     void loadIngredients();
-    void loadStockLedger();
     void loadVesselLedger();
     void loadVendorSuggestions();
-  }, [loadEvents, loadTemplates, loadIngredients, loadStockLedger, loadVesselLedger, loadVendorSuggestions]);
+  }, [loadEvents, loadTemplates, loadIngredients, loadVesselLedger, loadVendorSuggestions]);
 
   if (!event) {
     return (
@@ -200,25 +194,6 @@ export function EventDetail() {
       ),
     });
   };
-
-  const handleMarkUsed = (lineId: string) => {
-    const line = eventIngredients.find((item) => item.id === lineId);
-    if (!line || line.qty <= 0) return;
-    addUsedEntry({
-      ingredientId: line.ingredientId,
-      qty: line.qty,
-      date: event.date || todayLocalISO(),
-      eventId: event.id,
-      note: event.name,
-    });
-  };
-
-  const usedIngredientIds = new Set<string>();
-  for (const entry of ledgerEntries) {
-    if (entry.type === "used" && entry.eventId === event.id) {
-      usedIngredientIds.add(entry.ingredientId);
-    }
-  }
 
   const assignableEmployees = masterEmployees.filter(
     (employee) => !eventEmployees.some((line) => line.employeeId === employee.id)
@@ -362,8 +337,6 @@ export function EventDetail() {
         opened={printOpened}
         event={event}
         ingredients={ingredients}
-        usedIngredientIds={usedIngredientIds}
-        onMarkUsed={handleMarkUsed}
         onLineChange={handleLineChange}
         onClose={() => setPrintOpened(false)}
       />
@@ -488,15 +461,11 @@ export function EventDetail() {
               <EventIngredientTable
                 lines={eventIngredients}
                 ingredients={ingredients}
-                usedIngredientIds={usedIngredientIds}
-                onMarkUsed={handleMarkUsed}
                 onLineChange={handleLineChange}
               />
               <EventIngredientCards
                 lines={eventIngredients}
                 ingredients={ingredients}
-                usedIngredientIds={usedIngredientIds}
-                onMarkUsed={handleMarkUsed}
                 onLineChange={handleLineChange}
               />
               <Paper withBorder p="md">

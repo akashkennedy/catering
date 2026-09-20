@@ -1,6 +1,6 @@
 "use client";
 
-import { Badge, Button, NumberInput, Table, Text } from "@mantine/core";
+import { NumberInput, Table, Text } from "@mantine/core";
 
 import { Bilingual } from "@/components/Bilingual";
 import { ui } from "@/lib/i18n";
@@ -11,8 +11,6 @@ import { normalizeUnit } from "@/lib/units";
 type EventIngredientTableProps = {
   lines: EventIngredientLine[];
   ingredients: Ingredient[];
-  usedIngredientIds: Set<string>;
-  onMarkUsed: (lineId: string) => void;
   onLineChange: (
     lineId: string,
     patch: { qty?: number; price?: number }
@@ -22,8 +20,6 @@ type EventIngredientTableProps = {
 export function EventIngredientTable({
   lines,
   ingredients,
-  usedIngredientIds,
-  onMarkUsed,
   onLineChange,
 }: EventIngredientTableProps) {
   return (
@@ -35,7 +31,6 @@ export function EventIngredientTable({
             <Table.Th><Bilingual label={ui.common.qty} /></Table.Th>
             <Table.Th><Bilingual label={ui.common.unit} /></Table.Th>
             <Table.Th><Bilingual label={ui.common.price} /></Table.Th>
-            <Table.Th><Bilingual label={ui.events.used} /></Table.Th>
           </Table.Tr>
         </Table.Thead>
         <Table.Tbody>
@@ -83,22 +78,6 @@ export function EventIngredientTable({
                       onLineChange(line.id, { price: typeof value === "number" ? value : 0 })
                     }
                   />
-                </Table.Td>
-                <Table.Td>
-                  {usedIngredientIds.has(line.ingredientId) ? (
-                    <Badge color="teal" variant="light" size="sm">
-                      <Bilingual label={ui.events.used} />
-                    </Badge>
-                  ) : (
-                    <Button
-                      variant="subtle"
-                      size="xs"
-                      disabled={line.qty <= 0}
-                      onClick={() => onMarkUsed(line.id)}
-                    >
-                      <Bilingual label={ui.events.markUsed} />
-                    </Button>
-                  )}
                 </Table.Td>
               </Table.Tr>
             );

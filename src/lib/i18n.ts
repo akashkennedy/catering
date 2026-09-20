@@ -187,8 +187,6 @@ export const ui = {
     namePlaceholder: lab("e.g. Ravi's wedding", "எ.கா. ரவியின் திருமணம்"),
     phonePlaceholder: lab("e.g. 9876543210", "எ.கா. 9876543210"),
     headcountPlaceholder: lab("e.g. 300", "எ.கா. 300"),
-    used: lab("Used", "பயன்படுத்தப்பட்டது"),
-    markUsed: lab("Mark used", "பயன்படுத்தப்பட்டதாகக் குறி"),
     unknownIngredient: lab("Unknown ingredient", "அறியப்படாத பொருள்"),
     toPay: lab("To pay", "செலுத்த வேண்டியது"),
     paid: lab("Paid", "செலுத்தியது"),

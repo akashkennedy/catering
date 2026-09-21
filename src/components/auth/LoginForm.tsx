@@ -4,7 +4,8 @@ import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
-import { Button, PasswordInput, Stack, Text, TextInput, Title } from "@mantine/core";
+import { Alert, Button, Group, PasswordInput, Stack, Text, TextInput, Title } from "@mantine/core";
+import { TriangleAlert, CircleX } from "lucide-react";
 
 import { Bilingual } from "@/components/Bilingual";
 import { preferredText, ui } from "@/lib/i18n";
@@ -22,6 +23,12 @@ export function LoginForm() {
   const uiLanguage = useSettingsStore((state) => state.uiLanguage);
   const login = useAuthStore((state) => state.login);
   const [invalid, setInvalid] = useState(false);
+  const [capsLockOn, setCapsLockOn] = useState(false);
+
+  const handleCapsLock = (e: React.KeyboardEvent) => {
+    const on = typeof e.getModifierState === "function" && e.getModifierState("CapsLock");
+    setCapsLockOn(on);
+  };
 
   const {
     register,
@@ -61,20 +68,47 @@ export function LoginForm() {
               placeholder={preferredText(ui.auth.username, uiLanguage)}
               aria-label={preferredText(ui.auth.username, uiLanguage)}
               autoComplete="username"
-              error={errors.username ? preferredText(ui.auth.username, uiLanguage) : undefined}
+              aria-invalid={invalid}
+              error={
+                errors.username
+                  ? preferredText(ui.auth.username, uiLanguage)
+                  : invalid
+                    ? " "
+                    : undefined
+              }
               {...register("username", { onChange: () => setInvalid(false) })}
             />
             <PasswordInput
               placeholder={preferredText(ui.auth.password, uiLanguage)}
               aria-label={preferredText(ui.auth.password, uiLanguage)}
               autoComplete="current-password"
-              error={errors.password ? preferredText(ui.auth.password, uiLanguage) : undefined}
-              {...register("password", { onChange: () => setInvalid(false) })}
+              aria-invalid={invalid}
+              onKeyDown={handleCapsLock}
+              onKeyUp={handleCapsLock}
+              error={
+                errors.password
+                  ? preferredText(ui.auth.password, uiLanguage)
+                  : invalid
+                    ? " "
+                    : undefined
+              }
+              {...register("password", {
+                onChange: () => setInvalid(false),
+                onBlur: () => setCapsLockOn(false),
+              })}
             />
+            {capsLockOn ? (
+              <Group gap={6} wrap="nowrap" align="center" role="status">
+                <TriangleAlert size={14} style={{ flexShrink: 0 }} color="var(--mantine-color-orange-6)" />
+                <Text size="sm" c="orange">
+                  <Bilingual label={ui.auth.capsLockOn} />
+                </Text>
+              </Group>
+            ) : null}
             {invalid ? (
-              <Text size="sm" style={{ color: "var(--accent-kumkum)" }}>
+              <Alert color="red" icon={<CircleX size={16} />} role="alert">
                 <Bilingual label={ui.auth.invalidCredentials} />
-              </Text>
+              </Alert>
             ) : null}
             <Button type="submit" fullWidth loading={isSubmitting}>
               <Bilingual label={ui.auth.signIn} />

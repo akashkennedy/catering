@@ -544,6 +544,7 @@ export const ui = {
       "Invalid username or password.",
       "தவறான பயனர் பெயர் அல்லது கடவுச்சொல்."
     ),
+    capsLockOn: lab("Caps Lock is on", "Caps Lock இயக்கத்தில் உள்ளது"),
     logout: lab("Log out", "வெளியேறு"),
   },
   deleteConfirm: (name: string): Label => ({

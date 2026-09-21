@@ -39,6 +39,7 @@
 @import "@mantine/core/styles/Tabs.layer.css";
 @import "@mantine/core/styles/Card.layer.css";
 @import "@mantine/core/styles/SegmentedControl.layer.css";
+@import "@mantine/core/styles/Alert.layer.css";
 
 @theme inline {
   --font-sans: var(--font-catamaran);

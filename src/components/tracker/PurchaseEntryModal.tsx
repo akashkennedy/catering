@@ -49,6 +49,7 @@ export function PurchaseEntryModal({ opened, onClose }: PurchaseEntryModalProps)
     handleSubmit,
     reset,
     control,
+    setValue,
     formState: { errors, isSubmitting },
   } = useForm<PurchaseFormValues>({
     resolver: zodResolver(purchaseSchema),
@@ -93,7 +94,13 @@ export function PurchaseEntryModal({ opened, onClose }: PurchaseEntryModalProps)
                 }))}
                 searchable
                 value={field.value}
-                onChange={field.onChange}
+                onChange={(value) => {
+                  field.onChange(value);
+                  // Autofill the price from the ingredient master; unknown or
+                  // cleared selections leave the price input empty (stored as 0).
+                  const match = ingredients.find((item) => item.id === value);
+                  setValue("price", match?.globalPrice ?? 0, { shouldValidate: true });
+                }}
                 error={errors.ingredientId ? preferredText(ui.tracker.selectIngredient, uiLanguage) : undefined}
               />
             )}
@@ -122,7 +129,7 @@ export function PurchaseEntryModal({ opened, onClose }: PurchaseEntryModalProps)
               <NumberInput
                 label={<Bilingual label={ui.common.price} />}
                 placeholder={preferredText(ui.tracker.pricePlaceholder, uiLanguage)}
-                value={field.value}
+                value={field.value || ""}
                 min={0}
                 allowNegative={false}
                 decimalScale={2}

@@ -1,18 +1,18 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
-import { Button, Group, Select, Stack, Text, TextInput, Title } from "@mantine/core";
+import { Button, Group, Stack, Text, TextInput, Title } from "@mantine/core";
 import { Plus } from "lucide-react";
 import { useMediaQuery } from "@mantine/hooks";
 
 import { PurchaseCards } from "./PurchaseCards";
+import { AssignToEventModal } from "./AssignToEventModal";
 import { PurchaseEntryModal } from "./PurchaseEntryModal";
 import { PurchaseTable } from "./PurchaseTable";
 import { Bilingual } from "@/components/Bilingual";
 import { ListPageSkeleton } from "@/components/LoadingSkeletons";
 import { formatINR } from "@/lib/format";
 import { formatIndianDate, todayLocalISO } from "@/lib/date";
-import { formatStock } from "@/lib/stock";
 import { preferredText, ui } from "@/lib/i18n";
 import {
   filterPurchasesByRange,
@@ -44,8 +44,8 @@ export function InventoryTracker() {
 
   const [preset, setPreset] = useState<Preset>("week");
   const [custom, setCustom] = useState<DateRange>(() => thisWeekRange());
-  const [eventFilter, setEventFilter] = useState<string>("");
   const [logOpened, setLogOpened] = useState(false);
+  const [assignOpened, setAssignOpened] = useState(false);
 
   useEffect(() => {
     void loadStockLedger();
@@ -61,11 +61,10 @@ export function InventoryTracker() {
 
   const rangeValid = range.from <= range.to;
 
-  const filtered = useMemo(() => {
-    const inRange = rangeValid ? filterPurchasesByRange(entries, range) : [];
-    if (!eventFilter) return inRange;
-    return inRange.filter((entry) => entry.eventId === eventFilter);
-  }, [entries, range, rangeValid, eventFilter]);
+  const filtered = useMemo(
+    () => (rangeValid ? filterPurchasesByRange(entries, range) : []),
+    [entries, range, rangeValid]
+  );
   const summary = useMemo(() => summarizePurchases(filtered), [filtered]);
 
   const ingredientsById = useMemo(
@@ -76,13 +75,6 @@ export function InventoryTracker() {
     () => new Map(events.map((event) => [event.id, event])),
     [events]
   );
-  const eventsInRange = useMemo(() => {
-    const ids = new Set<string>();
-    for (const entry of rangeValid ? filterPurchasesByRange(entries, range) : []) {
-      if (entry.eventId) ids.add(entry.eventId);
-    }
-    return events.filter((event) => ids.has(event.id));
-  }, [entries, range, rangeValid, events]);
 
   const presets: { value: Preset; label: string }[] = [
     { value: "week", label: preferredText(ui.tracker.thisWeek, uiLanguage) },
@@ -105,9 +97,14 @@ export function InventoryTracker() {
                 <Bilingual label={ui.tracker.subtitle} />
               </Text>
             </div>
-            <Button leftSection={<Plus size={18} />} onClick={() => setLogOpened(true)}>
-              <Bilingual label={ui.tracker.logPurchase} />
-            </Button>
+            <Group gap="sm" wrap="wrap">
+              <Button variant="default" onClick={() => setAssignOpened(true)}>
+                <Bilingual label={ui.tracker.assignToEvent} />
+              </Button>
+              <Button leftSection={<Plus size={18} />} onClick={() => setLogOpened(true)}>
+                <Bilingual label={ui.tracker.logPurchase} />
+              </Button>
+            </Group>
           </Group>
 
           <div className="ingredient-filters" role="tablist" aria-label="Date range">
@@ -151,23 +148,6 @@ export function InventoryTracker() {
             </Group>
           ) : null}
 
-          <Select
-            label={<Bilingual label={ui.tracker.filterEvent} />}
-            placeholder={preferredText(ui.tracker.allEvents, uiLanguage)}
-            data={[
-              { value: "", label: preferredText(ui.tracker.allEvents, uiLanguage) },
-              ...eventsInRange.map((event) => ({
-                value: event.id,
-                label: event.date ? `${event.name} (${formatIndianDate(event.date)})` : event.name,
-              })),
-            ]}
-            clearable
-            value={eventFilter}
-            onChange={(value) => setEventFilter(value ?? "")}
-            mt="md"
-            maw={320}
-          />
-
           {!loaded ? (
             <div style={{ marginTop: 16 }}>
               <ListPageSkeleton />
@@ -207,37 +187,6 @@ export function InventoryTracker() {
                 </div>
               </Group>
 
-              {summary.byIngredient.length > 0 ? (
-                <div style={{ marginTop: 12 }}>
-                  <Text size="sm" fw={600} mb={4}>
-                    <Bilingual label={ui.tracker.byIngredient} />
-                  </Text>
-                  <Stack gap={2}>
-                    {summary.byIngredient.map((row) => {
-                      const ingredient = ingredientsById.get(row.ingredientId);
-                      const name = ingredient
-                        ? uiLanguage === "ta"
-                          ? ingredient.tamilName || ingredient.name
-                          : ingredient.name
-                        : row.ingredientId;
-                      return (
-                        <Group key={row.ingredientId} justify="space-between" wrap="nowrap">
-                          <Text size="sm" lineClamp={1}>
-                            {name}{" "}
-                            <Text span size="xs" c="dimmed">
-                              ({formatStock(row.qty, ingredient?.unit)})
-                            </Text>
-                          </Text>
-                          <Text size="sm" fw={600}>
-                            {formatINR(row.cost)}
-                          </Text>
-                        </Group>
-                      );
-                    })}
-                  </Stack>
-                </div>
-              ) : null}
-
               <div style={{ marginTop: 16 }}>
                 {filtered.length === 0 ? (
                   <Text c="dimmed">
@@ -255,6 +204,7 @@ export function InventoryTracker() {
       </div>
 
       <PurchaseEntryModal opened={logOpened} onClose={() => setLogOpened(false)} />
+      <AssignToEventModal opened={assignOpened} onClose={() => setAssignOpened(false)} />
     </Stack>
   );
 }

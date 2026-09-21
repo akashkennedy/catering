@@ -10,6 +10,11 @@ import { formatPhone } from "@/lib/phone";
 import { eventBalance } from "@/lib/eventFinances";
 import { ui, preferredText } from "@/lib/i18n";
 import { INGREDIENT_TAGS, type IngredientTag } from "@/lib/ingredientTags";
+import { normalizeCustomerPhone } from "@/lib/phone";
+
+// Re-exported so existing `@/lib/pdf` importers keep working; the
+// implementation lives in the lightweight phone utility.
+export { normalizeCustomerPhone };
 
 const TAMIL_FAMILY = "NotoSansTamil";
 
@@ -323,13 +328,6 @@ async function downloadDocument(element: React.ReactElement, filename: string): 
 function fileStem(eventName: string): string {
   const stem = eventName.replace(/[^a-zA-Z0-9\u0B80-\u0BFF]/g, "_").slice(0, 60);
   return stem || "event";
-}
-
-/** Normalizes an Indian customer number to 10 digits, or null when invalid. */
-export function normalizeCustomerPhone(phone: string): string | null {
-  let digits = phone.replace(/\D/g, "");
-  if (digits.length === 12 && digits.startsWith("91")) digits = digits.slice(2);
-  return digits.length === 10 ? digits : null;
 }
 
 /** WhatsApp invoice summary in the requested language. */

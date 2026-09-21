@@ -20,3 +20,10 @@ export function formatPhone(value: string): string {
   }
   return value.trim();
 }
+
+/** Normalizes an Indian customer number to 10 digits, or null when invalid. */
+export function normalizeCustomerPhone(phone: string): string | null {
+  let digits = digitsOnly(phone);
+  if (digits.length === 12 && digits.startsWith("91")) digits = digits.slice(2);
+  return digits.length === 10 ? digits : null;
+}

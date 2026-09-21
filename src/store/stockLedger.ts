@@ -88,9 +88,15 @@ export const useStockLedgerStore = create<StockLedgerState>()(
           loadStockLedgerRequest = (async () => {
             const { flushOutbox } = await import("@/lib/outbox");
             await flushOutbox();
-            const body = await fetchJson<{ entries?: StockLedgerEntry[] }>("/api/stock-entries");
-            if (body && Array.isArray(body.entries)) {
-              set({ entries: body.entries, loaded: true });
+            try {
+              const body = await fetchJson<{ entries?: StockLedgerEntry[] }>("/api/stock-entries");
+              if (body && Array.isArray(body.entries)) {
+                set({ entries: body.entries });
+              }
+            } finally {
+              // Completion, not success: render persisted data instead of
+              // skeleton-loading forever when the API is unreachable.
+              set({ loaded: true });
             }
           })().finally(() => {
             loadStockLedgerRequest = null;

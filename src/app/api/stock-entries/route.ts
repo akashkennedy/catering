@@ -10,7 +10,7 @@ const entrySchema = z.object({
   ingredientId: z.string(),
   type: z.enum(["purchase", "used"]),
   qty: z.number().finite(),
-  price: z.number().finite().optional(),
+  price: z.number().finite().min(0).optional(),
   date: z.string(),
   eventId: z.string().nullable(),
   note: z.string(),

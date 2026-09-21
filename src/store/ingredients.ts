@@ -142,13 +142,18 @@ export const useIngredientsStore = create<IngredientsState>()(
             await flushOutbox();
             try {
               const response = await fetch("/api/ingredients", { credentials: "same-origin" });
-              if (!response.ok) return;
-              const body = (await response.json()) as { ingredients?: Ingredient[] };
-              if (Array.isArray(body.ingredients)) {
-                set({ ingredients: body.ingredients, loaded: true });
+              if (response.ok) {
+                const body = (await response.json()) as { ingredients?: Ingredient[] };
+                if (Array.isArray(body.ingredients)) {
+                  set({ ingredients: body.ingredients });
+                }
               }
             } catch {
               // Offline: keep the localStorage cache as the read source.
+            } finally {
+              // Completion, not success: render persisted data instead of
+              // skeleton-loading forever when the API is unreachable.
+              set({ loaded: true });
             }
           })().finally(() => {
             loadIngredientsRequest = null;

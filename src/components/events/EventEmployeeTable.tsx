@@ -36,7 +36,7 @@ export function EventEmployeeTable({ lines, onLineChange, onRemove, visiblePayFo
             <Table.Th><Bilingual label={{ en: "To Pay", ta: "செலுத்த வேண்டியது" }} /></Table.Th>
             <Table.Th><Bilingual label={{ en: "Paid", ta: "செலுத்தியது" }} /></Table.Th>
             <Table.Th><Bilingual label={{ en: "Pending", ta: "நிலுவை" }} /></Table.Th>
-            <Table.Th><Bilingual label={ui.events.paid} /></Table.Th>
+            <Table.Th><Bilingual label={ui.common.status} /></Table.Th>
             <Table.Th />
           </Table.Tr>
         </Table.Thead>

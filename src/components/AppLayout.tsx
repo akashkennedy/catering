@@ -89,9 +89,13 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
     >
       <AppShell.Header style={{ background: "var(--surface)", borderColor: "var(--border)" }}>
         <Group h="100%" px="md" wrap="nowrap" gap="xs" style={{ alignItems: "center" }}>
-          <Text fw={700} size="lg" truncate style={{ flexShrink: 0 }}>
-            Catering
-          </Text>
+          <Group gap="xs" wrap="nowrap" style={{ alignItems: "center", flexShrink: 0 }}>
+            {/* eslint-disable-next-line @next/next/no-img-element -- static brand asset */}
+            <img src="/logo.png" alt="MampalliCRM logo" width={32} height={32} style={{ borderRadius: 6 }} />
+            <Text fw={700} size="lg" truncate>
+              MampalliCRM
+            </Text>
+          </Group>
           <Box visibleFrom="sm" style={{ flex: 1, minWidth: 0, display: "flex", justifyContent: "center" }}>
             <ShellSearch />
           </Box>

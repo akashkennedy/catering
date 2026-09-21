@@ -56,9 +56,9 @@ const styles = StyleSheet.create({
   tableFooter: { backgroundColor: "#f0f0f0", padding: 6 },
   tableFooterText: { fontWeight: "bold", fontSize: 9, flex: 1 },
   rowEven: { backgroundColor: "#f9f9f9" },
-  brandTitle: { fontSize: 22, fontWeight: "bold", textAlign: "center", marginBottom: 2 },
+  brandTitle: { fontSize: 26, fontWeight: "bold", textAlign: "center", marginBottom: 2 },
   brandPhone: { fontSize: 11, textAlign: "center", marginBottom: 12 },
-  brandLogo: { width: 110, height: 108, marginHorizontal: "auto", marginBottom: 6 },
+  brandLogo: { width: 64, height: 63, marginHorizontal: "auto", marginBottom: 4 },
   thankYou: { fontSize: 13, fontWeight: "bold", textAlign: "center", marginTop: 18 },
 });
 
@@ -115,12 +115,6 @@ function BrandHeader() {
   const phones = BRAND_PHONES.map((number) => formatPhone(number)).join(" · ");
   return (
     <>
-      <Text
-        style={styles.brandTitle}
-        render={({ pageNumber }: { pageNumber: number }) =>
-          pageNumber === 1 ? BRAND_NAME : ""
-        }
-      />
       <View
         render={({ pageNumber }: { pageNumber: number }) =>
           pageNumber === 1 ? (
@@ -129,6 +123,12 @@ function BrandHeader() {
               <Image src="/logo.png" style={styles.brandLogo} />
             </View>
           ) : null
+        }
+      />
+      <Text
+        style={styles.brandTitle}
+        render={({ pageNumber }: { pageNumber: number }) =>
+          pageNumber === 1 ? BRAND_NAME : ""
         }
       />
       <Text

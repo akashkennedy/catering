@@ -39,6 +39,13 @@ export function LoginForm() {
 
   return (
     <Stack align="center" justify="center" mih="100dvh" p="md">
+      <Stack align="center" gap="xs">
+        {/* eslint-disable-next-line @next/next/no-img-element -- static brand asset */}
+        <img src="/logo.png" alt="MampalliCRM logo" width={72} height={72} style={{ borderRadius: 12 }} />
+        <Title order={1} size="h2">
+          MampalliCRM
+        </Title>
+      </Stack>
       <div className="dash-card login-card" style={{ width: "100%", maxWidth: 400 }}>
         <form onSubmit={handleSubmit(onSubmit)}>
           <Stack gap="md">

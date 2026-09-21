@@ -17,7 +17,7 @@ export function Dashboard() {
   }, [loadEvents]);
 
   return (
-    <Stack gap={40}>
+    <Stack gap={20}>
       <OverviewGrid />
       <UpcomingEventsWidget />
       <PaymentStatusWidget />

@@ -55,7 +55,7 @@ export const ui = {
     events: lab("Events", "நிகழ்வுகள்"),
     templates: lab("Templates", "டெம்ப்ளேட்டுகள்"),
     ingredients: lab("Ingredients", "பொருட்கள்"),
-    inventoryTracker: lab("Purchase history", "கொள்முதல் வரலாறு"),
+    inventoryTracker: lab("Inventory", "சரக்கிருப்பு"),
     employees: lab("Employees", "ஊழியர்கள்"),
     website: lab("Website", "இணையதளம்"),
     finance: lab("Income & Expense", "வருமானம் & செலவு"),
@@ -375,7 +375,7 @@ export const ui = {
     },
   },
   tracker: {
-    title: lab("Purchase history", "கொள்முதல் வரலாறு"),
+    title: lab("Inventory", "சரக்கிருப்பு"),
     subtitle: lab(
       "Purchases logged to the stock ledger, filtered by date.",
       "சரக்கு பதிவேட்டில் பதிவான கொள்முதல்கள், தேதி வாரியாக."
@@ -404,7 +404,10 @@ export const ui = {
     logPurchase: lab("Log purchase", "கொள்முதல் பதிவு"),
     logTitle: lab("Log a purchase", "கொள்முதலைப் பதிவு செய்க"),
     selectIngredient: lab("Select ingredient", "பொருளைத் தேர்ந்தெடுக்கவும்"),
-    qtyMin: lab("Quantity must be more than 0", "அளவு 0-ஐ விட அதிகமாக இருக்க வேண்டும்"),
+    linkEvent: lab("Linked event (optional)", "இணைக்கப்பட்ட நிகழ்வு (விருப்பம்)"),
+    noEvent: lab("No event", "நிகழ்வு இல்லை"),
+    filterEvent: lab("Event", "நிகழ்வு"),
+    allEvents: lab("All events", "அனைத்து நிகழ்வுகள்"),    qtyMin: lab("Quantity must be more than 0", "அளவு 0-ஐ விட அதிகமாக இருக்க வேண்டும்"),
     priceMin: lab("Price must be 0 or more", "விலை 0 அல்லது அதற்கு மேல் இருக்க வேண்டும்"),
     pricePlaceholder: lab("e.g. 150", "எ.கா. 150"),
     dateRequired: lab("Date is required", "தேதி தேவை"),
@@ -566,6 +569,18 @@ export const ui = {
       "பயன்பாட்டு ஷெல் கிடைக்கிறது. உங்கள் localStorage தரவு இன்னும் அணுகலாம்."
     ),
     line2: lab("Reconnect to the network to load all features.", "அனைத்து அம்சங்களுக்கும் நெட்வொர்க்குடன் மீண்டும் இணையவும்."),
+  },
+  autoRemind: {
+    eventTomorrow: lab("Event tomorrow", "நாளை நிகழ்வு"),
+    eventTomorrowDetail: (name: string): Label => ({
+      en: `${name} is tomorrow — time to prepare.`,
+      ta: `${name} நாளை — தயாராகுங்கள்.`,
+    }),
+    paymentOverdue: lab("Payment overdue", "கட்டணம் தாமதம்"),
+    paymentOverdueDetail: (name: string, amount: string): Label => ({
+      en: `${name}: ${amount} pending over a week after the event.`,
+      ta: `${name}: நிகழ்வுக்குப் பிறகு ஒரு வாரத்திற்கும் மேலாக ${amount} நிலுவை.`,
+    }),
   },
   auth: {
     title: lab("Sign in", "உள்நுழைக"),

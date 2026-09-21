@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
-import { Button, Group, Stack, Text, TextInput, Title } from "@mantine/core";
+import { Button, Group, Select, Stack, Text, TextInput, Title } from "@mantine/core";
 import { Plus } from "lucide-react";
 import { useMediaQuery } from "@mantine/hooks";
 
@@ -22,6 +22,7 @@ import {
   type DateRange,
 } from "@/lib/purchaseReport";
 import { useIngredientsStore } from "@/store/ingredients";
+import { useEventsStore } from "@/store/events";
 import { useStockLedgerStore } from "@/store/stockLedger";
 import { useSettingsStore } from "@/store/settings";
 
@@ -37,16 +38,20 @@ export function InventoryTracker() {
   const ingredients = useIngredientsStore((state) => state.ingredients);
   const ingredientsLoaded = useIngredientsStore((state) => state.loaded);
   const loadIngredients = useIngredientsStore((state) => state.loadIngredients);
+  const events = useEventsStore((state) => state.events);
+  const loadEvents = useEventsStore((state) => state.loadEvents);
   const isMobile = useMediaQuery("(max-width: 639px)");
 
   const [preset, setPreset] = useState<Preset>("week");
   const [custom, setCustom] = useState<DateRange>(() => thisWeekRange());
+  const [eventFilter, setEventFilter] = useState<string>("");
   const [logOpened, setLogOpened] = useState(false);
 
   useEffect(() => {
     void loadStockLedger();
     void loadIngredients();
-  }, [loadStockLedger, loadIngredients]);
+    void loadEvents();
+  }, [loadStockLedger, loadIngredients, loadEvents]);
 
   const range: DateRange = useMemo(() => {
     if (preset === "month") return thisMonthRange();
@@ -56,16 +61,28 @@ export function InventoryTracker() {
 
   const rangeValid = range.from <= range.to;
 
-  const filtered = useMemo(
-    () => (rangeValid ? filterPurchasesByRange(entries, range) : []),
-    [entries, range, rangeValid]
-  );
+  const filtered = useMemo(() => {
+    const inRange = rangeValid ? filterPurchasesByRange(entries, range) : [];
+    if (!eventFilter) return inRange;
+    return inRange.filter((entry) => entry.eventId === eventFilter);
+  }, [entries, range, rangeValid, eventFilter]);
   const summary = useMemo(() => summarizePurchases(filtered), [filtered]);
 
   const ingredientsById = useMemo(
     () => new Map(ingredients.map((ingredient) => [ingredient.id, ingredient])),
     [ingredients]
   );
+  const eventsById = useMemo(
+    () => new Map(events.map((event) => [event.id, event])),
+    [events]
+  );
+  const eventsInRange = useMemo(() => {
+    const ids = new Set<string>();
+    for (const entry of rangeValid ? filterPurchasesByRange(entries, range) : []) {
+      if (entry.eventId) ids.add(entry.eventId);
+    }
+    return events.filter((event) => ids.has(event.id));
+  }, [entries, range, rangeValid, events]);
 
   const presets: { value: Preset; label: string }[] = [
     { value: "week", label: preferredText(ui.tracker.thisWeek, uiLanguage) },
@@ -133,6 +150,23 @@ export function InventoryTracker() {
               />
             </Group>
           ) : null}
+
+          <Select
+            label={<Bilingual label={ui.tracker.filterEvent} />}
+            placeholder={preferredText(ui.tracker.allEvents, uiLanguage)}
+            data={[
+              { value: "", label: preferredText(ui.tracker.allEvents, uiLanguage) },
+              ...eventsInRange.map((event) => ({
+                value: event.id,
+                label: event.date ? `${event.name} (${formatIndianDate(event.date)})` : event.name,
+              })),
+            ]}
+            clearable
+            value={eventFilter}
+            onChange={(value) => setEventFilter(value ?? "")}
+            mt="md"
+            maw={320}
+          />
 
           {!loaded ? (
             <div style={{ marginTop: 16 }}>
@@ -210,9 +244,9 @@ export function InventoryTracker() {
                     <Bilingual label={ui.tracker.empty} />
                   </Text>
                 ) : isMobile ? (
-                  <PurchaseCards entries={filtered} ingredientsById={ingredientsById} />
+                  <PurchaseCards entries={filtered} ingredientsById={ingredientsById} eventsById={eventsById} />
                 ) : (
-                  <PurchaseTable entries={filtered} ingredientsById={ingredientsById} />
+                  <PurchaseTable entries={filtered} ingredientsById={ingredientsById} eventsById={eventsById} />
                 )}
               </div>
             </>

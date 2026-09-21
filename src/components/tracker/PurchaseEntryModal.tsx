@@ -8,7 +8,8 @@ import { z } from "zod";
 
 import { Bilingual } from "@/components/Bilingual";
 import { preferredText, ui } from "@/lib/i18n";
-import { todayLocalISO } from "@/lib/date";
+import { formatIndianDate, todayLocalISO } from "@/lib/date";
+import { useEventsStore } from "@/store/events";
 import { useIngredientsStore } from "@/store/ingredients";
 import { useStockLedgerStore } from "@/store/stockLedger";
 import { useSettingsStore } from "@/store/settings";
@@ -20,6 +21,7 @@ const purchaseSchema = z.object({
   price: z.coerce.number().min(0),
   date: z.string().regex(/^\d{4}-\d{2}-\d{2}$/),
   note: z.string().trim(),
+  eventId: z.string(),
 });
 
 type PurchaseFormValues = z.infer<typeof purchaseSchema>;
@@ -38,6 +40,8 @@ export function PurchaseEntryModal({ opened, onClose }: PurchaseEntryModalProps)
   const uiLanguage = useSettingsStore((state) => state.uiLanguage);
   const sheet = useMobileSheet("sheet");
   const ingredients = useIngredientsStore((state) => state.ingredients);
+  const events = useEventsStore((state) => state.events);
+  const loadEvents = useEventsStore((state) => state.loadEvents);
   const addPurchaseEntry = useStockLedgerStore((state) => state.addPurchaseEntry);
 
   const {
@@ -48,13 +52,14 @@ export function PurchaseEntryModal({ opened, onClose }: PurchaseEntryModalProps)
     formState: { errors, isSubmitting },
   } = useForm<PurchaseFormValues>({
     resolver: zodResolver(purchaseSchema),
-    defaultValues: { ingredientId: "", qty: 1, price: 0, date: todayLocalISO(), note: "" },
+    defaultValues: { ingredientId: "", qty: 1, price: 0, date: todayLocalISO(), note: "", eventId: "" },
   });
 
   useEffect(() => {
     if (!opened) return;
-    reset({ ingredientId: "", qty: 1, price: 0, date: todayLocalISO(), note: "" });
-  }, [opened, reset]);
+    void loadEvents();
+    reset({ ingredientId: "", qty: 1, price: 0, date: todayLocalISO(), note: "", eventId: "" });
+  }, [opened, reset, loadEvents]);
 
   const onSubmit = (values: PurchaseFormValues) => {
     addPurchaseEntry({
@@ -63,6 +68,7 @@ export function PurchaseEntryModal({ opened, onClose }: PurchaseEntryModalProps)
       price: values.price,
       date: values.date,
       note: values.note,
+      eventId: values.eventId || null,
     });
     onClose();
   };
@@ -140,6 +146,29 @@ export function PurchaseEntryModal({ opened, onClose }: PurchaseEntryModalProps)
             label={<Bilingual label={ui.ingredients.note} />}
             placeholder={preferredText(ui.ingredients.notePlaceholder, uiLanguage)}
             {...register("note")}
+          />
+          <Controller
+            name="eventId"
+            control={control}
+            render={({ field }) => (
+              <Select
+                label={<Bilingual label={ui.tracker.linkEvent} />}
+                placeholder={preferredText(ui.tracker.noEvent, uiLanguage)}
+                data={[
+                  { value: "", label: preferredText(ui.tracker.noEvent, uiLanguage) },
+                  ...events.map((event) => ({
+                    value: event.id,
+                    label: event.date
+                      ? `${event.name} (${formatIndianDate(event.date)})`
+                      : event.name,
+                  })),
+                ]}
+                searchable
+                clearable
+                value={field.value}
+                onChange={(value) => field.onChange(value ?? "")}
+              />
+            )}
           />
           <Group justify="flex-end">
             <Button variant="default" onClick={onClose}>

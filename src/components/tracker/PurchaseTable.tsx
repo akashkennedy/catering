@@ -1,6 +1,7 @@
 "use client";
 
-import { Table, Text } from "@mantine/core";
+import { Anchor, Table, Text } from "@mantine/core";
+import Link from "next/link";
 
 import { Bilingual } from "@/components/Bilingual";
 import { formatINR } from "@/lib/format";
@@ -8,12 +9,14 @@ import { formatIndianDate } from "@/lib/date";
 import { formatStock } from "@/lib/stock";
 import { preferredText, ui } from "@/lib/i18n";
 import { useSettingsStore } from "@/store/settings";
+import type { CateringEvent } from "@/store/events";
 import type { Ingredient } from "@/store/ingredients";
 import type { StockLedgerEntry } from "@/store/stockLedger";
 
 type PurchaseTableProps = {
   entries: StockLedgerEntry[];
   ingredientsById: Map<string, Ingredient>;
+  eventsById: Map<string, CateringEvent>;
 };
 
 function ingredientName(
@@ -27,7 +30,7 @@ function ingredientName(
 }
 
 /** Desktop purchase-history table (hidden on mobile — cards take over). */
-export function PurchaseTable({ entries, ingredientsById }: PurchaseTableProps) {
+export function PurchaseTable({ entries, ingredientsById, eventsById }: PurchaseTableProps) {
   const uiLanguage = useSettingsStore((state) => state.uiLanguage);
   return (
     <div className="hidden sm:block">
@@ -55,6 +58,7 @@ export function PurchaseTable({ entries, ingredientsById }: PurchaseTableProps) 
         <Table.Tbody>
           {entries.map((entry, index) => {
             const ingredient = ingredientsById.get(entry.ingredientId);
+            const linkedEvent = entry.eventId ? eventsById.get(entry.eventId) : undefined;
             const price = entry.price ?? 0;
             return (
               <Table.Tr key={entry.id}>
@@ -66,6 +70,15 @@ export function PurchaseTable({ entries, ingredientsById }: PurchaseTableProps) 
                     <Text size="xs" c="dimmed">
                       {entry.note}
                     </Text>
+                  ) : null}
+                  {linkedEvent ? (
+                    <Anchor
+                      component={Link}
+                      href={`/events/${linkedEvent.id}`}
+                      size="xs"
+                    >
+                      {linkedEvent.name}
+                    </Anchor>
                   ) : null}
                 </Table.Td>
                 <Table.Td>{formatStock(entry.qty, ingredient?.unit)}</Table.Td>

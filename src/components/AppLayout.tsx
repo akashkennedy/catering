@@ -35,7 +35,6 @@ import { MobileBottomNav } from "@/components/MobileBottomNav";
 import { MobileSearchOverlay } from "@/components/MobileSearchOverlay";
 import { NotificationCenter } from "@/components/NotificationCenter";
 import { ShellSearch } from "@/components/ShellSearch";
-import { ThemeControl } from "@/components/ThemeControl";
 import { EventFormModal } from "@/components/events/EventFormModal";
 import { preferredText, ui, type Label } from "@/lib/i18n";
 import { useAuthStore } from "@/store/auth";
@@ -53,7 +52,7 @@ const NAV_ITEMS: NavItem[] = [
   { label: ui.dashboard.customerFollowUp, href: "/follow-ups", icon: PhoneCall },
   { label: ui.nav.templates, href: "/templates", icon: ClipboardList },
   { label: ui.nav.ingredients, href: "/ingredients", icon: ShoppingBasket },
-  { label: ui.nav.inventoryTracker, href: "/inventory-tracker", icon: Receipt },
+  { label: ui.nav.inventoryTracker, href: "/inventory", icon: Receipt },
   { label: ui.nav.employees, href: "/employees", icon: UserRound },
   { label: ui.nav.website, href: "/site-manager", icon: Globe },
   { label: ui.nav.finance, href: "/finance", icon: Wallet },
@@ -150,9 +149,6 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
               })}
             </Stack>
           </Stack>
-          <Box visibleFrom="sm">
-            <ThemeControl />
-          </Box>
           <Link
             href="/settings"
             onClick={() => setOpened(false)}

@@ -1,28 +1,32 @@
 "use client";
 
-import { Card, Group, Stack, Text } from "@mantine/core";
+import { Anchor, Card, Group, Stack, Text } from "@mantine/core";
+import Link from "next/link";
 
 import { formatINR } from "@/lib/format";
 import { formatIndianDate } from "@/lib/date";
 import { formatStock } from "@/lib/stock";
 import { preferredText, ui } from "@/lib/i18n";
 import { useSettingsStore } from "@/store/settings";
+import type { CateringEvent } from "@/store/events";
 import type { Ingredient } from "@/store/ingredients";
 import type { StockLedgerEntry } from "@/store/stockLedger";
 
 type PurchaseCardsProps = {
   entries: StockLedgerEntry[];
   ingredientsById: Map<string, Ingredient>;
+  eventsById: Map<string, CateringEvent>;
 };
 
 /** Mobile purchase-history cards (rendered instead of the table). */
-export function PurchaseCards({ entries, ingredientsById }: PurchaseCardsProps) {
+export function PurchaseCards({ entries, ingredientsById, eventsById }: PurchaseCardsProps) {
   const uiLanguage = useSettingsStore((state) => state.uiLanguage);
   return (
     <div className="sm:hidden">
       <Stack gap="sm">
         {entries.map((entry) => {
           const ingredient = ingredientsById.get(entry.ingredientId);
+          const linkedEvent = entry.eventId ? eventsById.get(entry.eventId) : undefined;
           const name = ingredient
             ? uiLanguage === "ta"
               ? ingredient.tamilName || ingredient.name
@@ -52,6 +56,11 @@ export function PurchaseCards({ entries, ingredientsById }: PurchaseCardsProps) 
                 <Text size="xs" c="dimmed" mt={2} lineClamp={1}>
                   {entry.note}
                 </Text>
+              ) : null}
+              {linkedEvent ? (
+                <Anchor component={Link} href={`/events/${linkedEvent.id}`} size="xs">
+                  {linkedEvent.name}
+                </Anchor>
               ) : null}
             </Card>
           );

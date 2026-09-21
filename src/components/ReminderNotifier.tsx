@@ -2,10 +2,36 @@
 
 import { useEffect } from "react";
 
+import { formatINR } from "@/lib/format";
 import { formatPhone } from "@/lib/phone";
+import { dueEveReminders, duePaymentReminders } from "@/lib/autoReminders";
+import { clientPendingAmount } from "@/lib/eventFinances";
+import { preferredText, ui } from "@/lib/i18n";
+import { useEventsStore } from "@/store/events";
 import { useRemindersStore } from "@/store/reminders";
+import { useSettingsStore } from "@/store/settings";
 
 const CHECK_INTERVAL_MS = 30_000;
+const AUTO_NOTIFIED_KEY = "catering-auto-notified";
+
+function readFiredKeys(): Set<string> {
+  try {
+    const raw = window.localStorage.getItem(AUTO_NOTIFIED_KEY);
+    if (!raw) return new Set();
+    const parsed: unknown = JSON.parse(raw);
+    return Array.isArray(parsed) ? new Set(parsed.filter((k): k is string => typeof k === "string")) : new Set();
+  } catch {
+    return new Set();
+  }
+}
+
+function writeFiredKeys(keys: Set<string>): void {
+  try {
+    window.localStorage.setItem(AUTO_NOTIFIED_KEY, JSON.stringify([...keys]));
+  } catch {
+    // Ignore storage errors; worst case a notification repeats.
+  }
+}
 
 function fireDueReminders() {
   if (typeof window === "undefined" || !("Notification" in window)) return;
@@ -24,12 +50,60 @@ function fireDueReminders() {
   }
 }
 
+/** One-shot browser pushes for derived event reminders (eve + overdue).
+ *  Fired keys persist in localStorage so reloads don't re-push. */
+function fireDueAutoReminders() {
+  if (typeof window === "undefined" || !("Notification" in window)) return;
+  if (Notification.permission !== "granted") return;
+
+  const uiLanguage = useSettingsStore.getState().uiLanguage;
+  const events = useEventsStore.getState().events;
+  const fired = readFiredKeys();
+  let changed = false;
+
+  const push = (key: string, title: string, body: string) => {
+    if (fired.has(key)) return;
+    new Notification(title, { body, tag: key });
+    fired.add(key);
+    changed = true;
+  };
+
+  for (const event of dueEveReminders(events)) {
+    push(
+      `auto:eve:${event.id}`,
+      preferredText(ui.autoRemind.eventTomorrow, uiLanguage),
+      preferredText(ui.autoRemind.eventTomorrowDetail(event.name), uiLanguage)
+    );
+  }
+
+  for (const event of duePaymentReminders(events)) {
+    push(
+      `auto:overdue:${event.id}`,
+      preferredText(ui.autoRemind.paymentOverdue, uiLanguage),
+      preferredText(
+        ui.autoRemind.paymentOverdueDetail(event.name, formatINR(clientPendingAmount(event))),
+        uiLanguage
+      )
+    );
+  }
+
+  if (changed) writeFiredKeys(fired);
+}
+
 export function ReminderNotifier() {
   useEffect(() => {
+    void useEventsStore.getState().loadEvents();
     fireDueReminders();
-    const interval = window.setInterval(fireDueReminders, CHECK_INTERVAL_MS);
+    fireDueAutoReminders();
+    const interval = window.setInterval(() => {
+      fireDueReminders();
+      fireDueAutoReminders();
+    }, CHECK_INTERVAL_MS);
     const onVisibilityChange = () => {
-      if (document.visibilityState === "visible") fireDueReminders();
+      if (document.visibilityState === "visible") {
+        fireDueReminders();
+        fireDueAutoReminders();
+      }
     };
     document.addEventListener("visibilitychange", onVisibilityChange);
     return () => {

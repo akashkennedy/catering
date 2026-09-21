@@ -434,8 +434,9 @@ This section records only what was built **after** §12 was written. §§1–12 
 
 ### 13.3 Theme control placement (extends §12.7)
 
-- Desktop sidebar keeps the animated Dark-mode toggle row + Settings nav button, but the toggle is now wrapped in `visibleFrom="sm"` so it only renders on desktop.
-- Mobile gets its own Dark-mode card at the top of **Settings** (`hiddenFrom="sm"`, `dash-card` styled, label via `ui.settings.dark`), rendering the same `ThemeControl`. No behavior change — still `light | dark` only, persisted `catering-theme`.
+- ~~Desktop sidebar keeps the animated Dark-mode toggle row + Settings nav button, but the toggle is now wrapped in `visibleFrom="sm"` so it only renders on desktop.~~
+- ~~Mobile gets its own Dark-mode card at the top of **Settings** (`hiddenFrom="sm"`, `dash-card` styled, label via `ui.settings.dark`), rendering the same `ThemeControl`.~~
+- **Superseded: the Dark-mode toggle now lives only in Settings** (top `dash-card` on all breakpoints, same `ThemeControl`); the sidebar has no theme row. No behavior change — still `light | dark` only, persisted `catering-theme`.
 
 ### 13.4 Notification center behavior (extends §12.8 header bell)
 

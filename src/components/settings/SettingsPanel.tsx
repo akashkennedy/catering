@@ -54,7 +54,7 @@ export function SettingsPanel() {
         <Bilingual label={ui.nav.settings} />
       </Title>
 
-      <Box hiddenFrom="sm" className="dash-card">
+      <Box className="dash-card">
         <Stack gap="sm">
           <Text fw={600} size="sm">
             <Bilingual label={ui.settings.dark} />

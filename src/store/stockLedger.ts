@@ -24,6 +24,7 @@ export type PurchaseEntryInput = {
   price: number;
   date: string;
   note?: string;
+  eventId?: string | null;
 };
 
 type StockLedgerState = {
@@ -64,7 +65,7 @@ export const useStockLedgerStore = create<StockLedgerState>()(
           qty: input.qty,
           price: input.price,
           date: input.date,
-          eventId: null,
+          eventId: input.eventId ?? null,
           note: input.note ?? "",
         };
         set((state) => ({ entries: [...state.entries, entry] }));

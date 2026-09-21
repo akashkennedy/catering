@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import {
   ActionIcon,
   Badge,
@@ -18,6 +18,9 @@ import { formatINR } from "@/lib/format";
 import { todayLocalISO } from "@/lib/date";
 import { formatPhone } from "@/lib/phone";
 import { clientPendingAmount, eventEmployeePending } from "@/lib/eventFinances";
+import { dueEveReminders, duePaymentReminders } from "@/lib/autoReminders";
+import { preferredText, ui } from "@/lib/i18n";
+import { useSettingsStore } from "@/store/settings";
 import { isLowStock, remainingStock } from "@/lib/stock";
 import { useRemindersStore } from "@/store/reminders";
 import { useEventsStore } from "@/store/events";
@@ -54,8 +57,14 @@ export function NotificationCenter() {
   const dismissReminder = useRemindersStore((s) => s.dismissReminder);
   const dismissAllReminders = useRemindersStore((s) => s.dismissAll);
   const events = useEventsStore((s) => s.events);
+  const loadEvents = useEventsStore((s) => s.loadEvents);
   const ingredients = useIngredientsStore((s) => s.ingredients);
   const ledgerEntries = useStockLedgerStore((s) => s.entries);
+  const uiLanguage = useSettingsStore((s) => s.uiLanguage);
+
+  useEffect(() => {
+    void loadEvents();
+  }, [loadEvents]);
 
   const dismiss = useCallback((id: string) => {
     if (id.startsWith("reminder-")) {
@@ -102,6 +111,33 @@ export function NotificationCenter() {
       });
     }
 
+    for (const event of dueEveReminders(events)) {
+      items.push({
+        id: `eve-${event.id}`,
+        type: "data",
+        icon: <CalendarClock size={16} />,
+        label: preferredText(ui.autoRemind.eventTomorrow, uiLanguage),
+        detail: preferredText(ui.autoRemind.eventTomorrowDetail(event.name), uiLanguage),
+        href: `/events/${event.id}`,
+        accent: "kumkum",
+      });
+    }
+
+    for (const event of duePaymentReminders(events)) {
+      items.push({
+        id: `overdue-${event.id}`,
+        type: "data",
+        icon: <CreditCard size={16} />,
+        label: preferredText(ui.autoRemind.paymentOverdue, uiLanguage),
+        detail: preferredText(
+          ui.autoRemind.paymentOverdueDetail(event.name, formatINR(clientPendingAmount(event))),
+          uiLanguage
+        ),
+        href: `/events/${event.id}`,
+        accent: "kumkum",
+      });
+    }
+
     for (const event of events) {
       if (["completed", "paid"].includes(event.status)) continue;
       for (const line of event.utensils ?? []) {
@@ -134,7 +170,7 @@ export function NotificationCenter() {
     }
 
     return items.filter((item) => !hidden.has(item.id));
-  }, [reminders, events, ingredients, ledgerEntries, hidden]);
+  }, [reminders, events, ingredients, ledgerEntries, hidden, uiLanguage]);
 
   const count = notifications.length;
   const reminderCount = notifications.filter((n) => n.type === "reminder").length;

@@ -16,6 +16,7 @@ import { Plus, Search } from "lucide-react";
 import { useMediaQuery } from "@mantine/hooks";
 
 import { EventCards } from "./EventCards";
+import { EventsCalendar } from "./EventsCalendar";
 import { EventFormModal } from "./EventFormModal";
 import { EventTable } from "./EventTable";
 import { Bilingual } from "@/components/Bilingual";
@@ -25,6 +26,13 @@ import { useSettingsStore } from "@/store/settings";
 import { useEventsStore, type CateringEvent, type EventStatus } from "@/store/events";
 
 type StatusFilter = "all" | EventStatus;
+
+type EventsView = "list" | "calendar";
+
+const VIEW_DATA: { label: React.ReactNode; value: EventsView }[] = [
+  { label: <Bilingual label={ui.events.viewList} />, value: "list" },
+  { label: <Bilingual label={ui.events.viewCalendar} />, value: "calendar" },
+];
 
 const STATUS_FILTER_DATA: { label: React.ReactNode; value: StatusFilter }[] = [
   { label: <Bilingual label={ui.events.statusAll} />, value: "all" },
@@ -46,6 +54,7 @@ export function EventsManager() {
   const [searchQuery, setSearchQuery] = useState("");
   const [dateFilter, setDateFilter] = useState("");
   const [statusFilter, setStatusFilter] = useState<StatusFilter>("all");
+  const [view, setView] = useState<EventsView>("list");
   const loadEvents = useEventsStore((state) => state.loadEvents);
   const loaded = useEventsStore((state) => state.loaded);
   // Render only the matching list variant (table xor cards) instead of
@@ -102,6 +111,11 @@ export function EventsManager() {
             onChange={(value) => setStatusFilter(value as StatusFilter)}
             data={STATUS_FILTER_DATA}
           />
+          <SegmentedControl
+            value={view}
+            onChange={(value) => setView(value as EventsView)}
+            data={VIEW_DATA}
+          />
         </Group>
       </Stack>
 
@@ -111,6 +125,8 @@ export function EventsManager() {
         <Text c="dimmed">
           <Bilingual label={ui.events.empty} />
         </Text>
+      ) : view === "calendar" ? (
+        <EventsCalendar events={filteredEvents} />
       ) : filteredEvents.length === 0 ? (
         <Text c="dimmed">
           <Bilingual label={ui.events.emptyFiltered} />

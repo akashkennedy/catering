@@ -1,8 +1,8 @@
 "use client";
 
 import { useState } from "react";
-import { Button, Group, Modal, Stack, Text } from "@mantine/core";
-import { Download } from "lucide-react";
+import { Button, Group, Modal, SegmentedControl, Stack, Text } from "@mantine/core";
+import { Download, MessageCircle } from "lucide-react";
 import { useMediaQuery } from "@mantine/hooks";
 
 import { Bilingual } from "@/components/Bilingual";
@@ -13,6 +13,7 @@ import { formatINR } from "@/lib/format";
 import type { Ingredient } from "@/store/ingredients";
 import type { CateringEvent, EventIngredientLine } from "@/store/events";
 import type { IngredientTag } from "@/lib/ingredientTags";
+import type { PdfLang } from "@/lib/pdf";
 import { presentTags, tagOfLine } from "@/lib/printLines";
 import { EventIngredientCards } from "./EventIngredientCards";
 import { EventIngredientTable } from "./EventIngredientTable";
@@ -40,6 +41,7 @@ export function PrintPreviewModal({
     tags: IngredientTag[];
   } | null>(null);
   const [generating, setGenerating] = useState<"buy" | "detailed" | null>(null);
+  const [pdfLang, setPdfLang] = useState<PdfLang>(uiLanguage === "ta" ? "ta" : "en");
   // Render only the matching list variant (table xor cards) instead of
   // mounting both and hiding one with CSS.
   const isMobile = useMediaQuery("(max-width: 639px)");
@@ -60,13 +62,19 @@ export function PrintPreviewModal({
       const { generateBuyListPdf, generateDetailedPdf } = await import("@/lib/pdf");
       const lines: EventIngredientLine[] = visibleLines;
       if (kind === "buy") {
-        await generateBuyListPdf(event, ingredients, lines, selectedTags);
+        await generateBuyListPdf(event, ingredients, lines, selectedTags, pdfLang);
       } else {
-        await generateDetailedPdf(event, ingredients, lines, selectedTags);
+        await generateDetailedPdf(event, ingredients, lines, selectedTags, pdfLang);
       }
     } finally {
       setGenerating(null);
     }
+  };
+
+  const sendWhatsApp = async (kind: "buy" | "detailed") => {
+    const { buildCustomerWhatsAppUrl } = await import("@/lib/pdf");
+    const url = buildCustomerWhatsAppUrl(event, subtotal, pdfLang, kind);
+    if (url) window.open(url, "_blank", "noopener,noreferrer");
   };
 
   return (
@@ -135,6 +143,21 @@ export function PrintPreviewModal({
           <Text fw={700}>{formatINR(subtotal)}</Text>
         </Group>
 
+        <div>
+          <Text size="sm" fw={500} mb={4}>
+            <Bilingual label={ui.events.pdfLanguage} />
+          </Text>
+          <SegmentedControl
+            fullWidth
+            value={pdfLang}
+            onChange={(value) => setPdfLang(value === "ta" ? "ta" : "en")}
+            data={[
+              { value: "en", label: preferredText(ui.events.pdfEnglish, uiLanguage) },
+              { value: "ta", label: preferredText(ui.events.pdfTamil, uiLanguage) },
+            ]}
+          />
+        </div>
+
         <Group grow>
           <Button
             variant="default"
@@ -143,7 +166,7 @@ export function PrintPreviewModal({
             disabled={visibleLines.length === 0}
             onClick={() => download("buy")}
           >
-            <Bilingual label={ui.events.buyListPdf} />
+            <Bilingual label={ui.events.buyListPdf} /> ({pdfLang === "ta" ? "தமிழ்" : "English"})
           </Button>
           <Button
             leftSection={<Download size={18} />}
@@ -151,9 +174,48 @@ export function PrintPreviewModal({
             disabled={visibleLines.length === 0}
             onClick={() => download("detailed")}
           >
-            <Bilingual label={ui.events.detailedPdf} />
+            <Bilingual label={ui.events.detailedPdf} /> ({pdfLang === "ta" ? "தமிழ்" : "English"})
           </Button>
         </Group>
+
+        <Stack gap="xs">
+          <Text size="sm" c="dimmed">
+            <Bilingual label={ui.events.whatsappNote} />
+          </Text>
+          {(() => {
+            const digits = (event.phone ?? "").replace(/\D/g, "").replace(/^91(?=\d{10}$)/, "");
+            const valid = digits.length === 10;
+            if (!valid) {
+              return (
+                <Text size="sm" c="red">
+                  <Bilingual label={ui.events.invalidCustomerPhone} />
+                </Text>
+              );
+            }
+            return (
+              <Group grow>
+                <Button
+                  variant="light"
+                  color="green"
+                  leftSection={<MessageCircle size={18} />}
+                  disabled={visibleLines.length === 0}
+                  onClick={() => sendWhatsApp("buy")}
+                >
+                  <Bilingual label={ui.events.sendBuyListWhatsApp} />
+                </Button>
+                <Button
+                  variant="light"
+                  color="green"
+                  leftSection={<MessageCircle size={18} />}
+                  disabled={visibleLines.length === 0}
+                  onClick={() => sendWhatsApp("detailed")}
+                >
+                  <Bilingual label={ui.events.sendDetailedWhatsApp} />
+                </Button>
+              </Group>
+            );
+          })()}
+        </Stack>
       </Stack>
     </Modal>
   );

@@ -182,6 +182,20 @@ export const ui = {
     invoice: lab("Invoice", "விலைப்பட்டியல்"),
     invoiceNo: lab("Invoice no", "விலைப்பட்டியல் எண்"),
     thankYou: lab("Thank You", "நன்றி"),
+    totalHeadcount: lab("Total headcount", "மொத்த நபர்கள்"),
+    pdfLanguage: lab("PDF language", "PDF மொழி"),
+    pdfEnglish: lab("English", "ஆங்கிலம்"),
+    pdfTamil: lab("Tamil", "தமிழ்"),
+    sendBuyListWhatsApp: lab("Send buy list on WhatsApp", "வாங்கும் பட்டியலை வாட்ஸ்அப்பில் அனுப்பு"),
+    sendDetailedWhatsApp: lab("Send invoice on WhatsApp", "விலைப்பட்டியலை வாட்ஸ்அப்பில் அனுப்பு"),
+    whatsappNote: lab(
+      "Opens WhatsApp to the customer number with the invoice summary. Attach the downloaded PDF in the chat.",
+      "வாடிக்கையாளர் எண்ணுக்கு வாட்ஸ்அப் திறக்கும். பதிவிறக்கிய PDF-ஐ அரட்டையில் இணைக்கவும்."
+    ),
+    invalidCustomerPhone: lab(
+      "Add a valid 10-digit customer phone number to the event first.",
+      "முதலில் நிகழ்வில் சரியான 10 இலக்க வாடிக்கையாளர் எண்ணைச் சேர்க்கவும்."
+    ),
     editEvent: lab("Edit Event", "நிகழ்வைத் திருத்து"),
     nameRequired: lab("Name is required", "பெயர் தேவை"),
     invalidPhone: lab("Enter a valid 10-digit phone number", "சரியான 10 இலக்க தொலைபேசி எண்ணை உள்ளிடவும்"),

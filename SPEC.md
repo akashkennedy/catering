@@ -366,13 +366,13 @@ This section records what has been implemented on top of §§1–11 so a new age
 ### 12.4 Dashboard: decluttered (supersedes §11.2 widget list)
 
 - `/` shows exactly three widgets stacked in a single full-width column on all screens: **Upcoming Events** (next 3 open events), **Total Earnings**, **Payment Status Overview**. Generous spacing (56px stack gap, 40px vertical gap between widget cards, 24px in-card gaps). New events are created from the sidebar **New Event** button (desktop, above the Dark-mode toggle) or the center **Plus** button in the mobile bottom bar — both open the full event form; there is no quick-add button on the dashboard (the old `QuickAddEventModal` is deleted, see §13.10).
-- Relocated widgets: **Utensils Not Yet Returned** now renders at the top of the **Utensils page**; **Inventory Alerts** at the top of the **Inventory page**. The old `QuickAddWidget` card is deleted.
+- Relocated widgets: **Utensils Not Yet Returned** now renders at the top of the **Utensils page**; **Inventory Alerts** at the top of the **Ingredients page**. The old `QuickAddWidget` card is deleted.
 - **Total Earnings formula (corrects §11.1/§11.2):** cash-collected basis, identical to the Finance page — a `paid` event contributes its full `totalAmount`, otherwise only `advancePaid`. Shared helper `eventCollected()` in `src/lib/financeReport.ts`. Month filter = current `YYYY-MM` date prefix; All-time = no filter. (The old `totalQuoted − costs` formula is **not** used; there is no `totalQuoted` field — the event amount fields are `ratePerPerson`, `totalAmount`, `totalAmountOverridden`, `advancePaid`.)
 
-### 12.5 Ingredients → Inventory rename (full, not labels-only)
+### 12.5 Ingredients page (rename reverted — route stays `/ingredients`)
 
-- Route is now **`/inventory`** (old `/ingredients` route deleted). All hrefs (sidebar, mobile More sheet, global search, notification links) point to `/inventory`.
-- Display name is **Inventory / சரக்கிருப்பு** everywhere (nav, page title, search labels, settings copy). Internal code names (`useIngredientsStore`, `Ingredient*` components, `Ingredient` type) intentionally unchanged.
+- The planned Ingredients → Inventory rename was **reverted**: route stays **`/ingredients`**. All hrefs (sidebar, mobile More sheet, global search, notification links) point to `/ingredients`.
+- Display name stays **Ingredients / பொருட்கள்** everywhere (nav, page title, search labels, settings copy). Internal code names (`useIngredientsStore`, `Ingredient*` components, `Ingredient` type) unchanged.
 
 ### 12.6 Customer Follow-up is a full page
 
@@ -392,7 +392,7 @@ This section records what has been implemented on top of §§1–11 so a new age
 /events               → Event list (search, date filter, status filter, delete confirm)
 /events/[id]          → Event detail (ingredients / employees / utensils sections, PDF export)
 /templates            → Food template master list
-/inventory            → Inventory page (low-stock alerts widget + ingredient master list)
+/ingredients           → Ingredients page (ingredient master list)
 /employees            → Employee master list
 /utensils             → Utensils page (not-returned widget + utensil master list)
 /calculator           → Pricing calculator (template + headcount → cost/quote, Convert to Event)
@@ -407,7 +407,7 @@ This section records what has been implemented on top of §§1–11 so a new age
 - Event status pipeline (actual): `enquiry → confirmed → preparing → completed → paid`.
 - Expense categories (actual): `food materials | other expenses | electricity | transport | gas | custom`. Staff salary is deliberately **not** an expense category (labour is tracked per-event via employee toPay/paid).
 - Ingredient units (actual): `gm | kg | litre | piece` (`src/lib/units.ts`).
-- Mobile nav: bottom bar (Dashboard, Events, Rental, Calculator + More drawer holding Templates, Inventory, Employees, Follow-up, Finance, Settings).
+- Mobile nav: bottom bar (Dashboard, Events, Rental, Calculator + More drawer holding Templates, Ingredients, Employees, Follow-up, Finance, Settings).
 
 ### 12.9 Demo-data route
 
@@ -430,7 +430,7 @@ This section records only what was built **after** §12 was written. §§1–12 
 
 - `MobileBottomNav` bottom bar is unchanged (Dashboard, Events, Rental, Calculator + More, leaf active state).
 - The **More** panel changed from a bottom sheet to a **right-side `Drawer` (`size={300}`)**, with `mobile-more-drawer` class handling full `100dvh` height plus top/bottom safe-area padding, and a bordered header. Panel title and More-button `aria-label` are localized (`ui.nav.more` = More / மேலும்).
-- More-sheet contents unchanged: Templates, Inventory, Employees, Follow-up, Finance, Settings (active-route highlighted, closes on navigate).
+- More-sheet contents unchanged: Templates, Ingredients, Employees, Follow-up, Finance, Settings (active-route highlighted, closes on navigate).
 
 ### 13.3 Theme control placement (extends §12.7)
 
@@ -474,7 +474,7 @@ This section records only what was built **after** §12 was written. §§1–12 
 
 - Desktop sidebar has a full-width **New Event** button directly **above** the Dark-mode toggle row (below the nav list, above theme + Settings). It opens the full event form (`EventFormModal` in create mode, `event={null}`) — the same form used on `/events`. State lives in `AppLayout` (`newEventOpened`).
 - Dashboard (`/`) no longer has a top quick-add button — it is just the three stacked widgets. `QuickAddEventModal` is deleted.
-- Mobile bottom bar is now Dashboard, Events, **center Plus FAB** (raised 52px leaf circle, localized `aria-label`, opens the same full event form via `MobileBottomNav onAddEvent`), Calculator, More. **Rental moved into the More drawer** (now: Rental, Templates, Inventory, Employees, Follow-up, Finance, Settings). Desktop sidebar keeps Rental in the main nav list.
+- Mobile bottom bar is now Dashboard, Events, **center Plus FAB** (raised 52px leaf circle, localized `aria-label`, opens the same full event form via `MobileBottomNav onAddEvent`), Calculator, More. **Rental moved into the More drawer** (now: Rental, Templates, Ingredients, Employees, Follow-up, Finance, Settings). Desktop sidebar keeps Rental in the main nav list.
 
 ### 13.11 PWA manifest link fix (APK showed Chrome URL bar)
 
@@ -485,7 +485,7 @@ This section records only what was built **after** §12 was written. §§1–12 
 ### 13.12 Status-bar overlap fix + loading states (offline queue still deferred)
 
 - **Status bar (AppsGeyser APK):** the WebView reports `safe-area-inset-top: 0`, so the old `padding-top: env(...)` rule did nothing and the 60px header slid under the phone status bar. Fix in `globals.css` (mobile only): `--apk-sat: env(safe-area-inset-top, 24px)` (24px Android status-bar fallback), header height/offset vars overridden to `calc(60px + var(--apk-sat))` so page content is pushed down too, and the search overlay + More drawer tops use the same var. Real-inset browsers (iOS PWA, Chrome) are unaffected — they still use the true inset value.
-- **Loading states:** new shared `LoadingSkeletons.tsx` (`CardSkeleton`, `StackedCardsSkeleton`, `ListPageSkeleton`, text-free so no i18n/store deps) + per-route `loading.tsx` for `/`, `/events`, `/events/[id]`, `/inventory`, `/utensils`, `/employees`, `/templates`, `/finance`, `/follow-ups`, `/calculator`, `/settings`. `ShellSearch` renders a `Skeleton` input until hydrated instead of `null`. All 12 RHF form modals wire `isSubmitting` to their submit `Button loading` (blocks double-submit today; lights up automatically when Phase 2 makes saves async).
+- **Loading states:** new shared `LoadingSkeletons.tsx` (`CardSkeleton`, `StackedCardsSkeleton`, `ListPageSkeleton`, text-free so no i18n/store deps) + per-route `loading.tsx` for `/`, `/events`, `/events/[id]`, `/ingredients`, `/utensils`, `/employees`, `/templates`, `/finance`, `/follow-ups`, `/calculator`, `/settings`. `ShellSearch` renders a `Skeleton` input until hydrated instead of `null`. All 12 RHF form modals wire `isSubmitting` to their submit `Button loading` (blocks double-submit today; lights up automatically when Phase 2 makes saves async).
 - **Offline mutation queue → DB sync:** still deferred as agreed — planned design is the §13-outlined outbox (`catering-outbox`, UUID ops, `useOnlineStatus`, FIFO flush with backoff, last-write-wins), to be built with the Phase 2 backend. Phase 2 (§1 + §8) unchanged.
 
 ### 13.13 Mock auth gate (no real auth yet)
@@ -509,7 +509,7 @@ This section records only what was built **after** §12 was written. §§1–12 
 ## 15. V6 Addendum — Calculator removed, New Event button on top
 
 - The **Pricing Calculator** (`/calculator`, `PricingCalculator.tsx`, §§11.3/12.8) is **deleted**: route, desktop sidebar entry, mobile bottom-bar tab, `ui.nav.calculator` + `ui.calculator` i18n keys, and the calculator→event prefill plumbing (`eventDraft.ts` store, `EventFormModal.createPrefill`, `EventsManager` draft wiring) are all gone.
-- Desktop sidebar order is now: **New Event button pinned at the top**, then Dashboard, Events, Customer Follow-up, Templates, Inventory, Employees, Rental, Finance. Mobile bottom bar is Dashboard, Events, center Plus FAB, More (Calculator tab removed).
+- Desktop sidebar order is now: **New Event button pinned at the top**, then Dashboard, Events, Customer Follow-up, Templates, Ingredients, Employees, Rental, Finance. Mobile bottom bar is Dashboard, Events, center Plus FAB, More (Calculator tab removed).
 - The Templates-page **Import old app** button is removed (legacy seed/import libs remain in-tree but unreachable from the UI).
 
 ---

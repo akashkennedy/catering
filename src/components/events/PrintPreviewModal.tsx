@@ -158,7 +158,7 @@ export function PrintPreviewModal({
           />
         </div>
 
-        <Group grow>
+        <div className="btn-row-stack">
           <Button
             variant="default"
             leftSection={<Download size={18} />}
@@ -176,7 +176,7 @@ export function PrintPreviewModal({
           >
             <Bilingual label={ui.events.detailedPdf} /> ({pdfLang === "ta" ? "தமிழ்" : "English"})
           </Button>
-        </Group>
+        </div>
 
         <Stack gap="xs">
           <Text size="sm" c="dimmed">
@@ -193,7 +193,7 @@ export function PrintPreviewModal({
               );
             }
             return (
-              <Group grow>
+              <div className="btn-row-stack">
                 <Button
                   variant="light"
                   color="green"
@@ -212,7 +212,7 @@ export function PrintPreviewModal({
                 >
                   <Bilingual label={ui.events.sendDetailedWhatsApp} />
                 </Button>
-              </Group>
+              </div>
             );
           })()}
         </Stack>

@@ -10,6 +10,7 @@ import {
   Group,
   NumberInput,
   Paper,
+  ScrollArea,
   Select,
   Stack,
   Tabs,
@@ -463,17 +464,19 @@ export function EventDetail() {
       </Paper>
 
       <Tabs defaultValue="ingredients">
-        <Tabs.List>
-          <Tabs.Tab value="ingredients" leftSection={<Salad size={16} />}>
-            <Bilingual label={ui.events.tabIngredients} />
-          </Tabs.Tab>
-          <Tabs.Tab value="employees" leftSection={<Users size={16} />}>
-            <Bilingual label={ui.events.tabEmployees} />
-          </Tabs.Tab>
-          <Tabs.Tab value="utensils" leftSection={<UtensilsCrossed size={16} />}>
-            <Bilingual label={ui.events.tabRental} />
-          </Tabs.Tab>
-        </Tabs.List>
+        <ScrollArea type="scroll" offsetScrollbars>
+          <Tabs.List style={{ flexWrap: "nowrap" }}>
+            <Tabs.Tab value="ingredients" leftSection={<Salad size={16} />} style={{ whiteSpace: "nowrap" }}>
+              <Bilingual label={ui.events.tabIngredients} />
+            </Tabs.Tab>
+            <Tabs.Tab value="employees" leftSection={<Users size={16} />} style={{ whiteSpace: "nowrap" }}>
+              <Bilingual label={ui.events.tabEmployees} />
+            </Tabs.Tab>
+            <Tabs.Tab value="utensils" leftSection={<UtensilsCrossed size={16} />} style={{ whiteSpace: "nowrap" }}>
+              <Bilingual label={ui.events.tabRental} />
+            </Tabs.Tab>
+          </Tabs.List>
+        </ScrollArea>
 
         <Tabs.Panel value="ingredients" pt="md">
           {eventIngredients.length === 0 ? (

@@ -86,7 +86,7 @@ export function AssignToEventModal({ opened, onClose }: AssignToEventModalProps)
     setSaving(true);
     try {
       const { id, ...rest } = event;
-      await updateEvent(id, { ...rest, ingredients: [...event.ingredients, ...staged] });
+      await updateEvent(id, { ...rest, ingredients: [...(event.ingredients ?? []), ...staged] });
       handleClose();
     } finally {
       setSaving(false);

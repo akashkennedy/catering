@@ -373,6 +373,7 @@ This section records what has been implemented on top of §§1–11 so a new age
 
 - The planned Ingredients → Inventory rename was **reverted**: route stays **`/ingredients`**. All hrefs (sidebar, mobile More sheet, global search, notification links) point to `/ingredients`.
 - Display name stays **Ingredients / பொருட்கள்** everywhere (nav, page title, search labels, settings copy). Internal code names (`useIngredientsStore`, `Ingredient*` components, `Ingredient` type) unchanged.
+- Separate route **`/inventory`** is the purchase tracker over `stock_ledger_entries` (week/month/custom filters, totals + entry counts, log-purchase modal, assign-to-event) — distinct from the `/ingredients` master list. Reachable from the desktop sidebar and the mobile More drawer.
 
 ### 12.6 Customer Follow-up is a full page
 
@@ -393,6 +394,7 @@ This section records what has been implemented on top of §§1–11 so a new age
 /events/[id]          → Event detail (ingredients / employees / utensils sections, PDF export)
 /templates            → Food template master list
 /ingredients           → Ingredients page (ingredient master list)
+/inventory              → Purchase tracker (stock-ledger history, log purchase, assign to event)
 /employees            → Employee master list
 /utensils             → Utensils page (not-returned widget + utensil master list)
 /calculator           → Pricing calculator (template + headcount → cost/quote, Convert to Event)
@@ -430,7 +432,7 @@ This section records only what was built **after** §12 was written. §§1–12 
 
 - `MobileBottomNav` bottom bar is unchanged (Dashboard, Events, Rental, Calculator + More, leaf active state).
 - The **More** panel changed from a bottom sheet to a **right-side `Drawer` (`size={300}`)**, with `mobile-more-drawer` class handling full `100dvh` height plus top/bottom safe-area padding, and a bordered header. Panel title and More-button `aria-label` are localized (`ui.nav.more` = More / மேலும்).
-- More-sheet contents unchanged: Templates, Ingredients, Employees, Follow-up, Finance, Settings (active-route highlighted, closes on navigate).
+- More-sheet contents unchanged: Templates, Ingredients, Inventory, Employees, Follow-up, Finance, Settings (active-route highlighted, closes on navigate).
 
 ### 13.3 Theme control placement (extends §12.7)
 
@@ -475,7 +477,7 @@ This section records only what was built **after** §12 was written. §§1–12 
 
 - Desktop sidebar has a full-width **New Event** button directly **above** the Dark-mode toggle row (below the nav list, above theme + Settings). It opens the full event form (`EventFormModal` in create mode, `event={null}`) — the same form used on `/events`. State lives in `AppLayout` (`newEventOpened`).
 - Dashboard (`/`) no longer has a top quick-add button — it is just the three stacked widgets. `QuickAddEventModal` is deleted.
-- Mobile bottom bar is now Dashboard, Events, **center Plus FAB** (raised 52px leaf circle, localized `aria-label`, opens the same full event form via `MobileBottomNav onAddEvent`), Calculator, More. **Rental moved into the More drawer** (now: Rental, Templates, Ingredients, Employees, Follow-up, Finance, Settings). Desktop sidebar keeps Rental in the main nav list.
+- Mobile bottom bar is now Dashboard, Events, **center Plus FAB** (raised 52px leaf circle, localized `aria-label`, opens the same full event form via `MobileBottomNav onAddEvent`), Calculator, More. **Rental moved into the More drawer** (now: Rental, Templates, Ingredients, Inventory, Employees, Follow-up, Finance, Settings). Desktop sidebar keeps Rental in the main nav list.
 
 ### 13.11 PWA manifest link fix (APK showed Chrome URL bar)
 

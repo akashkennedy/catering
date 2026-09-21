@@ -599,31 +599,48 @@ Supersedes §1 (Phase 2 is now), §13.13 (mock gate replaced), and UI-only roles
 | `41bfa04` | fix: dedupe ingredients 551→182 live (old browser migrations had tripled rows); catalog variant merge; 409 on duplicate names |
 | `b9a8831` | feat: Ingredients tab in mobile bottom bar; centered + button |
 | `bd9108a` | feat: dashboard 2×2 stat grid (plain CSS), event costs in finance totals, `(123)-456-7890` phones, hidden scrollbars, `preferredText` undefined-guard |
+| `cb9b827` | docs: JSDoc comments on API handlers, components, stores, utilities |
+| `fa2942b` | feat: MampalliCRM header/login branding, invoice logo-top layout |
+| `62bb1ef` | fix: cold-start retry on Neon connect timeout, 503 on unreachable DB |
+| `476e74e` | feat: events calendar view with month grid and day event lists |
+| `af78f9f` | feat: move calendar view toggle to far right |
+| `fbc7d96` | feat(invoice): centered bold brand header (logo beside title, 2-line address, single phone, headcount), invoice-no-only header, monolingual EN/TA PDFs with preview toggle, WhatsApp send (§23) |
+| `7e5cd27` | feat(auth): invalid-credentials Alert (Alert CSS import fix) + caps-lock warning on login |
+| `f04f30d` | feat(inventory): purchase history tracker page + migration `0007_stock_price` (price column) |
+| `1d04ad9` | docs(spec): correct stale `/inventory` references to `/ingredients` (§12.5 rename reverted) |
+| `bd6af6b` | feat(inventory): rename tracker to Inventory (`/inventory` route), event tie-in (picker + row links + filter), theme toggle to Settings only, eve/overdue auto reminders (bell + push) |
+| `c6d68b1` | feat(inventory): assign-to-event flow (append lines to event), price autofill from master, drop spend-by-ingredient |
+| `fb40fd8` | feat(events): status automations — confirm→invoice chat, paid→receipt text, completed→feedback modal (§23) |
+| `c677b89` | feat(events): feedback via WhatsApp request on completion, drop CRM popup |
+| `81f2cef` | feat(settings): 5 alert toggles (confirm/paid/feedback/eve/overdue, persisted v2) |
 
 ### Verified on Neon DB (live tests green)
-- **Migrations**: all 4 (0001_auth → 0004_operations) applied via `npm run db:migrate`; idempotent on re-run
+- **Migrations**: all 7 (0001_auth → 0007_stock_price) applied via `npm run db:migrate`; idempotent on re-run
 - **Round-trip probe**: `npm run db:check` succeeds (write+read back scratch row)
 - **Admin seed**: `npm run db:seed-admin` creates admin account; bcrypt-12 hashed; idempotent on re-run
-- **Login round-trip**: DB auth with email + bcrypt; session cookie created; `/api/auth/me` returns user+permissions
+- **Login round-trip**: DB auth with username + bcrypt; session cookie created; `/api/auth/me` returns user+permissions; wrong passwords show the invalid-credentials Alert, caps-lock warns inline
 - **403 enforcement**: `requirePermission('canViewFinance')` on `/api/expenses` returns 403 for restricted users; new employee defaults `canViewFinance=false`; admin has full permissions
-- **Idempotent /migrate**: running `npm run db:migrate` twice produces "skip all — already applied"
-- **Static verification**: `tsc` clean, `eslint` 0 errors, `npm run build` 36/36 routes green
+- **Inventory tracker**: purchases logged via `addPurchaseEntry` (price stored since 0007) appear in week/month/custom ranges with correct totals; `used` rows and out-of-range rows excluded
+- **Status automations**: confirm/paid/completed transitions open the right WhatsApp text; eve/overdue fire once (localStorage keys); all five gated by Settings toggles
+- **Static verification**: `tsc` clean, `eslint` 0 errors, `npm run build` green including `/inventory`
 
 ### Deliberately left out of git
 - `hello.ts`, `neon.ts` (root scratch files), `.env` (credential env-var file, gitignored), `.neon` gitignore entry — user's own Neon experiments, untouched.
 
 ---
 
-## 22. Session log 2026-09-20 — current truth + next steps (for AI handoff)
+## 22. Session log 2026-09-21 — current truth + next steps (for AI handoff)
 
 ### What is live right now
-- **Branch:** `dev` on `origin/dev` (Vercel previews build `dev`; `main` untouched). HEAD `bd9108a`, working tree clean except scratch logs.
-- **Neon project `mampalli-catering-crm`:** migrations `0001`–`0006` applied. Contents: **182 ingredients** (unique names), **2 seed templates** (Saapadu 42 courses, Biriyani 40 courses) + 1 user template, 84 dishes, 18 dish links, **2 users** (1 admin, 1 restricted employee login), 0 events/groups at last check.
-- **Auth:** username-based (`username` UNIQUE, lowercased). Login tries DB (bcrypt) first, legacy env-HMAC fallback only when `DATABASE_URL` unset. First admin seeded via `ADMIN_USERNAME`/`ADMIN_PASSWORD` (local `.env` still says `ADMIN_EMAIL` — rename before re-seeding).
-- **Permissions (7 flags, server-enforced):** `canViewFinance`, `canViewOtherEmployeeRates`, `canManageEmployees`, `canManageSettings`, `canViewEmployees`, `canViewWebsite`, `canExportExcel`. New logins: everything true except finance/rates/view/export (all false). Admin always full; self/admin edits 403. Enforcement: finance routes → finance flag; employees GET → view-employees; site-content GET → view-website; POST site → manage-settings; users routes → manage-employees; masked pay preserved on PATCH. UI mirrors all of it (nav, search, pages, export card, no-access cards).
-- **UI map (current):** `/` dashboard = 4-card 2×2 grid (Orders always; Amount/Expenses/Pending finance-gated) + Upcoming + Pending-payments; `/events` (+`/[id]` detail with ingredients/staff/rental tabs, manual course picking, xl form); `/templates`, `/ingredients`, `/employees` (+Logins & access), `/finance` (event-linked totals), `/follow-ups`, `/settings` (language, document lang, Excel export gated), `/site-manager` (gated), public `/site`. **No** `/utensils`, **no** `/migrate`. Mobile bar: Dashboard · Events · + · Ingredients · More. Login: placeholders, no focus ring (scoped). All loading states: text-free spinner. Scrollbars hidden globally (scroll still works).
-- **Data rules:** stable seed ids (`ing-*`, `tpl-*`, `dish-*`); `ON CONFLICT DO NOTHING` + `RETURNING *` writes (conflict falls back to SELECT so replays return the row); NUMERIC arrives as string over HTTP (coerce with `Number()`); ingredient refs are plain TEXT (dangling tolerated); `ingredients` POST 409s on duplicate names.
-- **Perf state:** API reads/writes parallelized; `@react-pdf/renderer` + `xlsx` load on click only (light `printLines.ts` for render); all 10 stores dedupe loads via `loaded` + shared in-flight promise; lists render table XOR cards via `(max-width: 639px)` media query. Measured: single-event read 310ms → 206ms live.
+- **Branch:** `dev` on `origin/dev` (Vercel previews build `dev`; `main` untouched). HEAD `81f2cef`, working tree clean.
+- **Neon project `mampalli-catering-crm`:** migrations `0001`–`0007` applied (`0007_stock_price` adds `price` to `stock_ledger_entries`). Contents: **182 ingredients** (unique names), **2 seed templates** (Saapadu 42 courses, Biriyani 40 courses) + 1 user template, 84 dishes, 18 dish links, **2 users** (1 admin, 1 restricted employee login).
+- **Auth:** username-based (`username` UNIQUE, lowercased). Login tries DB (bcrypt) first, legacy env-HMAC fallback only when `DATABASE_URL` unset. Wrong passwords show the invalid-credentials Alert; caps-lock warns inline. First admin seeded via `ADMIN_USERNAME`/`ADMIN_PASSWORD` (local `.env` still says `ADMIN_EMAIL` — rename before re-seeding).
+- **Permissions (7 flags, server-enforced):** `canViewFinance`, `canViewOtherEmployeeRates`, `canManageEmployees`, `canManageSettings`, `canViewEmployees`, `canViewWebsite`, `canExportExcel`. New logins: everything true except finance/rates/view/export (all false). Admin always full; self/admin edits 403. UI mirrors all of it (nav, search, pages, export card, no-access cards).
+- **UI map (current):** `/` dashboard (2×2 stat grid + Upcoming + Pending-payments); `/events` (+`/[id]` detail with ingredients/staff/rental tabs, calendar view, manual course picking, xl form); `/templates`, `/ingredients`, `/inventory` (purchase tracker, §23), `/employees` (+Logins & access), `/finance` (event-linked totals), `/follow-ups`, `/settings` (theme, alerts, language, document lang, Excel export gated), `/site-manager` (gated), public `/site`. **No** `/utensils`, `/calculator`, `/migrate`. Mobile bar: Dashboard · Events · + · Ingredients · More (Inventory, Templates, Employees, Follow-up, Website, Finance, Settings). All loading states: text-free spinner. Scrollbars hidden globally.
+- **Invoices:** centered bold brand header + invoice-no-only header; monolingual EN/TA PDFs with preview language toggle; WhatsApp send to customer number from the preview modal.
+- **Automations:** confirm→invoice chat, paid→receipt text, completed→feedback-request chat (all auto-open `wa.me`, document language, invalid numbers skipped); eve-of-event + 7-day payment-overdue in bell + one-shot pushes; five Settings toggles gate everything.
+- **Data rules:** stable seed ids (`ing-*`, `tpl-*`, `dish-*`); `ON CONFLICT DO NOTHING` + `RETURNING *` writes (conflict falls back to SELECT so replays return the row); NUMERIC arrives as string over HTTP (coerce with `Number()`); ingredient refs are plain TEXT (dangling tolerated); `ingredients` POST 409s on duplicate names; `addEvent` accepts an optional client id and returns it.
+- **Perf state:** API reads/writes parallelized; `@react-pdf/renderer` + `xlsx` load on click only (light `printLines.ts` for render); all stores dedupe loads via `loaded` + shared in-flight promise; lists render table XOR cards via `(max-width: 639px)` media query. Measured: single-event read 310ms → 206ms live.
 
 ### Known issues / open threads (do these next)
 1. **Undefined-label crash under investigation:** user reported `can't access property "en", label is undefined` (Firefox wording = `preferredText` got `undefined`). Full static audit found every key valid; `preferredText` now renders `""` + logs a dev stack instead of crashing. NEXT: get repro page/action from user (or read the dev console stack) and fix the data path that smuggles `undefined` through a cast.
@@ -640,3 +657,14 @@ Supersedes §1 (Phase 2 is now), §13.13 (mock gate replaced), and UI-only roles
 - API routes: session/permission gate first (`requirePermission`), client-id upserts, `RETURNING *` with SELECT fallback on conflict.
 - UI is bilingual (EN/TA via `ui.*` in `src/lib/i18n.ts` + `<Bilingual>`); never hardcode user-facing strings.
 - Commit per workstream on `dev`; only push when the user says "push".
+
+---
+
+## 23. V12 Addendum — invoice rework, inventory tracker, status automations (current)
+
+- **Invoice PDFs (`src/lib/pdf.tsx`):** centered bold brand header — logo aligned with the `Mampalli Cloud Kitchen and Catering` title, 2-line address (`Mampalli Vilai,` / rest), single `Phone: 9025350666`, total headcount below. Event header shows invoice number only. PDFs are monolingual (EN or TA) via a preview toggle; filenames carry `_buy-list|detailed_lang`. Preview modal sends buy-list/invoice summaries to the customer number via `wa.me` (PDF attached manually in chat).
+- **Inventory tracker (`/inventory`, sidebar + mobile More):** purchase history over the shared `stock_ledger_entries` (type `purchase` only) with This Week (default) / This Month / Custom filters, totals + entry count, desktop table + mobile cards. Migration `0007_stock_price` adds `price NUMERIC DEFAULT 0` (old rows read as 0, shown as `—`). Log-purchase modal reuses `addPurchaseEntry` (price autofills from master, blank = 0); Assign-to-Event appends staged ingredient+qty lines to an event (`price = qty × globalPrice`); rows link to linked events. Low-stock calc untouched (same entries, read-only).
+- **Status automations (`src/lib/statusTransitions.ts`):** `detectTransition(prev, next)` on every status save (`EventDetail` + `EventFormModal`; `addEvent` accepts/returns the id so new-as-confirmed invoices number correctly, chat opened synchronously to dodge popup blockers). Confirm → detailed invoice chat (document language); paid → receipt text (`ui.autoMsg`); completed → WhatsApp feedback request (stars + review reply; staff adds the testimonial manually in Site Manager). Invalid customer numbers skip silently.
+- **Auto reminders (`src/lib/autoReminders.ts`):** eve-of-event (tomorrow + open status) and payment-overdue (completed + balance owed + 7d after event day) surface in the bell (`NotificationCenter`, session dismiss) and as one-shot browser pushes (`ReminderNotifier`, localStorage fired-keys, same permission guards as stored reminders).
+- **Alert toggles (Settings):** five switches (`confirmInvoice`, `paymentReceived`, `feedbackRequest`, `eventEve`, `paymentOverdue`, all default on, persisted `catering-settings` v2) gate all WhatsApp opens, bell items, and pushes. Theme toggle lives only in Settings now (§13.3 superseded). Login shows an invalid-credentials Alert (`Alert.layer.css` import added) + caps-lock warning.
+- **Routes (actual):** `/`, `/events`, `/events/[id]`, `/templates`, `/ingredients`, `/inventory`, `/employees`, `/finance`, `/follow-ups`, `/settings`, `/site-manager`, `/dev-seed`, public `/site`. No `/utensils`, `/calculator`, `/migrate`, `/vendors`.

@@ -55,6 +55,7 @@ export const ui = {
     events: lab("Events", "நிகழ்வுகள்"),
     templates: lab("Templates", "டெம்ப்ளேட்டுகள்"),
     ingredients: lab("Ingredients", "பொருட்கள்"),
+    inventoryTracker: lab("Purchase history", "கொள்முதல் வரலாறு"),
     employees: lab("Employees", "ஊழியர்கள்"),
     website: lab("Website", "இணையதளம்"),
     finance: lab("Income & Expense", "வருமானம் & செலவு"),
@@ -372,6 +373,41 @@ export const ui = {
       "meat-fish": lab("Meat & Fish", "இறைச்சி & மீன்"),
       fuel: lab("Fuel", "எரிபொருள்"),
     },
+  },
+  tracker: {
+    title: lab("Purchase history", "கொள்முதல் வரலாறு"),
+    subtitle: lab(
+      "Purchases logged to the stock ledger, filtered by date.",
+      "சரக்கு பதிவேட்டில் பதிவான கொள்முதல்கள், தேதி வாரியாக."
+    ),
+    thisWeek: lab("This week", "இந்த வாரம்"),
+    thisMonth: lab("This month", "இந்த மாதம்"),
+    custom: lab("Custom", "தனிப்பயன்"),
+    from: lab("From", "முதல்"),
+    to: lab("To", "வரை"),
+    totalSpent: lab("Total spent", "மொத்த செலவு"),
+    entries: (count: number): Label => ({
+      en: `${count} ${count === 1 ? "purchase" : "purchases"}`,
+      ta: `${count} கொள்முதல்கள்`,
+    }),
+    byIngredient: lab("Spend by ingredient", "பொருள் வாரியான செலவு"),
+    cost: lab("Cost", "செலவு"),
+    noPrice: lab("Price not recorded", "விலை பதிவாகவில்லை"),
+    empty: lab(
+      "No purchases in this range. Log one to get started.",
+      "இந்த காலத்தில் கொள்முதல்கள் இல்லை. ஒன்றைப் பதிவு செய்யவும்."
+    ),
+    invalidRange: lab(
+      "Start date must be on or before the end date.",
+      "தொடக்க தேதி முடிவு தேதிக்கு முன் இருக்க வேண்டும்."
+    ),
+    logPurchase: lab("Log purchase", "கொள்முதல் பதிவு"),
+    logTitle: lab("Log a purchase", "கொள்முதலைப் பதிவு செய்க"),
+    selectIngredient: lab("Select ingredient", "பொருளைத் தேர்ந்தெடுக்கவும்"),
+    qtyMin: lab("Quantity must be more than 0", "அளவு 0-ஐ விட அதிகமாக இருக்க வேண்டும்"),
+    priceMin: lab("Price must be 0 or more", "விலை 0 அல்லது அதற்கு மேல் இருக்க வேண்டும்"),
+    pricePlaceholder: lab("e.g. 150", "எ.கா. 150"),
+    dateRequired: lab("Date is required", "தேதி தேவை"),
   },
   templates: {
     addTemplate: lab("Add Template", "டெம்ப்ளேட் சேர்க்க"),

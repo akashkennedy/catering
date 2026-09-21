@@ -11,6 +11,8 @@ export type StockLedgerEntry = {
   ingredientId: string;
   type: StockEntryType;
   qty: number;
+  /** Unit price paid (0 for rows logged before price tracking). */
+  price: number;
   date: string;
   eventId: string | null;
   note: string;
@@ -19,6 +21,7 @@ export type StockLedgerEntry = {
 export type PurchaseEntryInput = {
   ingredientId: string;
   qty: number;
+  price: number;
   date: string;
   note?: string;
 };
@@ -37,6 +40,7 @@ function toRecord(entry: StockLedgerEntry) {
     ingredientId: entry.ingredientId,
     type: entry.type,
     qty: entry.qty,
+    price: entry.price,
     date: entry.date,
     eventId: entry.eventId,
     note: entry.note,
@@ -58,6 +62,7 @@ export const useStockLedgerStore = create<StockLedgerState>()(
           ingredientId: input.ingredientId,
           type: "purchase",
           qty: input.qty,
+          price: input.price,
           date: input.date,
           eventId: null,
           note: input.note ?? "",

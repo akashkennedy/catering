@@ -10,6 +10,7 @@ const entrySchema = z.object({
   ingredientId: z.string(),
   type: z.enum(["purchase", "used"]),
   qty: z.number().finite(),
+  price: z.number().finite().optional(),
   date: z.string(),
   eventId: z.string().nullable(),
   note: z.string(),
@@ -23,6 +24,7 @@ export function toStockEntry(row: Row): StockLedgerEntry {
     ingredientId: String(row.ingredient_id),
     type: row.type === "used" ? "used" : "purchase",
     qty: Number(row.qty) || 0,
+    price: Number(row.price) || 0,
     date: String(row.date ?? ""),
     eventId: typeof row.event_id === "string" ? row.event_id : null,
     note: String(row.note ?? ""),
@@ -59,8 +61,8 @@ export async function POST(request: Request) {
   const id = parsed.data.id ?? newId();
   const d = parsed.data;
   const inserted = (await sql`
-    INSERT INTO stock_ledger_entries (id, ingredient_id, type, qty, date, event_id, note)
-    VALUES (${id}, ${d.ingredientId}, ${d.type}, ${d.qty}, ${d.date}, ${d.eventId}, ${d.note})
+    INSERT INTO stock_ledger_entries (id, ingredient_id, type, qty, price, date, event_id, note)
+    VALUES (${id}, ${d.ingredientId}, ${d.type}, ${d.qty}, ${d.price ?? 0}, ${d.date}, ${d.eventId}, ${d.note})
     ON CONFLICT (id) DO NOTHING
     RETURNING *
   `) as Row[];

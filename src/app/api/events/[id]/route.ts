@@ -4,6 +4,7 @@ import { db } from "@/lib/db";
 import { requireSession } from "@/lib/requirePermission";
 import { eventSchema, fetchFullEvent, writeEventChildren } from "../route";
 
+/** Replaces an event and its child records with the submitted event data. */
 export async function PATCH(
   request: Request,
   { params }: { params: Promise<{ id: string }> }

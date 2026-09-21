@@ -14,7 +14,7 @@ const catamaran = Catamaran({
   weight: ["400", "600", "700"],
 });
 
-const APP_NAME = "Catering CRM";
+const APP_NAME = "MampalliCRM";
 
 const THEME_BOOTSTRAP_SCRIPT = `try {
   var _t = window.localStorage.getItem("catering-theme");

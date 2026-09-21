@@ -83,6 +83,7 @@ let loadIngredientsRequest: Promise<void> | null = null;
 
 export const useIngredientsStore = create<IngredientsState>()(
   persist(
+    /** Builds the persisted ingredient store and its synchronized actions. */
     (set) => ({
       ingredients: [],
       loaded: false,

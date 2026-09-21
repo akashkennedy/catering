@@ -37,6 +37,7 @@ export async function GET() {
   return NextResponse.json({ utensils: (rows as Row[]).map(toUtensil) });
 }
 
+/** Creates a utensil and returns the persisted record. */
 export async function POST(request: Request) {
   const auth = await requireSession();
   if ("response" in auth) return auth.response;

@@ -50,6 +50,7 @@ export async function GET() {
   });
 }
 
+/** Creates an ingredient after rejecting a duplicate normalized name. */
 export async function POST(request: Request) {
   const auth = await requireSession();
   if ("response" in auth) return auth.response;

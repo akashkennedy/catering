@@ -2,6 +2,7 @@ function digitsOnly(value: string): string {
   return value.replace(/\D/g, "");
 }
 
+/** Returns whether a value contains exactly 10 phone digits. */
 export function validatePhone(value: string): boolean {
   const trimmed = value.trim();
   if (trimmed === "") return true;

@@ -43,6 +43,7 @@ export async function GET() {
   return NextResponse.json({ reminders: (rows as Row[]).map(toReminder) });
 }
 
+/** Creates a reminder and returns the persisted record. */
 export async function POST(request: Request) {
   const auth = await requireSession();
   if ("response" in auth) return auth.response;

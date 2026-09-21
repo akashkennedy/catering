@@ -39,6 +39,17 @@
 @import "@mantine/core/styles/Tabs.layer.css";
 @import "@mantine/core/styles/Card.layer.css";
 @import "@mantine/core/styles/SegmentedControl.layer.css";
+@import "@mantine/core/styles/Alert.layer.css";
+@import "@mantine/core/styles/Badge.layer.css";
+@import "@mantine/core/styles/Anchor.layer.css";
+@import "@mantine/core/styles/PasswordInput.layer.css";
+@import "@mantine/core/styles/Skeleton.layer.css";
+@import "@mantine/core/styles/Drawer.layer.css";
+@import "@mantine/core/styles/Container.layer.css";
+@import "@mantine/core/styles/Grid.layer.css";
+@import "@mantine/core/styles/SimpleGrid.layer.css";
+@import "@mantine/core/styles/List.layer.css";
+@import "@mantine/core/styles/Rating.layer.css";
 
 @theme inline {
   --font-sans: var(--font-catamaran);
@@ -683,6 +694,31 @@ body {
 
   .mantine-Modal-body {
     padding-bottom: env(safe-area-inset-bottom, 0px);
+  }
+}
+
+/* Button rows that sit side-by-side on desktop but stack full-width on
+   phones, so long bilingual labels never get squeezed to ellipsis. */
+.btn-row-stack {
+  display: flex;
+  gap: 8px;
+}
+
+@media (min-width: 640px) {
+  .btn-row-stack > * {
+    flex: 1 1 0;
+    min-width: 0;
+  }
+}
+
+@media (max-width: 639px) {
+  .btn-row-stack {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .btn-row-stack > * {
+    width: 100%;
   }
 }
 

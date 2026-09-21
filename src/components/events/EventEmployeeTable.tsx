@@ -4,7 +4,9 @@ import { ActionIcon, NumberInput, Table, Text } from "@mantine/core";
 import { X } from "lucide-react";
 
 import { Bilingual } from "@/components/Bilingual";
-import { ui } from "@/lib/i18n";
+import { ToggleSwitch } from "@/components/CheckRow";
+import { preferredText, ui } from "@/lib/i18n";
+import { useSettingsStore } from "@/store/settings";
 import type { EventEmployeeLine } from "@/store/events";
 import { formatINR } from "@/lib/format";
 import { formatPhone } from "@/lib/phone";
@@ -23,6 +25,7 @@ function canSeePay(line: EventEmployeeLine, visiblePayFor: Set<string> | null): 
 }
 
 export function EventEmployeeTable({ lines, onLineChange, onRemove, visiblePayFor }: EventEmployeeTableProps) {
+  const uiLanguage = useSettingsStore((state) => state.uiLanguage);
   return (
     <div className="hidden sm:block">
       <Table striped highlightOnHover withTableBorder>
@@ -33,12 +36,14 @@ export function EventEmployeeTable({ lines, onLineChange, onRemove, visiblePayFo
             <Table.Th><Bilingual label={{ en: "To Pay", ta: "செலுத்த வேண்டியது" }} /></Table.Th>
             <Table.Th><Bilingual label={{ en: "Paid", ta: "செலுத்தியது" }} /></Table.Th>
             <Table.Th><Bilingual label={{ en: "Pending", ta: "நிலுவை" }} /></Table.Th>
+            <Table.Th><Bilingual label={ui.events.paid} /></Table.Th>
             <Table.Th />
           </Table.Tr>
         </Table.Thead>
         <Table.Tbody>
           {lines.map((line) => {
             const showPay = canSeePay(line, visiblePayFor);
+            const isPaid = line.toPay - line.paid <= 0;
             return (
             <Table.Tr key={line.id}>
               <Table.Td>
@@ -87,6 +92,22 @@ export function EventEmployeeTable({ lines, onLineChange, onRemove, visiblePayFo
               </Table.Td>
               <Table.Td>
                 <Text fw={600}>{showPay ? formatINR(line.toPay - line.paid) : "—"}</Text>
+              </Table.Td>
+              <Table.Td>
+                {showPay ? (
+                  <ToggleSwitch
+                    checked={isPaid}
+                    onChange={(next) =>
+                      onLineChange(line.id, { paid: next ? line.toPay : 0 })
+                    }
+                    ariaLabel={preferredText(
+                      isPaid ? ui.events.markUnpaid : ui.events.markPaid,
+                      uiLanguage,
+                    )}
+                  />
+                ) : (
+                  "—"
+                )}
               </Table.Td>
               <Table.Td>
                 <ActionIcon

@@ -366,13 +366,13 @@ This section records what has been implemented on top of §§1–11 so a new age
 ### 12.4 Dashboard: decluttered (supersedes §11.2 widget list)
 
 - `/` shows exactly three widgets stacked in a single full-width column on all screens: **Upcoming Events** (next 3 open events), **Total Earnings**, **Payment Status Overview**. Generous spacing (56px stack gap, 40px vertical gap between widget cards, 24px in-card gaps). New events are created from the sidebar **New Event** button (desktop, above the Dark-mode toggle) or the center **Plus** button in the mobile bottom bar — both open the full event form; there is no quick-add button on the dashboard (the old `QuickAddEventModal` is deleted, see §13.10).
-- Relocated widgets: **Utensils Not Yet Returned** now renders at the top of the **Utensils page**; **Inventory Alerts** at the top of the **Inventory page**. The old `QuickAddWidget` card is deleted.
+- Relocated widgets: **Utensils Not Yet Returned** now renders at the top of the **Utensils page**; **Inventory Alerts** at the top of the **Ingredients page**. The old `QuickAddWidget` card is deleted.
 - **Total Earnings formula (corrects §11.1/§11.2):** cash-collected basis, identical to the Finance page — a `paid` event contributes its full `totalAmount`, otherwise only `advancePaid`. Shared helper `eventCollected()` in `src/lib/financeReport.ts`. Month filter = current `YYYY-MM` date prefix; All-time = no filter. (The old `totalQuoted − costs` formula is **not** used; there is no `totalQuoted` field — the event amount fields are `ratePerPerson`, `totalAmount`, `totalAmountOverridden`, `advancePaid`.)
 
-### 12.5 Ingredients → Inventory rename (full, not labels-only)
+### 12.5 Ingredients page (rename reverted — route stays `/ingredients`)
 
-- Route is now **`/inventory`** (old `/ingredients` route deleted). All hrefs (sidebar, mobile More sheet, global search, notification links) point to `/inventory`.
-- Display name is **Inventory / சரக்கிருப்பு** everywhere (nav, page title, search labels, settings copy). Internal code names (`useIngredientsStore`, `Ingredient*` components, `Ingredient` type) intentionally unchanged.
+- The planned Ingredients → Inventory rename was **reverted**: route stays **`/ingredients`**. All hrefs (sidebar, mobile More sheet, global search, notification links) point to `/ingredients`.
+- Display name stays **Ingredients / பொருட்கள்** everywhere (nav, page title, search labels, settings copy). Internal code names (`useIngredientsStore`, `Ingredient*` components, `Ingredient` type) unchanged.
 
 ### 12.6 Customer Follow-up is a full page
 
@@ -392,7 +392,7 @@ This section records what has been implemented on top of §§1–11 so a new age
 /events               → Event list (search, date filter, status filter, delete confirm)
 /events/[id]          → Event detail (ingredients / employees / utensils sections, PDF export)
 /templates            → Food template master list
-/inventory            → Inventory page (low-stock alerts widget + ingredient master list)
+/ingredients           → Ingredients page (ingredient master list)
 /employees            → Employee master list
 /utensils             → Utensils page (not-returned widget + utensil master list)
 /calculator           → Pricing calculator (template + headcount → cost/quote, Convert to Event)
@@ -407,7 +407,7 @@ This section records what has been implemented on top of §§1–11 so a new age
 - Event status pipeline (actual): `enquiry → confirmed → preparing → completed → paid`.
 - Expense categories (actual): `food materials | other expenses | electricity | transport | gas | custom`. Staff salary is deliberately **not** an expense category (labour is tracked per-event via employee toPay/paid).
 - Ingredient units (actual): `gm | kg | litre | piece` (`src/lib/units.ts`).
-- Mobile nav: bottom bar (Dashboard, Events, Rental, Calculator + More drawer holding Templates, Inventory, Employees, Follow-up, Finance, Settings).
+- Mobile nav: bottom bar (Dashboard, Events, Rental, Calculator + More drawer holding Templates, Ingredients, Employees, Follow-up, Finance, Settings).
 
 ### 12.9 Demo-data route
 
@@ -430,12 +430,13 @@ This section records only what was built **after** §12 was written. §§1–12 
 
 - `MobileBottomNav` bottom bar is unchanged (Dashboard, Events, Rental, Calculator + More, leaf active state).
 - The **More** panel changed from a bottom sheet to a **right-side `Drawer` (`size={300}`)**, with `mobile-more-drawer` class handling full `100dvh` height plus top/bottom safe-area padding, and a bordered header. Panel title and More-button `aria-label` are localized (`ui.nav.more` = More / மேலும்).
-- More-sheet contents unchanged: Templates, Inventory, Employees, Follow-up, Finance, Settings (active-route highlighted, closes on navigate).
+- More-sheet contents unchanged: Templates, Ingredients, Employees, Follow-up, Finance, Settings (active-route highlighted, closes on navigate).
 
 ### 13.3 Theme control placement (extends §12.7)
 
-- Desktop sidebar keeps the animated Dark-mode toggle row + Settings nav button, but the toggle is now wrapped in `visibleFrom="sm"` so it only renders on desktop.
-- Mobile gets its own Dark-mode card at the top of **Settings** (`hiddenFrom="sm"`, `dash-card` styled, label via `ui.settings.dark`), rendering the same `ThemeControl`. No behavior change — still `light | dark` only, persisted `catering-theme`.
+- ~~Desktop sidebar keeps the animated Dark-mode toggle row + Settings nav button, but the toggle is now wrapped in `visibleFrom="sm"` so it only renders on desktop.~~
+- ~~Mobile gets its own Dark-mode card at the top of **Settings** (`hiddenFrom="sm"`, `dash-card` styled, label via `ui.settings.dark`), rendering the same `ThemeControl`.~~
+- **Superseded: the Dark-mode toggle now lives only in Settings** (top `dash-card` on all breakpoints, same `ThemeControl`); the sidebar has no theme row. No behavior change — still `light | dark` only, persisted `catering-theme`.
 
 ### 13.4 Notification center behavior (extends §12.8 header bell)
 
@@ -474,7 +475,7 @@ This section records only what was built **after** §12 was written. §§1–12 
 
 - Desktop sidebar has a full-width **New Event** button directly **above** the Dark-mode toggle row (below the nav list, above theme + Settings). It opens the full event form (`EventFormModal` in create mode, `event={null}`) — the same form used on `/events`. State lives in `AppLayout` (`newEventOpened`).
 - Dashboard (`/`) no longer has a top quick-add button — it is just the three stacked widgets. `QuickAddEventModal` is deleted.
-- Mobile bottom bar is now Dashboard, Events, **center Plus FAB** (raised 52px leaf circle, localized `aria-label`, opens the same full event form via `MobileBottomNav onAddEvent`), Calculator, More. **Rental moved into the More drawer** (now: Rental, Templates, Inventory, Employees, Follow-up, Finance, Settings). Desktop sidebar keeps Rental in the main nav list.
+- Mobile bottom bar is now Dashboard, Events, **center Plus FAB** (raised 52px leaf circle, localized `aria-label`, opens the same full event form via `MobileBottomNav onAddEvent`), Calculator, More. **Rental moved into the More drawer** (now: Rental, Templates, Ingredients, Employees, Follow-up, Finance, Settings). Desktop sidebar keeps Rental in the main nav list.
 
 ### 13.11 PWA manifest link fix (APK showed Chrome URL bar)
 
@@ -485,7 +486,7 @@ This section records only what was built **after** §12 was written. §§1–12 
 ### 13.12 Status-bar overlap fix + loading states (offline queue still deferred)
 
 - **Status bar (AppsGeyser APK):** the WebView reports `safe-area-inset-top: 0`, so the old `padding-top: env(...)` rule did nothing and the 60px header slid under the phone status bar. Fix in `globals.css` (mobile only): `--apk-sat: env(safe-area-inset-top, 24px)` (24px Android status-bar fallback), header height/offset vars overridden to `calc(60px + var(--apk-sat))` so page content is pushed down too, and the search overlay + More drawer tops use the same var. Real-inset browsers (iOS PWA, Chrome) are unaffected — they still use the true inset value.
-- **Loading states:** new shared `LoadingSkeletons.tsx` (`CardSkeleton`, `StackedCardsSkeleton`, `ListPageSkeleton`, text-free so no i18n/store deps) + per-route `loading.tsx` for `/`, `/events`, `/events/[id]`, `/inventory`, `/utensils`, `/employees`, `/templates`, `/finance`, `/follow-ups`, `/calculator`, `/settings`. `ShellSearch` renders a `Skeleton` input until hydrated instead of `null`. All 12 RHF form modals wire `isSubmitting` to their submit `Button loading` (blocks double-submit today; lights up automatically when Phase 2 makes saves async).
+- **Loading states:** new shared `LoadingSkeletons.tsx` (`CardSkeleton`, `StackedCardsSkeleton`, `ListPageSkeleton`, text-free so no i18n/store deps) + per-route `loading.tsx` for `/`, `/events`, `/events/[id]`, `/ingredients`, `/utensils`, `/employees`, `/templates`, `/finance`, `/follow-ups`, `/calculator`, `/settings`. `ShellSearch` renders a `Skeleton` input until hydrated instead of `null`. All 12 RHF form modals wire `isSubmitting` to their submit `Button loading` (blocks double-submit today; lights up automatically when Phase 2 makes saves async).
 - **Offline mutation queue → DB sync:** still deferred as agreed — planned design is the §13-outlined outbox (`catering-outbox`, UUID ops, `useOnlineStatus`, FIFO flush with backoff, last-write-wins), to be built with the Phase 2 backend. Phase 2 (§1 + §8) unchanged.
 
 ### 13.13 Mock auth gate (no real auth yet)
@@ -509,7 +510,7 @@ This section records only what was built **after** §12 was written. §§1–12 
 ## 15. V6 Addendum — Calculator removed, New Event button on top
 
 - The **Pricing Calculator** (`/calculator`, `PricingCalculator.tsx`, §§11.3/12.8) is **deleted**: route, desktop sidebar entry, mobile bottom-bar tab, `ui.nav.calculator` + `ui.calculator` i18n keys, and the calculator→event prefill plumbing (`eventDraft.ts` store, `EventFormModal.createPrefill`, `EventsManager` draft wiring) are all gone.
-- Desktop sidebar order is now: **New Event button pinned at the top**, then Dashboard, Events, Customer Follow-up, Templates, Inventory, Employees, Rental, Finance. Mobile bottom bar is Dashboard, Events, center Plus FAB, More (Calculator tab removed).
+- Desktop sidebar order is now: **New Event button pinned at the top**, then Dashboard, Events, Customer Follow-up, Templates, Ingredients, Employees, Rental, Finance. Mobile bottom bar is Dashboard, Events, center Plus FAB, More (Calculator tab removed).
 - The Templates-page **Import old app** button is removed (legacy seed/import libs remain in-tree but unreachable from the UI).
 
 ---
@@ -598,31 +599,51 @@ Supersedes §1 (Phase 2 is now), §13.13 (mock gate replaced), and UI-only roles
 | `41bfa04` | fix: dedupe ingredients 551→182 live (old browser migrations had tripled rows); catalog variant merge; 409 on duplicate names |
 | `b9a8831` | feat: Ingredients tab in mobile bottom bar; centered + button |
 | `bd9108a` | feat: dashboard 2×2 stat grid (plain CSS), event costs in finance totals, `(123)-456-7890` phones, hidden scrollbars, `preferredText` undefined-guard |
+| `cb9b827` | docs: JSDoc comments on API handlers, components, stores, utilities |
+| `fa2942b` | feat: MampalliCRM header/login branding, invoice logo-top layout |
+| `62bb1ef` | fix: cold-start retry on Neon connect timeout, 503 on unreachable DB |
+| `476e74e` | feat: events calendar view with month grid and day event lists |
+| `af78f9f` | feat: move calendar view toggle to far right |
+| `fbc7d96` | feat(invoice): centered bold brand header (logo beside title, 2-line address, single phone, headcount), invoice-no-only header, monolingual EN/TA PDFs with preview toggle, WhatsApp send (§23) |
+| `7e5cd27` | feat(auth): invalid-credentials Alert (Alert CSS import fix) + caps-lock warning on login |
+| `f04f30d` | feat(inventory): purchase history tracker page + migration `0007_stock_price` (price column) |
+| `1d04ad9` | docs(spec): correct stale `/inventory` references to `/ingredients` (§12.5 rename reverted) |
+| `bd6af6b` | feat(inventory): rename tracker to Inventory (`/inventory` route), event tie-in (picker + row links + filter), theme toggle to Settings only, eve/overdue auto reminders (bell + push) |
+| `c6d68b1` | feat(inventory): assign-to-event flow (append lines to event), price autofill from master, drop spend-by-ingredient |
+| `fb40fd8` | feat(events): status automations — confirm→invoice chat, paid→receipt text, completed→feedback modal (§23) |
+| `c677b89` | feat(events): feedback via WhatsApp request on completion, drop CRM popup |
+| `81f2cef` | feat(settings): 5 alert toggles (confirm/paid/feedback/eve/overdue, persisted v2) |
+| `42be726` | docs(spec): V12 addendum, status table, live snapshot refresh (spec-only) |
+| `8b7fb70` | fix(mobile): 10 missing Mantine CSS layers, invoice buttons stack on phones, scrollable event tabs; assign-to-event `?? []` hardening (§24) |
 
 ### Verified on Neon DB (live tests green)
-- **Migrations**: all 4 (0001_auth → 0004_operations) applied via `npm run db:migrate`; idempotent on re-run
+- **Migrations**: all 7 (0001_auth → 0007_stock_price) applied via `npm run db:migrate`; idempotent on re-run
 - **Round-trip probe**: `npm run db:check` succeeds (write+read back scratch row)
 - **Admin seed**: `npm run db:seed-admin` creates admin account; bcrypt-12 hashed; idempotent on re-run
-- **Login round-trip**: DB auth with email + bcrypt; session cookie created; `/api/auth/me` returns user+permissions
+- **Login round-trip**: DB auth with username + bcrypt; session cookie created; `/api/auth/me` returns user+permissions; wrong passwords show the invalid-credentials Alert, caps-lock warns inline
 - **403 enforcement**: `requirePermission('canViewFinance')` on `/api/expenses` returns 403 for restricted users; new employee defaults `canViewFinance=false`; admin has full permissions
-- **Idempotent /migrate**: running `npm run db:migrate` twice produces "skip all — already applied"
-- **Static verification**: `tsc` clean, `eslint` 0 errors, `npm run build` 36/36 routes green
+- **Inventory tracker**: purchases logged via `addPurchaseEntry` (price stored since 0007) appear in week/month/custom ranges with correct totals; `used` rows and out-of-range rows excluded
+- **Status automations**: confirm/paid/completed transitions open the right WhatsApp text; eve/overdue fire once (localStorage keys); all five gated by Settings toggles
+- **Static verification**: `tsc` clean, `eslint` 0 errors, `npm run build` green including `/inventory`
+- **Mobile fix (§24)**: `tsc` clean + production `next build` green after the CSS/button/tab changes; Button/SegmentedControl/Tabs CSS were already imported so no visual regression on existing controls
 
 ### Deliberately left out of git
 - `hello.ts`, `neon.ts` (root scratch files), `.env` (credential env-var file, gitignored), `.neon` gitignore entry — user's own Neon experiments, untouched.
 
 ---
 
-## 22. Session log 2026-09-20 — current truth + next steps (for AI handoff)
+## 22. Session log 2026-09-21 — current truth + next steps (for AI handoff)
 
 ### What is live right now
-- **Branch:** `dev` on `origin/dev` (Vercel previews build `dev`; `main` untouched). HEAD `bd9108a`, working tree clean except scratch logs.
-- **Neon project `mampalli-catering-crm`:** migrations `0001`–`0006` applied. Contents: **182 ingredients** (unique names), **2 seed templates** (Saapadu 42 courses, Biriyani 40 courses) + 1 user template, 84 dishes, 18 dish links, **2 users** (1 admin, 1 restricted employee login), 0 events/groups at last check.
-- **Auth:** username-based (`username` UNIQUE, lowercased). Login tries DB (bcrypt) first, legacy env-HMAC fallback only when `DATABASE_URL` unset. First admin seeded via `ADMIN_USERNAME`/`ADMIN_PASSWORD` (local `.env` still says `ADMIN_EMAIL` — rename before re-seeding).
-- **Permissions (7 flags, server-enforced):** `canViewFinance`, `canViewOtherEmployeeRates`, `canManageEmployees`, `canManageSettings`, `canViewEmployees`, `canViewWebsite`, `canExportExcel`. New logins: everything true except finance/rates/view/export (all false). Admin always full; self/admin edits 403. Enforcement: finance routes → finance flag; employees GET → view-employees; site-content GET → view-website; POST site → manage-settings; users routes → manage-employees; masked pay preserved on PATCH. UI mirrors all of it (nav, search, pages, export card, no-access cards).
-- **UI map (current):** `/` dashboard = 4-card 2×2 grid (Orders always; Amount/Expenses/Pending finance-gated) + Upcoming + Pending-payments; `/events` (+`/[id]` detail with ingredients/staff/rental tabs, manual course picking, xl form); `/templates`, `/ingredients`, `/employees` (+Logins & access), `/finance` (event-linked totals), `/follow-ups`, `/settings` (language, document lang, Excel export gated), `/site-manager` (gated), public `/site`. **No** `/utensils`, **no** `/migrate`. Mobile bar: Dashboard · Events · + · Ingredients · More. Login: placeholders, no focus ring (scoped). All loading states: text-free spinner. Scrollbars hidden globally (scroll still works).
-- **Data rules:** stable seed ids (`ing-*`, `tpl-*`, `dish-*`); `ON CONFLICT DO NOTHING` + `RETURNING *` writes (conflict falls back to SELECT so replays return the row); NUMERIC arrives as string over HTTP (coerce with `Number()`); ingredient refs are plain TEXT (dangling tolerated); `ingredients` POST 409s on duplicate names.
-- **Perf state:** API reads/writes parallelized; `@react-pdf/renderer` + `xlsx` load on click only (light `printLines.ts` for render); all 10 stores dedupe loads via `loaded` + shared in-flight promise; lists render table XOR cards via `(max-width: 639px)` media query. Measured: single-event read 310ms → 206ms live.
+- **Branch:** `dev` on `origin/dev` (Vercel previews build `dev`; `main` untouched). HEAD `8b7fb70`, working tree clean.
+- **Neon project `mampalli-catering-crm`:** migrations `0001`–`0007` applied (`0007_stock_price` adds `price` to `stock_ledger_entries`). Contents: **182 ingredients** (unique names), **3 templates** (Saapadu 42 courses, Biriyani 40 courses + 1 user template), 84 dishes, 18 dish links, **1 event**, **4 users** (admins `akashkennedy` + `reju` + legacy `akashkennedy1@gmail.com`, restricted employee `abinesh123`).
+- **Auth:** username-based (`username` UNIQUE, lowercased). Login tries DB (bcrypt) first, legacy env-HMAC fallback only when `DATABASE_URL` unset. Wrong passwords show the invalid-credentials Alert; caps-lock warns inline. First admin seeded via `ADMIN_USERNAME`/`ADMIN_PASSWORD`. Local `.env` now uses `ADMIN_USERNAME=akashkennedy` / `AUTH_USERNAME=akashkennedy` (keep-password rename of `akashkennedy1` done directly in DB; `reju`/`reju` admin created directly in DB with bcrypt-12 — note `reju` is 4 chars, below the 8-char minimum enforced by the seed script and the users API, so it can log in but cannot be re-set via UI).
+- **Permissions (7 flags, server-enforced):** `canViewFinance`, `canViewOtherEmployeeRates`, `canManageEmployees`, `canManageSettings`, `canViewEmployees`, `canViewWebsite`, `canExportExcel`. New logins: everything true except finance/rates/view/export (all false). Admin always full; self/admin edits 403. UI mirrors all of it (nav, search, pages, export card, no-access cards). Sidebar + mobile More drawer both hide `/finance`, `/employees`, `/site-manager` per `canViewFinance` / `canViewEmployees` / `canViewWebsite`.
+- **UI map (current):** `/` dashboard (`OverviewGrid` 2×2 stat grid + Upcoming + Payment Status, single column); `/events` (search, date filter, status filter, list/calendar view toggle pinned right, delete confirm) + `/[id]` detail (invoice button, headcount/pricing, meals editor, status select, Ingredients/Employees/Rental tabs — tab list scrolls horizontally on phones, §24); `/templates`, `/ingredients`, `/inventory` (purchase tracker + assign-to-event, §23), `/employees` (+Logins & access), `/finance` (event-linked totals), `/follow-ups`, `/settings` (theme card on all breakpoints, 5 alert toggles, UI language, document language, Excel export gated), `/site-manager` (gated), public `/site`. **No** `/utensils`, `/calculator`, `/migrate`, `/vendors`. Desktop sidebar: New Event button on top, nav Dashboard · Events · Follow-up · Templates · Ingredients · Inventory · Employees · Website · Finance, Settings + Logout pinned at bottom (no theme row — theme lives only in Settings). Mobile bar: Dashboard · Events · center Plus FAB (opens full event form) · Ingredients · More drawer (Templates, Inventory, Employees, Follow-up, Website, Finance, Settings, same permission gating). All loading states: text-free spinner. Scrollbars hidden globally.
+- **Invoices:** centered bold brand header + invoice-no-only header; monolingual EN/TA PDFs with preview language toggle; WhatsApp send to customer number from the preview modal.
+- **Automations:** confirm→invoice chat, paid→receipt text, completed→feedback-request chat (all auto-open `wa.me`, document language, invalid numbers skipped); eve-of-event + 7-day payment-overdue in bell + one-shot pushes; five Settings toggles gate everything.
+- **Data rules:** stable seed ids (`ing-*`, `tpl-*`, `dish-*`); `ON CONFLICT DO NOTHING` + `RETURNING *` writes (conflict falls back to SELECT so replays return the row); NUMERIC arrives as string over HTTP (coerce with `Number()`); ingredient refs are plain TEXT (dangling tolerated); `ingredients` POST 409s on duplicate names; `addEvent` accepts an optional client id and returns it.
+- **Perf state:** API reads/writes parallelized; `@react-pdf/renderer` + `xlsx` load on click only (light `printLines.ts` for render); all stores dedupe loads via `loaded` + shared in-flight promise; lists render table XOR cards via `(max-width: 639px)` media query. Measured: single-event read 310ms → 206ms live.
 
 ### Known issues / open threads (do these next)
 1. **Undefined-label crash under investigation:** user reported `can't access property "en", label is undefined` (Firefox wording = `preferredText` got `undefined`). Full static audit found every key valid; `preferredText` now renders `""` + logs a dev stack instead of crashing. NEXT: get repro page/action from user (or read the dev console stack) and fix the data path that smuggles `undefined` through a cast.
@@ -631,7 +652,8 @@ Supersedes §1 (Phase 2 is now), §13.13 (mock gate replaced), and UI-only roles
 4. **Utensil/vessel APIs + tables remain** (event Rental tabs depend on them) though the page is gone — intentional.
 5. **Historic `used` stock rows remain readable** but nothing writes them anymore — intentional.
 6. **`main` never merged** — decide merge strategy (merge `dev` → `main` when previews are accepted).
-7. **`.env.example` documents `ADMIN_USERNAME`;** real `.env` is local-only (gitignored) — Vercel env vars must be kept in sync manually (`DATABASE_URL`, `AUTH_SESSION_SECRET`, `AUTH_USERNAME/PASSWORD` legacy fallback).
+7. **`.env.example` documents `ADMIN_USERNAME`;** real `.env` is local-only (gitignored) — Vercel env vars must be kept in sync manually (`DATABASE_URL`, `AUTH_SESSION_SECRET`, `AUTH_USERNAME/PASSWORD` legacy fallback). (The old "`.env` still says `ADMIN_EMAIL`" thread is resolved — it now says `ADMIN_USERNAME=akashkennedy`.)
+8. **Mobile button-text report (event detail, light mode) → fixed in §24.** If any button still renders blank, capture a screenshot of the exact spot before changing code.
 
 ### How to work in this repo (conventions Claude should follow)
 - `npm run build` must stay green (tsc + Turbopack); verify with `npx tsc --noEmit`.
@@ -639,3 +661,39 @@ Supersedes §1 (Phase 2 is now), §13.13 (mock gate replaced), and UI-only roles
 - API routes: session/permission gate first (`requirePermission`), client-id upserts, `RETURNING *` with SELECT fallback on conflict.
 - UI is bilingual (EN/TA via `ui.*` in `src/lib/i18n.ts` + `<Bilingual>`); never hardcode user-facing strings.
 - Commit per workstream on `dev`; only push when the user says "push".
+
+---
+
+## 23. V12 Addendum — invoice rework, inventory tracker, status automations (current)
+
+- **Invoice PDFs (`src/lib/pdf.tsx`):** centered bold brand header — logo aligned with the `Mampalli Cloud Kitchen and Catering` title, 2-line address (`Mampalli Vilai,` / rest), single `Phone: 9025350666`, total headcount below. Event header shows invoice number only. PDFs are monolingual (EN or TA) via a preview toggle; filenames carry `_buy-list|detailed_lang`. Preview modal sends buy-list/invoice summaries to the customer number via `wa.me` (PDF attached manually in chat).
+- **Inventory tracker (`/inventory`, sidebar + mobile More):** purchase history over the shared `stock_ledger_entries` (type `purchase` only) with This Week (default) / This Month / Custom filters, totals + entry count, desktop table + mobile cards. Migration `0007_stock_price` adds `price NUMERIC DEFAULT 0` (old rows read as 0, shown as `—`). Log-purchase modal reuses `addPurchaseEntry` (price autofills from master, blank = 0); Assign-to-Event appends staged ingredient+qty lines to an event (`price = qty × globalPrice`); rows link to linked events. Low-stock calc untouched (same entries, read-only).
+- **Status automations (`src/lib/statusTransitions.ts`):** `detectTransition(prev, next)` on every status save (`EventDetail` + `EventFormModal`; `addEvent` accepts/returns the id so new-as-confirmed invoices number correctly, chat opened synchronously to dodge popup blockers). Confirm → detailed invoice chat (document language); paid → receipt text (`ui.autoMsg`); completed → WhatsApp feedback request (stars + review reply; staff adds the testimonial manually in Site Manager). Invalid customer numbers skip silently.
+- **Auto reminders (`src/lib/autoReminders.ts`):** eve-of-event (tomorrow + open status) and payment-overdue (completed + balance owed + 7d after event day) surface in the bell (`NotificationCenter`, session dismiss) and as one-shot browser pushes (`ReminderNotifier`, localStorage fired-keys, same permission guards as stored reminders).
+- **Alert toggles (Settings):** five switches (`confirmInvoice`, `paymentReceived`, `feedbackRequest`, `eventEve`, `paymentOverdue`, all default on, persisted `catering-settings` v2) gate all WhatsApp opens, bell items, and pushes. Theme toggle lives only in Settings now (§13.3 superseded). Login shows an invalid-credentials Alert (`Alert.layer.css` import added) + caps-lock warning.
+- **Routes (actual):** `/`, `/events`, `/events/[id]`, `/templates`, `/ingredients`, `/inventory`, `/employees`, `/finance`, `/follow-ups`, `/settings`, `/site-manager`, `/dev-seed`, public `/site`. No `/utensils`, `/calculator`, `/migrate`, `/vendors`.
+
+---
+
+## 24. V13 Addendum — mobile button-text fix + missing Mantine CSS (current)
+
+User report (light mode, phone): on the event detail page some buttons showed no text / no background. Read-only audit found three compounding causes; all fixed in commit `8b7fb70` (`tsc` clean, `next build` green).
+
+### 24.1 Missing Mantine style layers (root cause for "no background")
+
+- `src/app/globals.css` imported only ~27 Mantine component layers, but the app renders more. Added the 10 missing imports that map to actually-used components: `Badge`, `Anchor`, `PasswordInput`, `Skeleton`, `Drawer`, `Container`, `Grid`, `SimpleGrid`, `List`, `Rating`.
+- Effect detail: status `Badge` pills (event cards, calendar day counts + day sheet, tables, finance lists, notification count) rendered as unstyled text with no pill; `Anchor` event-name links lost link styling under Tailwind preflight; the mobile More `Drawer`, login `PasswordInput`, and search `Skeleton` were likewise unstyled.
+- Deliberately NOT added: `TextInput`/`Select`/`Autocomplete`/`Textarea` have no dedicated layer files in Mantine v9 — single-selects and autocompletes are covered by the already-imported `Input` + `Combobox` layers (no `MultiSelect`/`TagsInput` in the codebase, so `PillsInput` is unnecessary).
+
+### 24.2 Invoice popup buttons squeezed to ellipsis (root cause for "no text")
+
+- `PrintPreviewModal` put the two PDF download buttons and the two WhatsApp buttons each in `<Group grow>` — equal widths, no wrap. On a 360px phone each button gets ~170px for long bilingual labels ("Buy list (qty only) (English)", "Send buy list on WhatsApp", Tamil equivalents), so Mantine clipped the labels to ellipsis/blank.
+- Fix: new `.btn-row-stack` class in `globals.css` — stacks buttons full-width (`flex-direction: column`, children `width: 100%`) at `≤639px`, keeps the equal-split row (`flex: 1 1 0`) on desktop. Both `Group grow` sites replaced with `<div className="btn-row-stack">`; other `Group` usages in the file untouched.
+
+### 24.3 Event detail tabs squeezed on phones
+
+- The Ingredients/Employees/Rental `Tabs.List` is a non-wrapping row; with icons + bilingual labels it crushed on narrow screens. Fix: wrapped in Mantine `ScrollArea` (`type="scroll"`, `offsetScrollbars`) with `flexWrap: "nowrap"` on the list and `whiteSpace: "nowrap"` per tab — swipeable on phones (scrollbars stay hidden per the global rule), unchanged on desktop.
+
+### 24.4 Assign-to-event hardening (same push)
+
+- `AssignToEventModal` spread `...event.ingredients` directly; legacy/cached events with `ingredients: undefined` would throw. Now `...(event.ingredients ?? [])` — staged lines and the `updateEvent` call unchanged.

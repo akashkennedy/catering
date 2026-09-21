@@ -14,6 +14,7 @@ import { preferredText, ui } from "@/lib/i18n";
 import { useSettingsStore } from "@/store/settings";
 import { templateDisplayName, templateMatchesQuery, useTemplatesStore, type FoodTemplate } from "@/store/templates";
 
+/** Manages template search, responsive results, and template editor actions. */
 export function TemplatesManager() {
   const templates = useTemplatesStore((state) => state.templates);
   const deleteTemplate = useTemplatesStore((state) => state.deleteTemplate);

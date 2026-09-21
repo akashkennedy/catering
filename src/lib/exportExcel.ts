@@ -198,6 +198,7 @@ export async function exportDatabaseToExcel(): Promise<ExcelExportSummary> {
       Ingredient: ingredientName.get(s.ingredientId) ?? s.ingredientId,
       Type: s.type,
       Qty: s.qty,
+      Price: s.price ?? 0,
       Event: s.eventId ? (eventName.get(s.eventId) ?? "") : "",
       Note: s.note,
     }))

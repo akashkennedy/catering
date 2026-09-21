@@ -4,7 +4,9 @@ import { ActionIcon, Card, Group, NumberInput, Stack, Text } from "@mantine/core
 import { X } from "lucide-react";
 
 import { Bilingual } from "@/components/Bilingual";
-import { ui } from "@/lib/i18n";
+import { ToggleSwitch } from "@/components/CheckRow";
+import { preferredText, ui } from "@/lib/i18n";
+import { useSettingsStore } from "@/store/settings";
 import type { EventEmployeeLine } from "@/store/events";
 import { formatINR } from "@/lib/format";
 import { formatPhone } from "@/lib/phone";
@@ -23,10 +25,12 @@ function canSeePay(line: EventEmployeeLine, visiblePayFor: Set<string> | null): 
 }
 
 export function EventEmployeeCards({ lines, onLineChange, onRemove, visiblePayFor }: EventEmployeeCardsProps) {
+  const uiLanguage = useSettingsStore((state) => state.uiLanguage);
   return (
     <Stack gap="sm" className="sm:hidden">
       {lines.map((line) => {
         const showPay = canSeePay(line, visiblePayFor);
+        const isPaid = line.toPay - line.paid <= 0;
         return (
         <Card key={line.id} withBorder padding="sm">
           <Stack gap="xs">
@@ -81,6 +85,21 @@ export function EventEmployeeCards({ lines, onLineChange, onRemove, visiblePayFo
                 <Text size="sm" fw={600}>
                   <Bilingual label={ui.events.pending} />: {formatINR(line.toPay - line.paid)}
                 </Text>
+                <Group gap="xs">
+                  <ToggleSwitch
+                    checked={isPaid}
+                    onChange={(next) =>
+                      onLineChange(line.id, { paid: next ? line.toPay : 0 })
+                    }
+                    ariaLabel={preferredText(
+                      isPaid ? ui.events.markUnpaid : ui.events.markPaid,
+                      uiLanguage,
+                    )}
+                  />
+                  <Text size="sm" fw={600}>
+                    <Bilingual label={isPaid ? ui.events.paid : ui.events.pending} />
+                  </Text>
+                </Group>
               </>
             )}
           </Stack>

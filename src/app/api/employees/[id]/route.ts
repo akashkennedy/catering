@@ -11,6 +11,7 @@ const employeePatchSchema = z.object({
   defaultRate: z.number().finite().min(0),
 });
 
+/** Updates an employee and returns the persisted record. */
 export async function PATCH(
   request: Request,
   { params }: { params: Promise<{ id: string }> }

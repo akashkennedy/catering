@@ -14,6 +14,7 @@ import {
   MoreHorizontal,
   ClipboardList,
   ShoppingBasket,
+  Receipt,
   LogOut,
   UserRound,
   Wallet,
@@ -41,6 +42,7 @@ const PRIMARY_TABS: MobileNavItem[] = [
 
 const MORE_ITEMS: MobileNavItem[] = [
   { label: ui.nav.templates, href: "/templates", icon: ClipboardList },
+  { label: ui.nav.inventoryTracker, href: "/inventory", icon: Receipt },
   { label: ui.nav.employees, href: "/employees", icon: UserRound },
   { label: ui.dashboard.customerFollowUp, href: "/follow-ups", icon: PhoneCall },
   { label: ui.nav.website, href: "/site-manager", icon: Globe },
@@ -53,6 +55,7 @@ function isActive(pathname: string, href: string): boolean {
   return pathname === href || pathname.startsWith(`${href}/`);
 }
 
+/** Renders the primary mobile navigation, add action, and overflow menu. */
 export function MobileBottomNav({ onAddEvent }: { onAddEvent: () => void }) {
   const pathname = usePathname();
   const [moreOpened, setMoreOpened] = useState(false);

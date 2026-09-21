@@ -10,6 +10,7 @@ import {
   Group,
   NumberInput,
   Paper,
+  ScrollArea,
   Select,
   Stack,
   Tabs,
@@ -51,6 +52,12 @@ import { useVendorSuggestionsStore } from "@/store/vendorSuggestions";
 import { PrintPreviewModal } from "./PrintPreviewModal";
 import { EVENT_STATUS_OPTIONS } from "./EventFormModal";
 import {
+  detectTransition,
+  openConfirmedInvoice,
+  openFeedbackRequest,
+  openPaymentReceived,
+} from "@/lib/statusTransitions";
+import {
   eventBalance,
   eventEmployeePaid,
   eventEmployeePending,
@@ -59,6 +66,7 @@ import {
   eventRentalCost,
 } from "@/lib/eventFinances";
 
+/** Renders and coordinates the editable details of the selected event. */
 export function EventDetail() {
   const params = useParams<{ id: string }>();
   const id = params.id;
@@ -171,7 +179,15 @@ export function EventDetail() {
   };
 
   const handleStatusChange = (status: CateringEventInput["status"]) => {
+    const transition = detectTransition(event.status, status);
     update({ status });
+    if (transition === "confirmed") {
+      openConfirmedInvoice({ ...event, status });
+    } else if (transition === "paid") {
+      openPaymentReceived({ ...event, status });
+    } else if (transition === "completed") {
+      openFeedbackRequest({ ...event, status });
+    }
   };
 
   const handleRateChange = (value: number | string) => {
@@ -448,17 +464,19 @@ export function EventDetail() {
       </Paper>
 
       <Tabs defaultValue="ingredients">
-        <Tabs.List>
-          <Tabs.Tab value="ingredients" leftSection={<Salad size={16} />}>
-            <Bilingual label={ui.events.tabIngredients} />
-          </Tabs.Tab>
-          <Tabs.Tab value="employees" leftSection={<Users size={16} />}>
-            <Bilingual label={ui.events.tabEmployees} />
-          </Tabs.Tab>
-          <Tabs.Tab value="utensils" leftSection={<UtensilsCrossed size={16} />}>
-            <Bilingual label={ui.events.tabRental} />
-          </Tabs.Tab>
-        </Tabs.List>
+        <ScrollArea type="scroll" offsetScrollbars>
+          <Tabs.List style={{ flexWrap: "nowrap" }}>
+            <Tabs.Tab value="ingredients" leftSection={<Salad size={16} />} style={{ whiteSpace: "nowrap" }}>
+              <Bilingual label={ui.events.tabIngredients} />
+            </Tabs.Tab>
+            <Tabs.Tab value="employees" leftSection={<Users size={16} />} style={{ whiteSpace: "nowrap" }}>
+              <Bilingual label={ui.events.tabEmployees} />
+            </Tabs.Tab>
+            <Tabs.Tab value="utensils" leftSection={<UtensilsCrossed size={16} />} style={{ whiteSpace: "nowrap" }}>
+              <Bilingual label={ui.events.tabRental} />
+            </Tabs.Tab>
+          </Tabs.List>
+        </ScrollArea>
 
         <Tabs.Panel value="ingredients" pt="md">
           {eventIngredients.length === 0 ? (

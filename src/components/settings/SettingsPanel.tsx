@@ -1,26 +1,39 @@
 "use client";
 
 import { useState } from "react";
-import { Box, Button, SegmentedControl, Stack, Text, Title } from "@mantine/core";
+import { Box, Button, Group, SegmentedControl, Stack, Text, Title } from "@mantine/core";
 
 import { Bilingual } from "@/components/Bilingual";
+import { ToggleSwitch } from "@/components/CheckRow";
 import { ThemeControl } from "@/components/ThemeControl";
-import { ui } from "@/lib/i18n";
+import { preferredText, ui } from "@/lib/i18n";
 import { useAuthStore } from "@/store/auth";
 import {
   useSettingsStore,
+  type AlertKey,
   type DefaultLanguage,
   type UiLanguage,
 } from "@/store/settings";
 
+/** Renders application settings and coordinates database export. */
 export function SettingsPanel() {
   const uiLanguage = useSettingsStore((state) => state.uiLanguage);
   const setUiLanguage = useSettingsStore((state) => state.setUiLanguage);
   const defaultLanguage = useSettingsStore((state) => state.defaultLanguage);
   const setDefaultLanguage = useSettingsStore((state) => state.setDefaultLanguage);
   const canExportExcel = useAuthStore((state) => state.permissions.canExportExcel);
+  const alerts = useSettingsStore((state) => state.alerts);
+  const setAlert = useSettingsStore((state) => state.setAlert);
   const [exporting, setExporting] = useState(false);
   const [exportStatus, setExportStatus] = useState<"idle" | "done" | "failed">("idle");
+
+  const alertRows: { key: AlertKey; label: string }[] = [
+    { key: "confirmInvoice", label: preferredText(ui.settings.alertConfirmInvoice, uiLanguage) },
+    { key: "paymentReceived", label: preferredText(ui.settings.alertPaymentReceived, uiLanguage) },
+    { key: "feedbackRequest", label: preferredText(ui.settings.alertFeedbackRequest, uiLanguage) },
+    { key: "eventEve", label: preferredText(ui.settings.alertEventEve, uiLanguage) },
+    { key: "paymentOverdue", label: preferredText(ui.settings.alertPaymentOverdue, uiLanguage) },
+  ];
 
   const runExport = () => {
     setExporting(true);
@@ -53,7 +66,7 @@ export function SettingsPanel() {
         <Bilingual label={ui.nav.settings} />
       </Title>
 
-      <Box hiddenFrom="sm" className="dash-card">
+      <Box className="dash-card">
         <Stack gap="sm">
           <Text fw={600} size="sm">
             <Bilingual label={ui.settings.dark} />
@@ -61,6 +74,27 @@ export function SettingsPanel() {
           <ThemeControl />
         </Stack>
       </Box>
+
+      <div className="dash-card">
+        <Stack gap="sm">
+          <Text fw={600} size="sm">
+            <Bilingual label={ui.settings.alerts} />
+          </Text>
+          <Text size="xs" c="dimmed">
+            <Bilingual label={ui.settings.alertsNote} />
+          </Text>
+          {alertRows.map((row) => (
+            <Group key={row.key} justify="space-between" wrap="nowrap">
+              <Text size="sm">{row.label}</Text>
+              <ToggleSwitch
+                checked={alerts[row.key]}
+                onChange={(value) => setAlert(row.key, value)}
+                ariaLabel={row.label}
+              />
+            </Group>
+          ))}
+        </Stack>
+      </div>
 
       <div className="dash-card">
         <Stack gap="sm">

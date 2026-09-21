@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
 
-import { db } from "@/lib/db";
+import { db, isDatabaseUnreachable } from "@/lib/db";
 import { requireSession } from "@/lib/requirePermission";
 import { resolveRequestSession } from "@/lib/authSession";
 import { EVENT_STATUS_PIPELINE, type CateringEvent } from "@/store/events";
@@ -73,6 +73,7 @@ function newId(prefix: string): string {
   return `${prefix}-${Date.now()}-${Math.floor(Math.random() * 1e6)}`;
 }
 
+/** Loads an event and assembles its related meal, ingredient, employee, and utensil rows. */
 export async function fetchFullEvent(
   sql: ReturnType<typeof db>,
   eventId: string
@@ -145,6 +146,7 @@ export async function fetchFullEvent(
   };
 }
 
+/** Persists all child collections belonging to an event. */
 export async function writeEventChildren(
   sql: ReturnType<typeof db>,
   eventId: string,
@@ -215,8 +217,20 @@ export async function writeEventChildren(
   await Promise.all(writes);
 }
 
+/** Lists every event with its related child records. */
 export async function GET() {
-  const session = await resolveRequestSession();
+  let session;
+  try {
+    session = await resolveRequestSession();
+  } catch (error) {
+    if (isDatabaseUnreachable(error)) {
+      return NextResponse.json(
+        { error: "Database temporarily unavailable. Please retry." },
+        { status: 503 }
+      );
+    }
+    throw error;
+  }
   if (!session) {
     return NextResponse.json({ error: "Not signed in." }, { status: 401 });
   }

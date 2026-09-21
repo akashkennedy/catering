@@ -12,6 +12,7 @@ const utensilPatchSchema = z.object({
   lowStockThreshold: z.number().finite(),
 });
 
+/** Updates a utensil and returns the persisted record. */
 export async function PATCH(
   request: Request,
   { params }: { params: Promise<{ id: string }> }

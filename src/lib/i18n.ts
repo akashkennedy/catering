@@ -55,6 +55,7 @@ export const ui = {
     events: lab("Events", "நிகழ்வுகள்"),
     templates: lab("Templates", "டெம்ப்ளேட்டுகள்"),
     ingredients: lab("Ingredients", "பொருட்கள்"),
+    inventoryTracker: lab("Inventory", "சரக்கிருப்பு"),
     employees: lab("Employees", "ஊழியர்கள்"),
     website: lab("Website", "இணையதளம்"),
     finance: lab("Income & Expense", "வருமானம் & செலவு"),
@@ -182,6 +183,20 @@ export const ui = {
     invoice: lab("Invoice", "விலைப்பட்டியல்"),
     invoiceNo: lab("Invoice no", "விலைப்பட்டியல் எண்"),
     thankYou: lab("Thank You", "நன்றி"),
+    totalHeadcount: lab("Total headcount", "மொத்த நபர்கள்"),
+    pdfLanguage: lab("PDF language", "PDF மொழி"),
+    pdfEnglish: lab("English", "ஆங்கிலம்"),
+    pdfTamil: lab("Tamil", "தமிழ்"),
+    sendBuyListWhatsApp: lab("Send buy list on WhatsApp", "வாங்கும் பட்டியலை வாட்ஸ்அப்பில் அனுப்பு"),
+    sendDetailedWhatsApp: lab("Send invoice on WhatsApp", "விலைப்பட்டியலை வாட்ஸ்அப்பில் அனுப்பு"),
+    whatsappNote: lab(
+      "Opens WhatsApp to the customer number with the invoice summary. Attach the downloaded PDF in the chat.",
+      "வாடிக்கையாளர் எண்ணுக்கு வாட்ஸ்அப் திறக்கும். பதிவிறக்கிய PDF-ஐ அரட்டையில் இணைக்கவும்."
+    ),
+    invalidCustomerPhone: lab(
+      "Add a valid 10-digit customer phone number to the event first.",
+      "முதலில் நிகழ்வில் சரியான 10 இலக்க வாடிக்கையாளர் எண்ணைச் சேர்க்கவும்."
+    ),
     editEvent: lab("Edit Event", "நிகழ்வைத் திருத்து"),
     nameRequired: lab("Name is required", "பெயர் தேவை"),
     invalidPhone: lab("Enter a valid 10-digit phone number", "சரியான 10 இலக்க தொலைபேசி எண்ணை உள்ளிடவும்"),
@@ -195,6 +210,8 @@ export const ui = {
     toPay: lab("To pay", "செலுத்த வேண்டியது"),
     paid: lab("Paid", "செலுத்தியது"),
     pending: lab("Pending", "நிலுவை"),
+    markPaid: lab("Mark paid", "செலுத்தியதாகக் குறி"),
+    markUnpaid: lab("Mark unpaid", "செலுத்தவில்லை எனக் குறி"),
     returned: lab("Returned", "திரும்பியது"),
     duration: lab("Duration", "காலம்"),
     utensil: lab("Utensil", "பாத்திரம்"),
@@ -224,6 +241,36 @@ export const ui = {
     qtyMin: lab("Quantity must be 1 or more", "அளவு 1 அல்லது அதற்கு மேல் இருக்க வேண்டும்"),
     startDateRequired: lab("Start date is required", "தொடக்க தேதி தேவை"),
     endDateRequired: lab("End date is required", "இறுதி தேதி தேவை"),
+    viewList: lab("List", "பட்டியல்"),
+    viewCalendar: lab("Calendar", "நாட்காட்டி"),
+    today: lab("Today", "இன்று"),
+    prevMonth: lab("Previous month", "முந்தைய மாதம்"),
+    nextMonth: lab("Next month", "அடுத்த மாதம்"),
+    noEventsOnDay: lab("No events on this day.", "அன்று நிகழ்வுகள் இல்லை."),
+    monthNames: [
+      lab("January", "ஜனவரி"),
+      lab("February", "பிப்ரவரி"),
+      lab("March", "மார்ச்"),
+      lab("April", "ஏப்ரல்"),
+      lab("May", "மே"),
+      lab("June", "ஜூன்"),
+      lab("July", "ஜூலை"),
+      lab("August", "ஆகஸ்ட்"),
+      lab("September", "செப்டம்பர்"),
+      lab("October", "அக்டோபர்"),
+      lab("November", "நவம்பர்"),
+      lab("December", "டிசம்பர்"),
+    ],
+    // Monday-first order to match the calendar grid.
+    weekdayNamesShort: [
+      lab("Mon", "தி"),
+      lab("Tue", "செ"),
+      lab("Wed", "பு"),
+      lab("Thu", "வி"),
+      lab("Fri", "வெ"),
+      lab("Sat", "ச"),
+      lab("Sun", "ஞா"),
+    ],
   },
   site: {
     manager: lab("Site manager", "தள மேலாளர்"),
@@ -329,6 +376,46 @@ export const ui = {
       fuel: lab("Fuel", "எரிபொருள்"),
     },
   },
+  tracker: {
+    title: lab("Inventory", "சரக்கிருப்பு"),
+    subtitle: lab(
+      "Purchases logged to the stock ledger, filtered by date.",
+      "சரக்கு பதிவேட்டில் பதிவான கொள்முதல்கள், தேதி வாரியாக."
+    ),
+    thisWeek: lab("This week", "இந்த வாரம்"),
+    thisMonth: lab("This month", "இந்த மாதம்"),
+    custom: lab("Custom", "தனிப்பயன்"),
+    from: lab("From", "முதல்"),
+    to: lab("To", "வரை"),
+    totalSpent: lab("Total spent", "மொத்த செலவு"),
+    entries: (count: number): Label => ({
+      en: `${count} ${count === 1 ? "purchase" : "purchases"}`,
+      ta: `${count} கொள்முதல்கள்`,
+    }),
+    cost: lab("Cost", "செலவு"),
+    noPrice: lab("Price not recorded", "விலை பதிவாகவில்லை"),
+    empty: lab(
+      "No purchases in this range. Log one to get started.",
+      "இந்த காலத்தில் கொள்முதல்கள் இல்லை. ஒன்றைப் பதிவு செய்யவும்."
+    ),
+    invalidRange: lab(
+      "Start date must be on or before the end date.",
+      "தொடக்க தேதி முடிவு தேதிக்கு முன் இருக்க வேண்டும்."
+    ),
+    logPurchase: lab("Log purchase", "கொள்முதல் பதிவு"),
+    logTitle: lab("Log a purchase", "கொள்முதலைப் பதிவு செய்க"),
+    selectIngredient: lab("Select ingredient", "பொருளைத் தேர்ந்தெடுக்கவும்"),
+    linkEvent: lab("Linked event (optional)", "இணைக்கப்பட்ட நிகழ்வு (விருப்பம்)"),
+    noEvent: lab("No event", "நிகழ்வு இல்லை"),
+    assignToEvent: lab("Assign to event", "நிகழ்வுக்கு ஒதுக்கு"),
+    assignTitle: lab("Assign items to event", "நிகழ்வுக்கு பொருட்களை ஒதுக்கு"),
+    selectEvent: lab("Select event", "நிகழ்வைத் தேர்ந்தெடுக்கவும்"),
+    addItem: lab("Add item", "பொருள் சேர்"),
+    noItems: lab("No items added yet.", "இன்னும் பொருட்கள் சேர்க்கப்படவில்லை."),    qtyMin: lab("Quantity must be more than 0", "அளவு 0-ஐ விட அதிகமாக இருக்க வேண்டும்"),
+    priceMin: lab("Price must be 0 or more", "விலை 0 அல்லது அதற்கு மேல் இருக்க வேண்டும்"),
+    pricePlaceholder: lab("e.g. 150", "எ.கா. 150"),
+    dateRequired: lab("Date is required", "தேதி தேவை"),
+  },
   templates: {
     addTemplate: lab("Add Template", "டெம்ப்ளேட் சேர்க்க"),
     empty: lab("No templates yet. Add one to get started.", "இன்னும் டெம்ப்ளேட்டுகள் இல்லை. தொடங்க ஒன்றைச் சேர்க்கவும்."),
@@ -431,6 +518,16 @@ export const ui = {
       "ஏற்றுமதி தோல்வியடைந்தது. மீண்டும் முயற்சிக்கவும்."
     ),
     dark: lab("Dark", "இருள்"),
+    alerts: lab("Alerts", "அறிவிப்புகள்"),
+    alertsNote: lab(
+      "Choose which automatic WhatsApp messages and reminders are sent.",
+      "எந்த தானியங்கி வாட்ஸ்அப் செய்திகள் மற்றும் நினைவூட்டல்கள் அனுப்பப்படும் என்பதைத் தேர்ந்தெடுக்கவும்."
+    ),
+    alertConfirmInvoice: lab("Invoice when event is confirmed", "நிகழ்வு உறுதியானதும் விலைப்பட்டியல்"),
+    alertPaymentReceived: lab("Payment received message", "கட்டணம் பெறப்பட்ட செய்தி"),
+    alertFeedbackRequest: lab("Feedback request when event is completed", "நிகழ்வு முடிந்ததும் கருத்து கோரிக்கை"),
+    alertEventEve: lab("Reminder one day before an event", "நிகழ்வுக்கு ஒரு நாள் முன் நினைவூட்டல்"),
+    alertPaymentOverdue: lab("Reminder for overdue event payments", "தாமதமான நிகழ்வு கட்டண நினைவூட்டல்"),
   },
   finance: {
     income: lab("Income", "வருமானம்"),
@@ -487,6 +584,30 @@ export const ui = {
     ),
     line2: lab("Reconnect to the network to load all features.", "அனைத்து அம்சங்களுக்கும் நெட்வொர்க்குடன் மீண்டும் இணையவும்."),
   },
+  autoMsg: {
+    paymentThanks: lab("Payment received — thank you!", "கட்டணம் பெறப்பட்டது — நன்றி!"),
+    amountPaid: lab("Amount paid", "செலுத்திய தொகை"),
+    feedbackThanks: lab(
+      "Thank you for celebrating with us! We hope you enjoyed our food and service.",
+      "எங்களுடன் கொண்டாடியதற்கு நன்றி! எங்கள் உணவும் சேவையும் உங்களுக்கு பிடித்திருக்கும் என நம்புகிறோம்."
+    ),
+    feedbackRequest: lab(
+      "Please reply with your rating (1-5 stars) and a short review — we will feature it on our website. Thank you!",
+      "உங்கள் மதிப்பீட்டை (1-5 நட்சத்திரங்கள்) மற்றும் ஒரு சிறு கருத்தை பதிலாக அனுப்புங்கள் — அதை எங்கள் இணையதளத்தில் வெளியிடுவோம். நன்றி!"
+    ),
+  },
+  autoRemind: {
+    eventTomorrow: lab("Event tomorrow", "நாளை நிகழ்வு"),
+    eventTomorrowDetail: (name: string): Label => ({
+      en: `${name} is tomorrow — time to prepare.`,
+      ta: `${name} நாளை — தயாராகுங்கள்.`,
+    }),
+    paymentOverdue: lab("Payment overdue", "கட்டணம் தாமதம்"),
+    paymentOverdueDetail: (name: string, amount: string): Label => ({
+      en: `${name}: ${amount} pending over a week after the event.`,
+      ta: `${name}: நிகழ்வுக்குப் பிறகு ஒரு வாரத்திற்கும் மேலாக ${amount} நிலுவை.`,
+    }),
+  },
   auth: {
     title: lab("Sign in", "உள்நுழைக"),
     subtitle: lab(
@@ -500,6 +621,7 @@ export const ui = {
       "Invalid username or password.",
       "தவறான பயனர் பெயர் அல்லது கடவுச்சொல்."
     ),
+    capsLockOn: lab("Caps Lock is on", "Caps Lock இயக்கத்தில் உள்ளது"),
     logout: lab("Log out", "வெளியேறு"),
   },
   deleteConfirm: (name: string): Label => ({
@@ -528,6 +650,7 @@ export const ui = {
   }),
 } as const;
 
+/** Selects the preferred language from a bilingual label. */
 export function preferredText(
   label: Label | undefined | null,
   preference: "en" | "ta"

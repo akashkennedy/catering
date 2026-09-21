@@ -98,6 +98,7 @@ let loadTemplatesRequest: Promise<void> | null = null;
 
 export const useTemplatesStore = create<TemplatesState>()(
   persist(
+    /** Builds the persisted template store and its synchronized actions. */
     (set) => ({
       templates: [],
       loaded: false,

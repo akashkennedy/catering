@@ -27,6 +27,7 @@ let loadUtensilsRequest: Promise<void> | null = null;
 
 export const useUtensilsStore = create<UtensilsState>()(
   persist(
+    /** Builds the persisted utensil store and its synchronized actions. */
     (set) => ({
       utensils: [],
       loaded: false,

@@ -8,6 +8,7 @@ import { OverviewGrid } from "./OverviewGrid";
 import { PaymentStatusWidget } from "./PaymentStatusWidget";
 import { useEventsStore } from "@/store/events";
 
+/** Renders the dashboard overview and upcoming-event widgets. */
 export function Dashboard() {
   const loadEvents = useEventsStore((state) => state.loadEvents);
 
@@ -16,7 +17,7 @@ export function Dashboard() {
   }, [loadEvents]);
 
   return (
-    <Stack gap={40}>
+    <Stack gap={20}>
       <OverviewGrid />
       <UpcomingEventsWidget />
       <PaymentStatusWidget />

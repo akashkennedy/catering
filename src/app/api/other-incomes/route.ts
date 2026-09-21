@@ -35,6 +35,7 @@ export async function GET() {
   });
 }
 
+/** Creates an additional income entry and returns the persisted record. */
 export async function POST(request: Request) {
   const auth = await requirePermission("canViewFinance");
   if ("response" in auth) return auth.response;

@@ -16,6 +16,7 @@ type ExpenseListProps = {
   onDelete: (expense: Expense) => void;
 };
 
+/** Renders expenses as desktop rows or mobile cards with delete actions. */
 export function ExpenseList({ expenses, onDelete }: ExpenseListProps) {
   const uiLanguage = useSettingsStore((state) => state.uiLanguage);
   // Render only the matching list variant (table xor cards) instead of

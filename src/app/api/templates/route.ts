@@ -30,6 +30,7 @@ function newId(prefix: string): string {
   return `${prefix}-${Date.now()}-${Math.floor(Math.random() * 1e6)}`;
 }
 
+/** Loads a template with its ordered dishes and ingredient rows. */
 export async function fetchFullTemplate(
   sql: ReturnType<typeof db>,
   templateId: string
@@ -66,6 +67,7 @@ export async function fetchFullTemplate(
   };
 }
 
+/** Persists the complete dish and ingredient hierarchy for a template. */
 async function writeDishes(
   sql: ReturnType<typeof db>,
   templateId: string,
@@ -99,6 +101,7 @@ async function writeDishes(
   );
 }
 
+/** Lists every template with its complete dish hierarchy. */
 export async function GET() {
   const auth = await requireSession();
   if ("response" in auth) return auth.response;

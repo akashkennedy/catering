@@ -26,6 +26,7 @@ let loadEmployeesRequest: Promise<void> | null = null;
 
 export const useEmployeesStore = create<EmployeesState>()(
   persist(
+    /** Builds the persisted employee store and its synchronized actions. */
     (set) => ({
       employees: [],
       loaded: false,

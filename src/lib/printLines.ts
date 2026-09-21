@@ -17,6 +17,7 @@ export type PrintLine = {
   price: number;
 };
 
+/** Converts event ingredient selections into printable line items. */
 export function toPrintLines(
   lines: EventIngredientLine[],
   ingredients: Ingredient[]
@@ -35,6 +36,7 @@ export function toPrintLines(
   });
 }
 
+/** Resolves the normalized category tag for a printable line item. */
 export function tagOfLine(
   line: EventIngredientLine,
   ingredients: Ingredient[]
@@ -43,6 +45,7 @@ export function tagOfLine(
   return master && isIngredientTag(master.tag) ? master.tag : "grocery";
 }
 
+/** Returns category tags that occur in the supplied printable lines. */
 export function presentTags(
   lines: EventIngredientLine[],
   ingredients: Ingredient[]

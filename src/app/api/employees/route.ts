@@ -35,6 +35,7 @@ export async function GET() {
   return NextResponse.json({ employees: (rows as Row[]).map(toEmployee) });
 }
 
+/** Creates an employee and returns the persisted record. */
 export async function POST(request: Request) {
   const auth = await requirePermission("canManageEmployees");
   if ("response" in auth) return auth.response;

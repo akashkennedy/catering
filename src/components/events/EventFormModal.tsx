@@ -34,6 +34,13 @@ import {
   type EventMealGroup,
   type EventStatus,
 } from "@/store/events";
+import { newClientId } from "@/lib/storeSync";
+import {
+  detectTransition,
+  openConfirmedInvoice,
+  openFeedbackRequest,
+  openPaymentReceived,
+} from "@/lib/statusTransitions";
 import { emptyMealGroup, MealGroupsEditor } from "./MealGroupsEditor";
 
 export const EVENT_STATUS_OPTIONS: { value: EventStatus; label: Label }[] = [
@@ -64,6 +71,7 @@ function asNumber(value: number | string | undefined): number {
   return Number(value) || 0;
 }
 
+/** Builds event validation rules for either a new or existing event. */
 function buildEventSchema(isNew: boolean, currentDate?: string) {
   return z.object({
     name: z.string().trim().min(1, "Name is required"),
@@ -114,6 +122,7 @@ type EventFormModalProps = {
   onClose: () => void;
 };
 
+/** Creates or updates an event through the responsive event form. */
 export function EventFormModal({ opened, event, onClose }: EventFormModalProps) {
   const uiLanguage = useSettingsStore((state) => state.uiLanguage);
   const sheet = useMobileSheet("full", "xl");
@@ -233,22 +242,50 @@ export function EventFormModal({ opened, event, onClose }: EventFormModalProps) 
       const headcountChanged = event.headcount !== values.headcount;
       const groupsChanged =
         JSON.stringify(event.mealGroups ?? []) !== JSON.stringify(groups);
+      const nextIngredients =
+        templateChanged || headcountChanged || groupsChanged
+          ? scaledIngredients
+          : event.ingredients ?? [];
+      const transition = detectTransition(event.status, values.status);
+      const nextEvent: CateringEvent = {
+        ...event,
+        ...input,
+        employees: event.employees ?? [],
+        utensils: event.utensils ?? [],
+        ingredients: nextIngredients,
+      };
       updateEvent(event.id, {
         ...input,
         employees: event.employees ?? [],
         utensils: event.utensils ?? [],
-        ingredients:
-          templateChanged || headcountChanged || groupsChanged
-            ? scaledIngredients
-            : event.ingredients ?? [],
+        ingredients: nextIngredients,
       });
+      if (transition === "confirmed") {
+        openConfirmedInvoice(nextEvent);
+      } else if (transition === "paid") {
+        openPaymentReceived(nextEvent);
+      } else if (transition === "completed") {
+        openFeedbackRequest(nextEvent);
+      }
     } else {
-      addEvent(input);
+      const id = newClientId();
+      const created: CateringEvent = { id, ...input };
+      const transition = detectTransition(null, values.status);
+      if (transition === "confirmed") {
+        openConfirmedInvoice(created);
+      } else if (transition === "paid") {
+        openPaymentReceived(created);
+      }
+      if (transition === "completed") {
+        openFeedbackRequest(created);
+      }
+      void addEvent({ ...input, id });
     }
     onClose();
   };
 
   return (
+    <>
     <Modal
       opened={opened}
       onClose={onClose}
@@ -473,5 +510,6 @@ export function EventFormModal({ opened, event, onClose }: EventFormModalProps) 
         </div>
       </form>
     </Modal>
+    </>
   );
 }

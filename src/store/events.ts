@@ -196,7 +196,7 @@ export function buildScaledIngredientsForGroups(
 type EventsState = {
   events: CateringEvent[];
   loaded: boolean;
-  addEvent: (input: CateringEventInput) => Promise<void>;
+  addEvent: (input: CateringEventInput & { id?: string }) => Promise<string>;
   updateEvent: (id: string, input: CateringEventInput) => Promise<void>;
   deleteEvent: (id: string) => Promise<void>;
   loadEvents: () => Promise<void>;
@@ -238,17 +238,21 @@ let loadEventsRequest: Promise<void> | null = null;
 
 export const useEventsStore = create<EventsState>()(
   persist(
+    /** Builds the persisted event store and its synchronized actions. */
     (set) => ({
       events: [],
       loaded: false,
       addEvent: async (input) => {
-        const event: CateringEvent = { id: newClientId(), ...input };
+        const { id: providedId, ...rest } = input;
+        const id = providedId ?? newClientId();
+        const event: CateringEvent = { id, ...rest };
         set((state) => ({ events: [...state.events, event] }));
         const ok = await sendJson("/api/events", "POST", event);
         if (!ok) {
           const { queueOp } = await import("@/lib/outbox");
           queueOp({ method: "POST", path: "/api/events", body: event });
         }
+        return id;
       },
       updateEvent: async (id, input) => {
         set((state) => ({

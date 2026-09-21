@@ -34,7 +34,14 @@ import {
   type EventMealGroup,
   type EventStatus,
 } from "@/store/events";
+import { newClientId } from "@/lib/storeSync";
+import {
+  detectTransition,
+  openConfirmedInvoice,
+  openPaymentReceived,
+} from "@/lib/statusTransitions";
 import { emptyMealGroup, MealGroupsEditor } from "./MealGroupsEditor";
+import { EventFeedbackModal } from "./EventFeedbackModal";
 
 export const EVENT_STATUS_OPTIONS: { value: EventStatus; label: Label }[] = [
   { value: "enquiry", label: ui.events.statusEnquiry },
@@ -160,6 +167,7 @@ export function EventFormModal({ opened, event, onClose }: EventFormModalProps) 
   const advancePaid = watch("advancePaid");
   const [amountOverridden, setAmountOverridden] = useState(false);
   const [mealGroups, setMealGroups] = useState<EventMealGroup[]>([]);
+  const [feedbackEvent, setFeedbackEvent] = useState<CateringEvent | null>(null);
   const balance = roundMoney(asNumber(totalAmount) - asNumber(advancePaid));
 
   useEffect(() => {
@@ -235,22 +243,50 @@ export function EventFormModal({ opened, event, onClose }: EventFormModalProps) 
       const headcountChanged = event.headcount !== values.headcount;
       const groupsChanged =
         JSON.stringify(event.mealGroups ?? []) !== JSON.stringify(groups);
+      const nextIngredients =
+        templateChanged || headcountChanged || groupsChanged
+          ? scaledIngredients
+          : event.ingredients ?? [];
+      const transition = detectTransition(event.status, values.status);
+      const nextEvent: CateringEvent = {
+        ...event,
+        ...input,
+        employees: event.employees ?? [],
+        utensils: event.utensils ?? [],
+        ingredients: nextIngredients,
+      };
       updateEvent(event.id, {
         ...input,
         employees: event.employees ?? [],
         utensils: event.utensils ?? [],
-        ingredients:
-          templateChanged || headcountChanged || groupsChanged
-            ? scaledIngredients
-            : event.ingredients ?? [],
+        ingredients: nextIngredients,
       });
+      if (transition === "confirmed") {
+        openConfirmedInvoice(nextEvent);
+      } else if (transition === "paid") {
+        openPaymentReceived(nextEvent);
+      } else if (transition === "completed") {
+        setFeedbackEvent(nextEvent);
+      }
     } else {
-      addEvent(input);
+      const id = newClientId();
+      const created: CateringEvent = { id, ...input };
+      const transition = detectTransition(null, values.status);
+      if (transition === "confirmed") {
+        openConfirmedInvoice(created);
+      } else if (transition === "paid") {
+        openPaymentReceived(created);
+      }
+      if (transition === "completed") {
+        setFeedbackEvent(created);
+      }
+      void addEvent({ ...input, id });
     }
     onClose();
   };
 
   return (
+    <>
     <Modal
       opened={opened}
       onClose={onClose}
@@ -475,5 +511,11 @@ export function EventFormModal({ opened, event, onClose }: EventFormModalProps) 
         </div>
       </form>
     </Modal>
+    <EventFeedbackModal
+      opened={feedbackEvent !== null}
+      event={feedbackEvent}
+      onClose={() => setFeedbackEvent(null)}
+    />
+    </>
   );
 }

@@ -572,6 +572,22 @@ export const ui = {
     ),
     line2: lab("Reconnect to the network to load all features.", "அனைத்து அம்சங்களுக்கும் நெட்வொர்க்குடன் மீண்டும் இணையவும்."),
   },
+  autoMsg: {
+    paymentThanks: lab("Payment received — thank you!", "கட்டணம் பெறப்பட்டது — நன்றி!"),
+    amountPaid: lab("Amount paid", "செலுத்திய தொகை"),
+  },
+  feedback: {
+    title: lab("Customer feedback", "வாடிக்கையாளர் கருத்து"),
+    subtitle: lab(
+      "Ask the customer for a star rating and a short review, then save it to the website testimonials.",
+      "வாடிக்கையாளரிடம் நட்சத்திர மதிப்பீடு மற்றும் கருத்தைக் கேட்டு, இணையதள கருத்துகளில் சேமிக்கவும்."
+    ),
+    rating: lab("Rating", "மதிப்பீடு"),
+    review: lab("Review", "கருத்து"),
+    reviewPlaceholder: lab("e.g. Excellent food and service!", "எ.கா. அருமையான உணவு மற்றும் சேவை!"),
+    author: lab("Customer name", "வாடிக்கையாளர் பெயர்"),
+    skip: lab("Skip", "தவிர்"),
+  },
   autoRemind: {
     eventTomorrow: lab("Event tomorrow", "நாளை நிகழ்வு"),
     eventTomorrowDetail: (name: string): Label => ({

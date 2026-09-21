@@ -19,8 +19,7 @@ import { todayLocalISO } from "@/lib/date";
 import { formatPhone } from "@/lib/phone";
 import { clientPendingAmount, eventEmployeePending } from "@/lib/eventFinances";
 import { dueEveReminders, duePaymentReminders } from "@/lib/autoReminders";
-import { preferredText, ui } from "@/lib/i18n";
-import { useSettingsStore } from "@/store/settings";
+import { eveNotificationText, overdueNotificationText } from "@/lib/statusTransitions";
 import { isLowStock, remainingStock } from "@/lib/stock";
 import { useRemindersStore } from "@/store/reminders";
 import { useEventsStore } from "@/store/events";
@@ -60,7 +59,6 @@ export function NotificationCenter() {
   const loadEvents = useEventsStore((s) => s.loadEvents);
   const ingredients = useIngredientsStore((s) => s.ingredients);
   const ledgerEntries = useStockLedgerStore((s) => s.entries);
-  const uiLanguage = useSettingsStore((s) => s.uiLanguage);
 
   useEffect(() => {
     void loadEvents();
@@ -112,27 +110,26 @@ export function NotificationCenter() {
     }
 
     for (const event of dueEveReminders(events)) {
+      const text = eveNotificationText(event.name);
       items.push({
         id: `eve-${event.id}`,
         type: "data",
         icon: <CalendarClock size={16} />,
-        label: preferredText(ui.autoRemind.eventTomorrow, uiLanguage),
-        detail: preferredText(ui.autoRemind.eventTomorrowDetail(event.name), uiLanguage),
+        label: text.title,
+        detail: text.body,
         href: `/events/${event.id}`,
         accent: "kumkum",
       });
     }
 
     for (const event of duePaymentReminders(events)) {
+      const text = overdueNotificationText(event.name, clientPendingAmount(event));
       items.push({
         id: `overdue-${event.id}`,
         type: "data",
         icon: <CreditCard size={16} />,
-        label: preferredText(ui.autoRemind.paymentOverdue, uiLanguage),
-        detail: preferredText(
-          ui.autoRemind.paymentOverdueDetail(event.name, formatINR(clientPendingAmount(event))),
-          uiLanguage
-        ),
+        label: text.title,
+        detail: text.body,
         href: `/events/${event.id}`,
         accent: "kumkum",
       });
@@ -170,7 +167,7 @@ export function NotificationCenter() {
     }
 
     return items.filter((item) => !hidden.has(item.id));
-  }, [reminders, events, ingredients, ledgerEntries, hidden, uiLanguage]);
+  }, [reminders, events, ingredients, ledgerEntries, hidden]);
 
   const count = notifications.length;
   const reminderCount = notifications.filter((n) => n.type === "reminder").length;

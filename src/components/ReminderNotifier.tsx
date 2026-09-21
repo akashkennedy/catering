@@ -2,14 +2,12 @@
 
 import { useEffect } from "react";
 
-import { formatINR } from "@/lib/format";
 import { formatPhone } from "@/lib/phone";
 import { dueEveReminders, duePaymentReminders } from "@/lib/autoReminders";
 import { clientPendingAmount } from "@/lib/eventFinances";
-import { preferredText, ui } from "@/lib/i18n";
+import { eveNotificationText, overdueNotificationText } from "@/lib/statusTransitions";
 import { useEventsStore } from "@/store/events";
 import { useRemindersStore } from "@/store/reminders";
-import { useSettingsStore } from "@/store/settings";
 
 const CHECK_INTERVAL_MS = 30_000;
 const AUTO_NOTIFIED_KEY = "catering-auto-notified";
@@ -56,7 +54,6 @@ function fireDueAutoReminders() {
   if (typeof window === "undefined" || !("Notification" in window)) return;
   if (Notification.permission !== "granted") return;
 
-  const uiLanguage = useSettingsStore.getState().uiLanguage;
   const events = useEventsStore.getState().events;
   const fired = readFiredKeys();
   let changed = false;
@@ -69,22 +66,13 @@ function fireDueAutoReminders() {
   };
 
   for (const event of dueEveReminders(events)) {
-    push(
-      `auto:eve:${event.id}`,
-      preferredText(ui.autoRemind.eventTomorrow, uiLanguage),
-      preferredText(ui.autoRemind.eventTomorrowDetail(event.name), uiLanguage)
-    );
+    const text = eveNotificationText(event.name);
+    push(`auto:eve:${event.id}`, text.title, text.body);
   }
 
   for (const event of duePaymentReminders(events)) {
-    push(
-      `auto:overdue:${event.id}`,
-      preferredText(ui.autoRemind.paymentOverdue, uiLanguage),
-      preferredText(
-        ui.autoRemind.paymentOverdueDetail(event.name, formatINR(clientPendingAmount(event))),
-        uiLanguage
-      )
-    );
+    const text = overdueNotificationText(event.name, clientPendingAmount(event));
+    push(`auto:overdue:${event.id}`, text.title, text.body);
   }
 
   if (changed) writeFiredKeys(fired);

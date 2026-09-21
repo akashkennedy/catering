@@ -115,6 +115,7 @@ export function EventsManager() {
             value={view}
             onChange={(value) => setView(value as EventsView)}
             data={VIEW_DATA}
+            ml="auto"
           />
         </Group>
       </Stack>

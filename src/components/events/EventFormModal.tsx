@@ -38,10 +38,10 @@ import { newClientId } from "@/lib/storeSync";
 import {
   detectTransition,
   openConfirmedInvoice,
+  openFeedbackRequest,
   openPaymentReceived,
 } from "@/lib/statusTransitions";
 import { emptyMealGroup, MealGroupsEditor } from "./MealGroupsEditor";
-import { EventFeedbackModal } from "./EventFeedbackModal";
 
 export const EVENT_STATUS_OPTIONS: { value: EventStatus; label: Label }[] = [
   { value: "enquiry", label: ui.events.statusEnquiry },
@@ -167,7 +167,6 @@ export function EventFormModal({ opened, event, onClose }: EventFormModalProps) 
   const advancePaid = watch("advancePaid");
   const [amountOverridden, setAmountOverridden] = useState(false);
   const [mealGroups, setMealGroups] = useState<EventMealGroup[]>([]);
-  const [feedbackEvent, setFeedbackEvent] = useState<CateringEvent | null>(null);
   const balance = roundMoney(asNumber(totalAmount) - asNumber(advancePaid));
 
   useEffect(() => {
@@ -266,7 +265,7 @@ export function EventFormModal({ opened, event, onClose }: EventFormModalProps) 
       } else if (transition === "paid") {
         openPaymentReceived(nextEvent);
       } else if (transition === "completed") {
-        setFeedbackEvent(nextEvent);
+        openFeedbackRequest(nextEvent);
       }
     } else {
       const id = newClientId();
@@ -278,7 +277,7 @@ export function EventFormModal({ opened, event, onClose }: EventFormModalProps) 
         openPaymentReceived(created);
       }
       if (transition === "completed") {
-        setFeedbackEvent(created);
+        openFeedbackRequest(created);
       }
       void addEvent({ ...input, id });
     }
@@ -511,11 +510,6 @@ export function EventFormModal({ opened, event, onClose }: EventFormModalProps) 
         </div>
       </form>
     </Modal>
-    <EventFeedbackModal
-      opened={feedbackEvent !== null}
-      event={feedbackEvent}
-      onClose={() => setFeedbackEvent(null)}
-    />
     </>
   );
 }

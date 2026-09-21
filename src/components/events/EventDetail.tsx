@@ -49,11 +49,11 @@ import { useVesselStockLedgerStore } from "@/store/vesselStockLedger";
 import { useTemplatesStore } from "@/store/templates";
 import { useVendorSuggestionsStore } from "@/store/vendorSuggestions";
 import { PrintPreviewModal } from "./PrintPreviewModal";
-import { EventFeedbackModal } from "./EventFeedbackModal";
 import { EVENT_STATUS_OPTIONS } from "./EventFormModal";
 import {
   detectTransition,
   openConfirmedInvoice,
+  openFeedbackRequest,
   openPaymentReceived,
 } from "@/lib/statusTransitions";
 import {
@@ -82,7 +82,6 @@ export function EventDetail() {
   const [assignValue, setAssignValue] = useState<string | null>(null);
   const [utensilVendorName, setUtensilVendorName] = useState("");
   const [printOpened, setPrintOpened] = useState(false);
-  const [feedbackOpened, setFeedbackOpened] = useState(false);
   const canViewAllPay = useAuthStore(
     (state) => state.isAdmin || state.permissions.canViewOtherEmployeeRates
   );
@@ -186,7 +185,7 @@ export function EventDetail() {
     } else if (transition === "paid") {
       openPaymentReceived({ ...event, status });
     } else if (transition === "completed") {
-      setFeedbackOpened(true);
+      openFeedbackRequest({ ...event, status });
     }
   };
 
@@ -364,12 +363,6 @@ export function EventDetail() {
         ingredients={ingredients}
         onLineChange={handleLineChange}
         onClose={() => setPrintOpened(false)}
-      />
-
-      <EventFeedbackModal
-        opened={feedbackOpened}
-        event={event}
-        onClose={() => setFeedbackOpened(false)}
       />
 
       <Paper withBorder p="md">

@@ -575,18 +575,14 @@ export const ui = {
   autoMsg: {
     paymentThanks: lab("Payment received — thank you!", "கட்டணம் பெறப்பட்டது — நன்றி!"),
     amountPaid: lab("Amount paid", "செலுத்திய தொகை"),
-  },
-  feedback: {
-    title: lab("Customer feedback", "வாடிக்கையாளர் கருத்து"),
-    subtitle: lab(
-      "Ask the customer for a star rating and a short review, then save it to the website testimonials.",
-      "வாடிக்கையாளரிடம் நட்சத்திர மதிப்பீடு மற்றும் கருத்தைக் கேட்டு, இணையதள கருத்துகளில் சேமிக்கவும்."
+    feedbackThanks: lab(
+      "Thank you for celebrating with us! We hope you enjoyed our food and service.",
+      "எங்களுடன் கொண்டாடியதற்கு நன்றி! எங்கள் உணவும் சேவையும் உங்களுக்கு பிடித்திருக்கும் என நம்புகிறோம்."
     ),
-    rating: lab("Rating", "மதிப்பீடு"),
-    review: lab("Review", "கருத்து"),
-    reviewPlaceholder: lab("e.g. Excellent food and service!", "எ.கா. அருமையான உணவு மற்றும் சேவை!"),
-    author: lab("Customer name", "வாடிக்கையாளர் பெயர்"),
-    skip: lab("Skip", "தவிர்"),
+    feedbackRequest: lab(
+      "Please reply with your rating (1-5 stars) and a short review — we will feature it on our website. Thank you!",
+      "உங்கள் மதிப்பீட்டை (1-5 நட்சத்திரங்கள்) மற்றும் ஒரு சிறு கருத்தை பதிலாக அனுப்புங்கள் — அதை எங்கள் இணையதளத்தில் வெளியிடுவோம். நன்றி!"
+    ),
   },
   autoRemind: {
     eventTomorrow: lab("Event tomorrow", "நாளை நிகழ்வு"),

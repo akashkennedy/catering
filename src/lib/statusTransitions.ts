@@ -59,6 +59,20 @@ export function openPaymentReceived(event: CateringEvent): boolean {
   return openWhatsAppChat(event.phone, paymentMessage(event, docLang()));
 }
 
+function feedbackRequestMessage(event: CateringEvent, lang: PdfLang): string {
+  const lines = [
+    preferredText(ui.autoMsg.feedbackThanks, lang),
+    `${event.name}`,
+    preferredText(ui.autoMsg.feedbackRequest, lang),
+  ];
+  return lines.join("\n");
+}
+
+/** Feedback-request text for a newly completed event. False = no valid number. */
+export function openFeedbackRequest(event: CateringEvent): boolean {
+  return openWhatsAppChat(event.phone, feedbackRequestMessage(event, docLang()));
+}
+
 /** Eve-of-event push title/body in the current UI language. */
 export function eveNotificationText(name: string): { title: string; body: string } {
   const lang = useSettingsStore.getState().uiLanguage;

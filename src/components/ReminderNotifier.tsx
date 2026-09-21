@@ -8,6 +8,7 @@ import { clientPendingAmount } from "@/lib/eventFinances";
 import { eveNotificationText, overdueNotificationText } from "@/lib/statusTransitions";
 import { useEventsStore } from "@/store/events";
 import { useRemindersStore } from "@/store/reminders";
+import { useSettingsStore } from "@/store/settings";
 
 const CHECK_INTERVAL_MS = 30_000;
 const AUTO_NOTIFIED_KEY = "catering-auto-notified";
@@ -55,6 +56,7 @@ function fireDueAutoReminders() {
   if (Notification.permission !== "granted") return;
 
   const events = useEventsStore.getState().events;
+  const alerts = useSettingsStore.getState().alerts;
   const fired = readFiredKeys();
   let changed = false;
 
@@ -66,11 +68,13 @@ function fireDueAutoReminders() {
   };
 
   for (const event of dueEveReminders(events)) {
+    if (alerts.eventEve === false) break;
     const text = eveNotificationText(event.name);
     push(`auto:eve:${event.id}`, text.title, text.body);
   }
 
   for (const event of duePaymentReminders(events)) {
+    if (alerts.paymentOverdue === false) break;
     const text = overdueNotificationText(event.name, clientPendingAmount(event));
     push(`auto:overdue:${event.id}`, text.title, text.body);
   }

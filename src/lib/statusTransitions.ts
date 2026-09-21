@@ -2,7 +2,7 @@ import type { CateringEvent, EventStatus } from "@/store/events";
 import { formatINR } from "@/lib/format";
 import { eventBalance } from "@/lib/eventFinances";
 import { ui, preferredText } from "@/lib/i18n";
-import { useSettingsStore } from "@/store/settings";
+import { useSettingsStore, type AlertKey } from "@/store/settings";
 import {
   buildWhatsAppMessage,
   makeInvoiceNumber,
@@ -34,8 +34,13 @@ function docLang(): PdfLang {
   return lang === "ta" ? "ta" : "en";
 }
 
-/** Detailed invoice text for a newly confirmed event. False = no valid number. */
+function isAlertEnabled(key: AlertKey): boolean {
+  return useSettingsStore.getState().alerts[key] !== false;
+}
+
+/** Detailed invoice text for a newly confirmed event. False = disabled or no valid number. */
 export function openConfirmedInvoice(event: CateringEvent): boolean {
+  if (!isAlertEnabled("confirmInvoice")) return false;
   const subtotal = (event.ingredients ?? []).reduce((sum, line) => sum + line.price, 0);
   const message = buildWhatsAppMessage(event, subtotal, docLang(), "detailed");
   return openWhatsAppChat(event.phone, message);
@@ -54,8 +59,9 @@ function paymentMessage(event: CateringEvent, lang: PdfLang): string {
   return lines.join("\n");
 }
 
-/** Payment-received text for a newly paid event. False = no valid number. */
+/** Payment-received text for a newly paid event. False = disabled or no valid number. */
 export function openPaymentReceived(event: CateringEvent): boolean {
+  if (!isAlertEnabled("paymentReceived")) return false;
   return openWhatsAppChat(event.phone, paymentMessage(event, docLang()));
 }
 
@@ -68,8 +74,9 @@ function feedbackRequestMessage(event: CateringEvent, lang: PdfLang): string {
   return lines.join("\n");
 }
 
-/** Feedback-request text for a newly completed event. False = no valid number. */
+/** Feedback-request text for a newly completed event. False = disabled or no valid number. */
 export function openFeedbackRequest(event: CateringEvent): boolean {
+  if (!isAlertEnabled("feedbackRequest")) return false;
   return openWhatsAppChat(event.phone, feedbackRequestMessage(event, docLang()));
 }
 

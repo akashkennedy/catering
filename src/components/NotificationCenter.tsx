@@ -23,6 +23,7 @@ import { eveNotificationText, overdueNotificationText } from "@/lib/statusTransi
 import { isLowStock, remainingStock } from "@/lib/stock";
 import { useRemindersStore } from "@/store/reminders";
 import { useEventsStore } from "@/store/events";
+import { useSettingsStore } from "@/store/settings";
 import { useIngredientsStore } from "@/store/ingredients";
 import { useStockLedgerStore } from "@/store/stockLedger";
 
@@ -59,6 +60,7 @@ export function NotificationCenter() {
   const loadEvents = useEventsStore((s) => s.loadEvents);
   const ingredients = useIngredientsStore((s) => s.ingredients);
   const ledgerEntries = useStockLedgerStore((s) => s.entries);
+  const alerts = useSettingsStore((s) => s.alerts);
 
   useEffect(() => {
     void loadEvents();
@@ -110,6 +112,7 @@ export function NotificationCenter() {
     }
 
     for (const event of dueEveReminders(events)) {
+      if (alerts.eventEve === false) break;
       const text = eveNotificationText(event.name);
       items.push({
         id: `eve-${event.id}`,
@@ -123,6 +126,7 @@ export function NotificationCenter() {
     }
 
     for (const event of duePaymentReminders(events)) {
+      if (alerts.paymentOverdue === false) break;
       const text = overdueNotificationText(event.name, clientPendingAmount(event));
       items.push({
         id: `overdue-${event.id}`,
@@ -167,7 +171,7 @@ export function NotificationCenter() {
     }
 
     return items.filter((item) => !hidden.has(item.id));
-  }, [reminders, events, ingredients, ledgerEntries, hidden]);
+  }, [reminders, events, ingredients, ledgerEntries, hidden, alerts]);
 
   const count = notifications.length;
   const reminderCount = notifications.filter((n) => n.type === "reminder").length;

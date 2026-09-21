@@ -516,6 +516,16 @@ export const ui = {
       "ஏற்றுமதி தோல்வியடைந்தது. மீண்டும் முயற்சிக்கவும்."
     ),
     dark: lab("Dark", "இருள்"),
+    alerts: lab("Alerts", "அறிவிப்புகள்"),
+    alertsNote: lab(
+      "Choose which automatic WhatsApp messages and reminders are sent.",
+      "எந்த தானியங்கி வாட்ஸ்அப் செய்திகள் மற்றும் நினைவூட்டல்கள் அனுப்பப்படும் என்பதைத் தேர்ந்தெடுக்கவும்."
+    ),
+    alertConfirmInvoice: lab("Invoice when event is confirmed", "நிகழ்வு உறுதியானதும் விலைப்பட்டியல்"),
+    alertPaymentReceived: lab("Payment received message", "கட்டணம் பெறப்பட்ட செய்தி"),
+    alertFeedbackRequest: lab("Feedback request when event is completed", "நிகழ்வு முடிந்ததும் கருத்து கோரிக்கை"),
+    alertEventEve: lab("Reminder one day before an event", "நிகழ்வுக்கு ஒரு நாள் முன் நினைவூட்டல்"),
+    alertPaymentOverdue: lab("Reminder for overdue event payments", "தாமதமான நிகழ்வு கட்டண நினைவூட்டல்"),
   },
   finance: {
     income: lab("Income", "வருமானம்"),

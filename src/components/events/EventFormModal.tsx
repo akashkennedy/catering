@@ -64,6 +64,7 @@ function asNumber(value: number | string | undefined): number {
   return Number(value) || 0;
 }
 
+/** Builds event validation rules for either a new or existing event. */
 function buildEventSchema(isNew: boolean, currentDate?: string) {
   return z.object({
     name: z.string().trim().min(1, "Name is required"),
@@ -114,6 +115,7 @@ type EventFormModalProps = {
   onClose: () => void;
 };
 
+/** Creates or updates an event through the responsive event form. */
 export function EventFormModal({ opened, event, onClose }: EventFormModalProps) {
   const uiLanguage = useSettingsStore((state) => state.uiLanguage);
   const sheet = useMobileSheet("full", "xl");

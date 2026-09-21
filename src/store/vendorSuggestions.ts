@@ -30,6 +30,7 @@ let loadVendorSuggestionsRequest: Promise<void> | null = null;
 
 export const useVendorSuggestionsStore = create<VendorSuggestionsState>()(
   persist(
+    /** Builds the persisted vendor suggestion store and its synchronized actions. */
     (set) => ({
       vendorSuggestions: seedFromLegacyVendors(),
       loaded: false,

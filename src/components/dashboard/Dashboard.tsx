@@ -8,6 +8,7 @@ import { OverviewGrid } from "./OverviewGrid";
 import { PaymentStatusWidget } from "./PaymentStatusWidget";
 import { useEventsStore } from "@/store/events";
 
+/** Renders the dashboard overview and upcoming-event widgets. */
 export function Dashboard() {
   const loadEvents = useEventsStore((state) => state.loadEvents);
 

@@ -89,6 +89,7 @@ let loadFinanceRequest: Promise<void> | null = null;
 
 export const useFinanceStore = create<FinanceState>()(
   persist(
+    /** Builds the persisted finance store and its synchronized actions. */
     (set, get) => ({
       expenses: [],
       otherIncomes: [],

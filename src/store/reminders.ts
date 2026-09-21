@@ -32,6 +32,7 @@ let loadRemindersRequest: Promise<void> | null = null;
 
 export const useRemindersStore = create<RemindersState>()(
   persist(
+    /** Builds the persisted reminder store and its synchronized actions. */
     (set) => ({
       reminders: [],
       loaded: false,

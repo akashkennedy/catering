@@ -238,6 +238,7 @@ let loadEventsRequest: Promise<void> | null = null;
 
 export const useEventsStore = create<EventsState>()(
   persist(
+    /** Builds the persisted event store and its synchronized actions. */
     (set) => ({
       events: [],
       loaded: false,

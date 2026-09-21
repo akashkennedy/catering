@@ -20,6 +20,7 @@ import { useFinanceStore } from "@/store/finance";
 
 type OverviewFilter = "month" | "all";
 
+/** Displays one labeled dashboard metric with an optional supporting value. */
 function StatCard({
   icon,
   title,
@@ -49,6 +50,7 @@ function StatCard({
 
 const iconStyle = { color: "var(--ink-muted)" } as const;
 
+/** Summarizes event and finance totals for the selected reporting period. */
 export function OverviewGrid() {
   const events = useEventsStore((state) => state.events);
   const eventsLoaded = useEventsStore((state) => state.loaded);

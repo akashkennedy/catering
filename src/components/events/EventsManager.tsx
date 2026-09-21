@@ -35,6 +35,7 @@ const STATUS_FILTER_DATA: { label: React.ReactNode; value: StatusFilter }[] = [
   { label: <Bilingual label={ui.events.statusPaid} />, value: "paid" },
 ];
 
+/** Manages event search, responsive results, and event editor actions. */
 export function EventsManager() {
   const uiLanguage = useSettingsStore((state) => state.uiLanguage);
   const events = useEventsStore((state) => state.events);

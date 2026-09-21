@@ -53,6 +53,7 @@ function isActive(pathname: string, href: string): boolean {
   return pathname === href || pathname.startsWith(`${href}/`);
 }
 
+/** Renders the primary mobile navigation, add action, and overflow menu. */
 export function MobileBottomNav({ onAddEvent }: { onAddEvent: () => void }) {
   const pathname = usePathname();
   const [moreOpened, setMoreOpened] = useState(false);

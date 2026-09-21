@@ -59,6 +59,7 @@ import {
   eventRentalCost,
 } from "@/lib/eventFinances";
 
+/** Renders and coordinates the editable details of the selected event. */
 export function EventDetail() {
   const params = useParams<{ id: string }>();
   const id = params.id;

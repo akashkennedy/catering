@@ -41,6 +41,7 @@ export async function GET() {
   return NextResponse.json({ entries: (rows as Row[]).map(toStockEntry) });
 }
 
+/** Creates an ingredient stock entry and returns the persisted record. */
 export async function POST(request: Request) {
   const auth = await requireSession();
   if ("response" in auth) return auth.response;

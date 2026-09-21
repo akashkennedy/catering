@@ -528,6 +528,7 @@ export const ui = {
   }),
 } as const;
 
+/** Selects the preferred language from a bilingual label. */
 export function preferredText(
   label: Label | undefined | null,
   preference: "en" | "ta"

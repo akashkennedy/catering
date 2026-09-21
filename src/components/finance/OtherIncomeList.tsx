@@ -15,6 +15,7 @@ type OtherIncomeListProps = {
   onDelete: (income: OtherIncome) => void;
 };
 
+/** Renders other income entries as desktop rows or mobile cards. */
 export function OtherIncomeList({ otherIncomes, onDelete }: OtherIncomeListProps) {
   // Render only the matching list variant (table xor cards) instead of
   // mounting both and hiding one with CSS.

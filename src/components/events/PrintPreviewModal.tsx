@@ -25,6 +25,7 @@ type PrintPreviewModalProps = {
   onClose: () => void;
 };
 
+/** Previews an event document and downloads the selected PDF format. */
 export function PrintPreviewModal({
   opened,
   event,

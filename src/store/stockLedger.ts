@@ -48,6 +48,7 @@ let loadStockLedgerRequest: Promise<void> | null = null;
 
 export const useStockLedgerStore = create<StockLedgerState>()(
   persist(
+    /** Builds the persisted ingredient stock ledger and its synchronized actions. */
     (set) => ({
       entries: [],
       loaded: false,

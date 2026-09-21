@@ -15,6 +15,7 @@ import { Bilingual } from "@/components/Bilingual";
 import { ui } from "@/lib/i18n";
 import { useEmployeesStore, type Employee } from "@/store/employees";
 
+/** Manages the responsive employee list and employee editor actions. */
 export function EmployeesManager() {
   const employees = useEmployeesStore((state) => state.employees);
   const deleteEmployee = useEmployeesStore((state) => state.deleteEmployee);

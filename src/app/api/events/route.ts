@@ -73,6 +73,7 @@ function newId(prefix: string): string {
   return `${prefix}-${Date.now()}-${Math.floor(Math.random() * 1e6)}`;
 }
 
+/** Loads an event and assembles its related meal, ingredient, employee, and utensil rows. */
 export async function fetchFullEvent(
   sql: ReturnType<typeof db>,
   eventId: string
@@ -145,6 +146,7 @@ export async function fetchFullEvent(
   };
 }
 
+/** Persists all child collections belonging to an event. */
 export async function writeEventChildren(
   sql: ReturnType<typeof db>,
   eventId: string,
@@ -215,6 +217,7 @@ export async function writeEventChildren(
   await Promise.all(writes);
 }
 
+/** Lists every event with its related child records. */
 export async function GET() {
   const session = await resolveRequestSession();
   if (!session) {

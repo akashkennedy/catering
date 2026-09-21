@@ -42,6 +42,7 @@ type DeleteTarget = {
   descriptor: string;
 };
 
+/** Builds the filterable finance report and its summary and detail views. */
 export function FinanceReport() {
   const uiLanguage = useSettingsStore((state) => state.uiLanguage);
   const events = useEventsStore((state) => state.events);

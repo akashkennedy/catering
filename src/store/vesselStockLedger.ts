@@ -58,6 +58,7 @@ let loadVesselLedgerRequest: Promise<void> | null = null;
 
 export const useVesselStockLedgerStore = create<VesselStockLedgerState>()(
   persist(
+    /** Builds the persisted vessel stock ledger and its synchronized actions. */
     (set) => ({
       entries: [],
       loaded: false,

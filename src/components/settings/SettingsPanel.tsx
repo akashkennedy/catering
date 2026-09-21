@@ -13,6 +13,7 @@ import {
   type UiLanguage,
 } from "@/store/settings";
 
+/** Renders application settings and coordinates database export. */
 export function SettingsPanel() {
   const uiLanguage = useSettingsStore((state) => state.uiLanguage);
   const setUiLanguage = useSettingsStore((state) => state.setUiLanguage);

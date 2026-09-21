@@ -18,6 +18,7 @@ import { useIngredientsStore, type Ingredient } from "@/store/ingredients";
 
 type TagFilter = "all" | IngredientTag;
 
+/** Manages ingredient search, responsive results, and ingredient editor actions. */
 export function IngredientsManager() {
   const ingredients = useIngredientsStore((state) => state.ingredients);
   const deleteIngredient = useIngredientsStore((state) => state.deleteIngredient);

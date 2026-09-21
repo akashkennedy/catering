@@ -27,6 +27,7 @@ function newId(prefix: string): string {
   return `${prefix}-${Date.now()}-${Math.floor(Math.random() * 1e6)}`;
 }
 
+/** Replaces a template and its dish hierarchy with the submitted data. */
 export async function PATCH(
   request: Request,
   { params }: { params: Promise<{ id: string }> }

@@ -163,6 +163,7 @@ function ThankYouFooter() {
   );
 }
 
+/** Renders the event metadata shown beneath the branded PDF header. */
 function EventHeader({ event }: { event: CateringEvent }) {
   return (
     <View>
@@ -279,6 +280,7 @@ function GroupedTable({
   );
 }
 
+/** Builds a branded event PDF document from printable ingredient lines. */
 export function buildDocument(
   event: CateringEvent,
   ingredients: Ingredient[],

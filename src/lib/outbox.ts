@@ -53,7 +53,7 @@ export function pendingOpCount(): number {
   return readOps().length;
 }
 
-/** Drops all queued ops. Used by the dev-seed wipe so cleared data cannot replay. */
+/** Drops all queued ops (e.g. after a full local wipe so cleared data cannot replay). */
 export function clearOutbox(): void {
   if (typeof window === "undefined") return;
   writeOps([]);

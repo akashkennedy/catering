@@ -3,6 +3,7 @@
 import { useCallback, useDeferredValue, useEffect, useMemo, useState } from "react";
 import { Button, Group, Modal, Stack, Text, TextInput, Title } from "@mantine/core";
 import { Plus, Search } from "lucide-react";
+import { useMediaQuery } from "@mantine/hooks";
 
 import { IngredientCards } from "./IngredientCards";
 import { IngredientFormModal } from "./IngredientFormModal";
@@ -22,6 +23,9 @@ export function IngredientsManager() {
   const deleteIngredient = useIngredientsStore((state) => state.deleteIngredient);
   const loadIngredients = useIngredientsStore((state) => state.loadIngredients);
   const loaded = useIngredientsStore((state) => state.loaded);
+  // Render only the matching list variant (table xor cards) instead of
+  // mounting both and hiding one with CSS.
+  const isMobile = useMediaQuery("(max-width: 639px)");
 
   useEffect(() => {
     void loadIngredients();
@@ -127,19 +131,18 @@ export function IngredientsManager() {
             <Text c="dimmed">
               <Bilingual label={deferredQuery.trim() ? ui.ingredients.noMatch : ui.ingredients.empty} />
             </Text>
+          ) : isMobile ? (
+            <IngredientCards
+              ingredients={filtered}
+              onEdit={handleEdit}
+              onDelete={setDeletingIngredient}
+            />
           ) : (
-            <>
-              <IngredientTable
-                ingredients={filtered}
-                onEdit={handleEdit}
-                onDelete={setDeletingIngredient}
-              />
-              <IngredientCards
-                ingredients={filtered}
-                onEdit={handleEdit}
-                onDelete={setDeletingIngredient}
-              />
-            </>
+            <IngredientTable
+              ingredients={filtered}
+              onEdit={handleEdit}
+              onDelete={setDeletingIngredient}
+            />
           )}
         </div>
       </div>

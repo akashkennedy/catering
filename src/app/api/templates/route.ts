@@ -40,12 +40,15 @@ export async function fetchFullTemplate(
   const dishRows = (await sql`
     SELECT * FROM template_dishes WHERE template_id = ${templateId} ORDER BY position ASC, id ASC
   `) as Row[];
-  const dishes: TemplateDish[] = [];
-  for (const dishRow of dishRows) {
-    const ingredientRows = (await sql`
-      SELECT * FROM template_dish_ingredients WHERE dish_id = ${String(dishRow.id)}
-    `) as Row[];
-    dishes.push({
+  // Per-dish ingredient reads are independent — fire them together.
+  const ingredientLists = (await Promise.all(
+    dishRows.map((dishRow) =>
+      sql`SELECT * FROM template_dish_ingredients WHERE dish_id = ${String(dishRow.id)}`
+    )
+  )) as Row[][];
+  const dishes: TemplateDish[] = dishRows.map((dishRow, index) => {
+    const ingredientRows = ingredientLists[index] ?? [];
+    return {
       id: String(dishRow.id),
       nameEn: String(dishRow.name_en ?? ""),
       nameTa: String(dishRow.name_ta ?? ""),
@@ -53,8 +56,8 @@ export async function fetchFullTemplate(
         ingredientId: String(item.ingredient_id),
         qtyPer100: Number(item.qty_per_100) || 0,
       })),
-    });
-  }
+    };
+  });
   return {
     id: String(template.id),
     nameEn: String(template.name_en ?? ""),
@@ -68,27 +71,32 @@ async function writeDishes(
   templateId: string,
   dishes: z.infer<typeof dishSchema>[]
 ): Promise<void> {
-  let position = 0;
-  for (const dish of dishes) {
-    const dishId = dish.id ?? newId("dish");
-    await sql`
-      INSERT INTO template_dishes (id, template_id, name_en, name_ta, position)
-      VALUES (${dishId}, ${templateId}, ${dish.nameEn}, ${dish.nameTa}, ${position})
-      ON CONFLICT (id) DO UPDATE SET
-        template_id = EXCLUDED.template_id,
-        name_en = EXCLUDED.name_en,
-        name_ta = EXCLUDED.name_ta,
-        position = EXCLUDED.position
-    `;
-    await sql`DELETE FROM template_dish_ingredients WHERE dish_id = ${dishId}`;
-    for (const item of dish.ingredients) {
+  // NOTE: link rows must be deleted before re-inserting (stale links would
+  // linger), so each dish needs delete-then-insert ordering. Dishes run in
+  // parallel; within a dish the statements stay sequential.
+  await Promise.all(
+    dishes.map(async (dish, position) => {
+      const dishId = dish.id ?? newId("dish");
       await sql`
-        INSERT INTO template_dish_ingredients (id, dish_id, ingredient_id, qty_per_100)
-        VALUES (${newId("tdi")}, ${dishId}, ${item.ingredientId}, ${item.qtyPer100})
+        INSERT INTO template_dishes (id, template_id, name_en, name_ta, position)
+        VALUES (${dishId}, ${templateId}, ${dish.nameEn}, ${dish.nameTa}, ${position})
+        ON CONFLICT (id) DO UPDATE SET
+          template_id = EXCLUDED.template_id,
+          name_en = EXCLUDED.name_en,
+          name_ta = EXCLUDED.name_ta,
+          position = EXCLUDED.position
       `;
-    }
-    position += 1;
-  }
+      await sql`DELETE FROM template_dish_ingredients WHERE dish_id = ${dishId}`;
+      await Promise.all(
+        dish.ingredients.map((item) =>
+          sql`
+            INSERT INTO template_dish_ingredients (id, dish_id, ingredient_id, qty_per_100)
+            VALUES (${newId("tdi")}, ${dishId}, ${item.ingredientId}, ${item.qtyPer100})
+          `
+        )
+      );
+    })
+  );
 }
 
 export async function GET() {
@@ -96,11 +104,11 @@ export async function GET() {
   if ("response" in auth) return auth.response;
   const sql = db();
   const rows = (await sql`SELECT id FROM food_templates ORDER BY name_en ASC`) as Row[];
-  const templates: FoodTemplate[] = [];
-  for (const row of rows) {
-    const full = await fetchFullTemplate(sql, String(row.id));
-    if (full) templates.push(full);
-  }
+  // Each template's reads are independent — resolve them together.
+  const fullTemplates = await Promise.all(
+    rows.map((row) => fetchFullTemplate(sql, String(row.id)))
+  );
+  const templates = fullTemplates.filter((t): t is FoodTemplate => t !== null);
   return NextResponse.json({ templates });
 }
 

@@ -50,12 +50,18 @@ export async function POST(request: Request) {
   }
   const sql = db();
   const id = parsed.data.id ?? newId();
-  await sql`
+  // RETURNING collapses the write+read into one round-trip; the SELECT
+  // fallback only runs on id conflict (replay) to return the existing row.
+  const inserted = (await sql`
     INSERT INTO employees (id, name, phone, default_rate, updated_at)
     VALUES (${id}, ${parsed.data.name}, ${parsed.data.phone}, ${parsed.data.defaultRate}, NOW())
     ON CONFLICT (id) DO NOTHING
-  `;
-  const rows = await sql`SELECT * FROM employees WHERE id = ${id} LIMIT 1`;
+    RETURNING *
+  `) as Row[];
+  const rows =
+    inserted.length > 0
+      ? inserted
+      : ((await sql`SELECT * FROM employees WHERE id = ${id} LIMIT 1`) as Row[]);
   if (rows.length === 0) {
     return NextResponse.json({ error: "Could not save employee." }, { status: 500 });
   }

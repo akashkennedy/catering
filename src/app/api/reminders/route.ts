@@ -59,12 +59,16 @@ export async function POST(request: Request) {
   const sql = db();
   const id = parsed.data.id ?? newId();
   const d = parsed.data;
-  await sql`
+  const inserted = (await sql`
     INSERT INTO reminders (id, customer_name, phone, note, remind_at, event_id, dismissed, notified)
     VALUES (${id}, ${d.customerName}, ${d.phone}, ${d.note}, ${d.remindAt}, ${d.eventId}, ${d.dismissed}, ${d.notified})
     ON CONFLICT (id) DO NOTHING
-  `;
-  const rows = await sql`SELECT * FROM reminders WHERE id = ${id} LIMIT 1`;
+    RETURNING *
+  `) as Row[];
+  const rows =
+    inserted.length > 0
+      ? inserted
+      : ((await sql`SELECT * FROM reminders WHERE id = ${id} LIMIT 1`) as Row[]);
   if (rows.length === 0) {
     return NextResponse.json({ error: "Could not save reminder." }, { status: 500 });
   }

@@ -54,12 +54,16 @@ export async function POST(request: Request) {
   }
   const sql = db();
   const id = parsed.data.id ?? newId();
-  await sql`
+  const inserted = (await sql`
     INSERT INTO expenses (id, category, amount, date, note)
     VALUES (${id}, ${parsed.data.category}, ${parsed.data.amount}, ${parsed.data.date}, ${parsed.data.note})
     ON CONFLICT (id) DO NOTHING
-  `;
-  const rows = await sql`SELECT * FROM expenses WHERE id = ${id} LIMIT 1`;
+    RETURNING *
+  `) as Record<string, unknown>[];
+  const rows =
+    inserted.length > 0
+      ? inserted
+      : ((await sql`SELECT * FROM expenses WHERE id = ${id} LIMIT 1`) as Record<string, unknown>[]);
   if (rows.length === 0) {
     return NextResponse.json({ error: "Could not save expense." }, { status: 500 });
   }

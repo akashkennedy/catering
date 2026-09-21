@@ -233,6 +233,9 @@ async function sendDelete(path: string): Promise<boolean> {
   }
 }
 
+// Shared in-flight load so simultaneous mounts fire a single request.
+let loadEventsRequest: Promise<void> | null = null;
+
 export const useEventsStore = create<EventsState>()(
   persist(
     (set) => ({
@@ -270,18 +273,26 @@ export const useEventsStore = create<EventsState>()(
         }
       },
       loadEvents: async () => {
-        const { flushOutbox } = await import("@/lib/outbox");
-        await flushOutbox();
-        try {
-          const response = await fetch("/api/events", { credentials: "same-origin" });
-          if (!response.ok) return;
-          const body = (await response.json()) as { events?: CateringEvent[] };
-          if (Array.isArray(body.events)) {
-            set({ events: body.events, loaded: true });
-          }
-        } catch {
-          // Offline: keep the localStorage cache as the read source.
+        if (useEventsStore.getState().loaded) return;
+        if (!loadEventsRequest) {
+          loadEventsRequest = (async () => {
+            const { flushOutbox } = await import("@/lib/outbox");
+            await flushOutbox();
+            try {
+              const response = await fetch("/api/events", { credentials: "same-origin" });
+              if (!response.ok) return;
+              const body = (await response.json()) as { events?: CateringEvent[] };
+              if (Array.isArray(body.events)) {
+                set({ events: body.events, loaded: true });
+              }
+            } catch {
+              // Offline: keep the localStorage cache as the read source.
+            }
+          })().finally(() => {
+            loadEventsRequest = null;
+          });
         }
+        await loadEventsRequest;
       },
     }),
     {

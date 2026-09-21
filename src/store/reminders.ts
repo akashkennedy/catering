@@ -27,6 +27,9 @@ type RemindersState = {
   loadReminders: () => Promise<void>;
 };
 
+// Shared in-flight load so simultaneous mounts fire a single request.
+let loadRemindersRequest: Promise<void> | null = null;
+
 export const useRemindersStore = create<RemindersState>()(
   persist(
     (set) => ({
@@ -75,12 +78,20 @@ export const useRemindersStore = create<RemindersState>()(
         void syncOrQueue("DELETE", `/api/reminders/${encodeURIComponent(id)}`);
       },
       loadReminders: async () => {
-        const { flushOutbox } = await import("@/lib/outbox");
-        await flushOutbox();
-        const body = await fetchJson<{ reminders?: Reminder[] }>("/api/reminders");
-        if (body && Array.isArray(body.reminders)) {
-          set({ reminders: body.reminders, loaded: true });
+        if (useRemindersStore.getState().loaded) return;
+        if (!loadRemindersRequest) {
+          loadRemindersRequest = (async () => {
+            const { flushOutbox } = await import("@/lib/outbox");
+            await flushOutbox();
+            const body = await fetchJson<{ reminders?: Reminder[] }>("/api/reminders");
+            if (body && Array.isArray(body.reminders)) {
+              set({ reminders: body.reminders, loaded: true });
+            }
+          })().finally(() => {
+            loadRemindersRequest = null;
+          });
         }
+        await loadRemindersRequest;
       },
     }),
     {

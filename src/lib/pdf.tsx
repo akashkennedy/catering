@@ -1,16 +1,31 @@
 import React from "react";
-import { pdf, Font, Document, Page, Text, View, StyleSheet } from "@react-pdf/renderer";
+import { pdf, Font, Document, Image, Page, Text, View, StyleSheet } from "@react-pdf/renderer";
 import type { DocumentProps } from "@react-pdf/renderer";
-import type { CateringEvent, EventIngredientLine, EventStatus } from "@/store/events";
+import type { CateringEvent, EventIngredientLine } from "@/store/events";
 import type { Ingredient } from "@/store/ingredients";
 import { formatINR } from "@/lib/format";
 import { normalizeUnit } from "@/lib/units";
 import { formatIndianDate } from "@/lib/date";
+import { formatPhone } from "@/lib/phone";
 import { eventBalance } from "@/lib/eventFinances";
 import { ui, preferredText } from "@/lib/i18n";
-import { INGREDIENT_TAGS, isIngredientTag, type IngredientTag } from "@/lib/ingredientTags";
+import { INGREDIENT_TAGS, type IngredientTag } from "@/lib/ingredientTags";
 
 const TAMIL_FAMILY = "NotoSansTamil";
+
+const BRAND_NAME = "Mampalli Catering";
+const BRAND_PHONES = ["9025350666", "9488073555"];
+
+/**
+ * Unique invoice number from the event date + id slice, e.g. 20261010-A3F9C2.
+ * Deterministic from stored data so reprints keep the same number.
+ */
+export function makeInvoiceNumber(event: { date: string; id: string }): string {
+  const day = (event.date ?? "").replace(/\D/g, "").slice(0, 8) || "NODATE";
+  const short =
+    (event.id ?? "").replace(/[^a-zA-Z0-9]/g, "").slice(0, 6).toUpperCase() || "XXXXXX";
+  return `${day}-${short}`;
+}
 
 let fontRegistered = false;
 
@@ -21,21 +36,6 @@ function ensureFont(): void {
     src: "/fonts/NotoSansTamil-Regular.ttf",
   });
   fontRegistered = true;
-}
-
-function statusDual(status: EventStatus): string {
-  switch (status) {
-    case "confirmed":
-      return `${preferredText(ui.events.statusConfirmed, "en")} / ${preferredText(ui.events.statusConfirmed, "ta")}`;
-    case "preparing":
-      return `${preferredText(ui.events.statusPreparing, "en")} / ${preferredText(ui.events.statusPreparing, "ta")}`;
-    case "completed":
-      return `${preferredText(ui.events.statusCompleted, "en")} / ${preferredText(ui.events.statusCompleted, "ta")}`;
-    case "paid":
-      return `${preferredText(ui.events.statusPaid, "en")} / ${preferredText(ui.events.statusPaid, "ta")}`;
-    default:
-      return `${preferredText(ui.events.statusEnquiry, "en")} / ${preferredText(ui.events.statusEnquiry, "ta")}`;
-  }
 }
 
 function tagHeading(tag: IngredientTag): string {
@@ -56,51 +56,14 @@ const styles = StyleSheet.create({
   tableFooter: { backgroundColor: "#f0f0f0", padding: 6 },
   tableFooterText: { fontWeight: "bold", fontSize: 9, flex: 1 },
   rowEven: { backgroundColor: "#f9f9f9" },
+  brandTitle: { fontSize: 22, fontWeight: "bold", textAlign: "center", marginBottom: 2 },
+  brandPhone: { fontSize: 11, textAlign: "center", marginBottom: 12 },
+  brandLogo: { width: 110, height: 108, marginHorizontal: "auto", marginBottom: 6 },
+  thankYou: { fontSize: 13, fontWeight: "bold", textAlign: "center", marginTop: 18 },
 });
 
-export type PrintLine = {
-  key: string;
-  nameEn: string;
-  nameTa: string;
-  qty: number;
-  unit: string;
-  price: number;
-};
-
-export function toPrintLines(
-  lines: EventIngredientLine[],
-  ingredients: Ingredient[]
-): PrintLine[] {
-  const byId = new Map(ingredients.map((item) => [item.id, item]));
-  return lines.map((line) => {
-    const master = byId.get(line.ingredientId);
-    return {
-      key: line.id,
-      nameEn: master?.name || "—",
-      nameTa: master?.tamilName || master?.name || "—",
-      qty: line.qty,
-      unit: normalizeUnit(master?.unit),
-      price: line.price,
-    };
-  });
-}
-
-export function tagOfLine(
-  line: EventIngredientLine,
-  ingredients: Ingredient[]
-): IngredientTag {
-  const master = ingredients.find((item) => item.id === line.ingredientId);
-  return master && isIngredientTag(master.tag) ? master.tag : "grocery";
-}
-
-export function presentTags(
-  lines: EventIngredientLine[],
-  ingredients: Ingredient[]
-): IngredientTag[] {
-  const seen = new Set<IngredientTag>();
-  for (const line of lines) seen.add(tagOfLine(line, ingredients));
-  return INGREDIENT_TAGS.filter((tag) => seen.has(tag));
-}
+export type { PrintLine } from "./printLines";
+import { tagOfLine, type PrintLine } from "./printLines";
 
 type GroupedLine = PrintLine & { serial: number };
 
@@ -144,6 +107,62 @@ function groupLines(
   );
 }
 
+/**
+ * Brand heading — first page only. Renders an empty string on every other
+ * page so no space is reserved there.
+ */
+function BrandHeader() {
+  const phones = BRAND_PHONES.map((number) => formatPhone(number)).join(" · ");
+  return (
+    <>
+      <Text
+        style={styles.brandTitle}
+        render={({ pageNumber }: { pageNumber: number }) =>
+          pageNumber === 1 ? BRAND_NAME : ""
+        }
+      />
+      <View
+        render={({ pageNumber }: { pageNumber: number }) =>
+          pageNumber === 1 ? (
+            <View style={{ alignItems: "center" }}>
+              {/* eslint-disable-next-line jsx-a11y/alt-text -- PDF output, not HTML */}
+              <Image src="/logo.png" style={styles.brandLogo} />
+            </View>
+          ) : null
+        }
+      />
+      <Text
+        style={styles.brandPhone}
+        render={({ pageNumber }: { pageNumber: number }) => (pageNumber === 1 ? phones : "")}
+      />
+    </>
+  );
+}
+
+/**
+ * Thank-you footer — bottom of the last page only. `fixed` pins it to the
+ * page bottom; the render condition skips every other page (including all
+ * middle pages of multi-page invoices).
+ */
+function ThankYouFooter() {
+  const label = `${preferredText(ui.events.thankYou, "en")} / ${preferredText(
+    ui.events.thankYou,
+    "ta"
+  )}`;
+  return (
+    <Text
+      fixed
+      style={[
+        styles.thankYou,
+        { position: "absolute", bottom: 30, left: 30, right: 30 },
+      ]}
+      render={({ pageNumber, totalPages }) =>
+        pageNumber === totalPages ? label : ""
+      }
+    />
+  );
+}
+
 function EventHeader({ event }: { event: CateringEvent }) {
   return (
     <View>
@@ -151,16 +170,12 @@ function EventHeader({ event }: { event: CateringEvent }) {
         {preferredText(ui.events.invoice, "ta")} / {preferredText(ui.events.invoice, "en")}: {event.name}
       </Text>
       <Text style={styles.detail}>
+        {preferredText(ui.events.invoiceNo, "ta")} / {preferredText(ui.events.invoiceNo, "en")}:{" "}
+        {makeInvoiceNumber(event)}
+      </Text>
+      <Text style={styles.detail}>
         {preferredText(ui.common.date, "ta")} / {preferredText(ui.common.date, "en")}:{" "}
         {event.date ? formatIndianDate(event.date) : "—"}
-      </Text>
-      <Text style={styles.detail}>
-        {preferredText(ui.common.headcount, "ta")} / {preferredText(ui.common.headcount, "en")}:{" "}
-        {event.headcount}
-      </Text>
-      <Text style={styles.detail}>
-        {preferredText(ui.common.status, "ta")} / {preferredText(ui.common.status, "en")}:{" "}
-        {statusDual(event.status)}
       </Text>
     </View>
   );
@@ -264,7 +279,7 @@ function GroupedTable({
   );
 }
 
-function buildDocument(
+export function buildDocument(
   event: CateringEvent,
   ingredients: Ingredient[],
   lines: EventIngredientLine[],
@@ -280,12 +295,14 @@ function buildDocument(
   return (
     <Document>
       <Page size="A4" style={styles.page}>
+        <BrandHeader />
         <EventHeader event={event} />
         <Text style={styles.sectionTitle}>
           {preferredText(ui.templates.ingredients, "ta")} /{" "}
           {preferredText(ui.templates.ingredients, "en")}
         </Text>
         <GroupedTable groups={groups} withPrice={withPrice} event={event} subtotal={subtotal} />
+        <ThankYouFooter />
       </Page>
     </Document>
   );
@@ -314,7 +331,7 @@ export async function generateBuyListPdf(
   selectedTags: IngredientTag[]
 ): Promise<void> {
   const element = buildDocument(event, ingredients, lines, selectedTags, false);
-  await downloadDocument(element, `${fileStem(event.name)}_buy-list.pdf`);
+  await downloadDocument(element, `${makeInvoiceNumber(event)}_${fileStem(event.name)}.pdf`);
 }
 
 /** Detailed invoice: names + quantities + prices with totals, grouped by category. */
@@ -325,5 +342,5 @@ export async function generateDetailedPdf(
   selectedTags: IngredientTag[]
 ): Promise<void> {
   const element = buildDocument(event, ingredients, lines, selectedTags, true);
-  await downloadDocument(element, `${fileStem(event.name)}_detailed.pdf`);
+  await downloadDocument(element, `${makeInvoiceNumber(event)}_${fileStem(event.name)}.pdf`);
 }

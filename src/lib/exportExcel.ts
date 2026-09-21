@@ -1,5 +1,3 @@
-import * as XLSX from "xlsx";
-
 import { useEmployeesStore } from "@/store/employees";
 import { useEventsStore } from "@/store/events";
 import { useFinanceStore } from "@/store/finance";
@@ -25,8 +23,11 @@ function fileStamp(now = new Date()): string {
  * Exports the whole database (as currently loaded in the stores) to a
  * multi-sheet .xlsx file and triggers a browser download. Data only —
  * users, sessions and permissions are never exported.
+ *
+ * Async because the xlsx engine loads on demand (kept out of page bundles).
  */
-export function exportDatabaseToExcel(): ExcelExportSummary {
+export async function exportDatabaseToExcel(): Promise<ExcelExportSummary> {
+  const XLSX = await import("xlsx");
   const ingredients = useIngredientsStore.getState().ingredients;
   const templates = useTemplatesStore.getState().templates;
   const events = useEventsStore.getState().events;

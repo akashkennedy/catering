@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { Button, Group, Modal, Stack, Text, TextInput, Title } from "@mantine/core";
 import { Plus, Search } from "lucide-react";
+import { useMediaQuery } from "@mantine/hooks";
 
 import { TemplateCards } from "./TemplateCards";
 import { TemplateFormModal } from "./TemplateFormModal";
@@ -23,6 +24,9 @@ export function TemplatesManager() {
   const [query, setQuery] = useState("");
   const loadTemplates = useTemplatesStore((state) => state.loadTemplates);
   const loaded = useTemplatesStore((state) => state.loaded);
+  // Render only the matching list variant (table xor cards) instead of
+  // mounting both and hiding one with CSS.
+  const isMobile = useMediaQuery("(max-width: 639px)");
 
   useEffect(() => {
     void loadTemplates();
@@ -71,25 +75,24 @@ export function TemplatesManager() {
           <Text c="dimmed">
             <Bilingual label={ui.templates.noMatch} />
           </Text>
+        ) : isMobile ? (
+          <TemplateCards
+            templates={filtered}
+            onEdit={(template) => {
+              setEditingTemplate(template);
+              setFormOpened(true);
+            }}
+            onDelete={setDeletingTemplate}
+          />
         ) : (
-          <>
-            <TemplateTable
-              templates={filtered}
-              onEdit={(template) => {
-                setEditingTemplate(template);
-                setFormOpened(true);
-              }}
-              onDelete={setDeletingTemplate}
-            />
-            <TemplateCards
-              templates={filtered}
-              onEdit={(template) => {
-                setEditingTemplate(template);
-                setFormOpened(true);
-              }}
-              onDelete={setDeletingTemplate}
-            />
-          </>
+          <TemplateTable
+            templates={filtered}
+            onEdit={(template) => {
+              setEditingTemplate(template);
+              setFormOpened(true);
+            }}
+            onDelete={setDeletingTemplate}
+          />
         )}
       </div>
 

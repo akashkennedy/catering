@@ -13,6 +13,7 @@ import {
   Title,
 } from "@mantine/core";
 import { Plus, Search } from "lucide-react";
+import { useMediaQuery } from "@mantine/hooks";
 
 import { EventCards } from "./EventCards";
 import { EventFormModal } from "./EventFormModal";
@@ -46,6 +47,9 @@ export function EventsManager() {
   const [statusFilter, setStatusFilter] = useState<StatusFilter>("all");
   const loadEvents = useEventsStore((state) => state.loadEvents);
   const loaded = useEventsStore((state) => state.loaded);
+  // Render only the matching list variant (table xor cards) instead of
+  // mounting both and hiding one with CSS.
+  const isMobile = useMediaQuery("(max-width: 639px)");
 
   useEffect(() => {
     void loadEvents();
@@ -110,25 +114,24 @@ export function EventsManager() {
         <Text c="dimmed">
           <Bilingual label={ui.events.emptyFiltered} />
         </Text>
+      ) : isMobile ? (
+        <EventCards
+          events={filteredEvents}
+          onEdit={(event) => {
+            setEditingEvent(event);
+            setManualOpen(true);
+          }}
+          onDelete={setDeletingEvent}
+        />
       ) : (
-        <>
-          <EventTable
-            events={filteredEvents}
-            onEdit={(event) => {
-              setEditingEvent(event);
-              setManualOpen(true);
-            }}
-            onDelete={setDeletingEvent}
-          />
-          <EventCards
-            events={filteredEvents}
-            onEdit={(event) => {
-              setEditingEvent(event);
-              setManualOpen(true);
-            }}
-            onDelete={setDeletingEvent}
-          />
-        </>
+        <EventTable
+          events={filteredEvents}
+          onEdit={(event) => {
+            setEditingEvent(event);
+            setManualOpen(true);
+          }}
+          onDelete={setDeletingEvent}
+        />
       )}
 
       <EventFormModal

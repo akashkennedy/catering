@@ -5,24 +5,17 @@ function digitsOnly(value: string): string {
 export function validatePhone(value: string): boolean {
   const trimmed = value.trim();
   if (trimmed === "") return true;
-  const digits = digitsOnly(trimmed);
-  if (digits.length === 12 && digits.startsWith("91")) {
-    return /^[6-9]\d{9}$/.test(digits.slice(2));
-  }
-  if (digits.length === 10) {
-    return /^[6-9]\d{9}$/.test(digits);
-  }
-  return false;
+  return digitsOnly(trimmed).length === 10;
 }
 
+/** Formats any 10-digit number as (123)-456-7890. */
 export function formatPhone(value: string): string {
-  const digits = digitsOnly(value);
+  let digits = digitsOnly(value);
   if (digits.length === 12 && digits.startsWith("91")) {
-    const ten = digits.slice(2);
-    return `+91 ${ten.slice(0, 5)} ${ten.slice(5)}`;
+    digits = digits.slice(2);
   }
   if (digits.length === 10) {
-    return `${digits.slice(0, 5)} ${digits.slice(5)}`;
+    return `(${digits.slice(0, 3)})-${digits.slice(3, 6)}-${digits.slice(6)}`;
   }
   return value.trim();
 }

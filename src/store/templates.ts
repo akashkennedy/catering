@@ -93,6 +93,9 @@ async function sendDelete(path: string): Promise<boolean> {
   }
 }
 
+// Shared in-flight load so simultaneous mounts fire a single request.
+let loadTemplatesRequest: Promise<void> | null = null;
+
 export const useTemplatesStore = create<TemplatesState>()(
   persist(
     (set) => ({
@@ -134,18 +137,26 @@ export const useTemplatesStore = create<TemplatesState>()(
         }
       },
       loadTemplates: async () => {
-        const { flushOutbox } = await import("@/lib/outbox");
-        await flushOutbox();
-        try {
-          const response = await fetch("/api/templates", { credentials: "same-origin" });
-          if (!response.ok) return;
-          const body = (await response.json()) as { templates?: FoodTemplate[] };
-          if (Array.isArray(body.templates)) {
-            set({ templates: body.templates, loaded: true });
-          }
-        } catch {
-          // Offline: keep the localStorage cache as the read source.
+        if (useTemplatesStore.getState().loaded) return;
+        if (!loadTemplatesRequest) {
+          loadTemplatesRequest = (async () => {
+            const { flushOutbox } = await import("@/lib/outbox");
+            await flushOutbox();
+            try {
+              const response = await fetch("/api/templates", { credentials: "same-origin" });
+              if (!response.ok) return;
+              const body = (await response.json()) as { templates?: FoodTemplate[] };
+              if (Array.isArray(body.templates)) {
+                set({ templates: body.templates, loaded: true });
+              }
+            } catch {
+              // Offline: keep the localStorage cache as the read source.
+            }
+          })().finally(() => {
+            loadTemplatesRequest = null;
+          });
         }
+        await loadTemplatesRequest;
       },
     }),
     {

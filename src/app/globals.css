@@ -74,6 +74,16 @@ body {
   color: var(--ink);
 }
 
+/* No visible scrollbars anywhere — touch/wheel/keyboard scrolling still
+   works, only the visual thumbs and tracks are hidden. */
+* {
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+*::-webkit-scrollbar {
+  display: none;
+}
+
 .app-nav-item {
   display: flex;
   align-items: center;

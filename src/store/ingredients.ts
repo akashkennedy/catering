@@ -78,6 +78,9 @@ async function deletePath(path: string): Promise<boolean> {
   }
 }
 
+// Shared in-flight load so simultaneous mounts fire a single request.
+let loadIngredientsRequest: Promise<void> | null = null;
+
 export const useIngredientsStore = create<IngredientsState>()(
   persist(
     (set) => ({
@@ -131,18 +134,26 @@ export const useIngredientsStore = create<IngredientsState>()(
         }
       },
       loadIngredients: async () => {
-        const { flushOutbox } = await import("@/lib/outbox");
-        await flushOutbox();
-        try {
-          const response = await fetch("/api/ingredients", { credentials: "same-origin" });
-          if (!response.ok) return;
-          const body = (await response.json()) as { ingredients?: Ingredient[] };
-          if (Array.isArray(body.ingredients)) {
-            set({ ingredients: body.ingredients, loaded: true });
-          }
-        } catch {
-          // Offline: keep the localStorage cache as the read source.
+        if (useIngredientsStore.getState().loaded) return;
+        if (!loadIngredientsRequest) {
+          loadIngredientsRequest = (async () => {
+            const { flushOutbox } = await import("@/lib/outbox");
+            await flushOutbox();
+            try {
+              const response = await fetch("/api/ingredients", { credentials: "same-origin" });
+              if (!response.ok) return;
+              const body = (await response.json()) as { ingredients?: Ingredient[] };
+              if (Array.isArray(body.ingredients)) {
+                set({ ingredients: body.ingredients, loaded: true });
+              }
+            } catch {
+              // Offline: keep the localStorage cache as the read source.
+            }
+          })().finally(() => {
+            loadIngredientsRequest = null;
+          });
         }
+        await loadIngredientsRequest;
       },
     }),
     {

@@ -53,6 +53,9 @@ function toRecord(entry: VesselStockEntry) {
   };
 }
 
+// Shared in-flight load so simultaneous mounts fire a single request.
+let loadVesselLedgerRequest: Promise<void> | null = null;
+
 export const useVesselStockLedgerStore = create<VesselStockLedgerState>()(
   persist(
     (set) => ({
@@ -96,12 +99,20 @@ export const useVesselStockLedgerStore = create<VesselStockLedgerState>()(
         );
       },
       loadVesselLedger: async () => {
-        const { flushOutbox } = await import("@/lib/outbox");
-        await flushOutbox();
-        const body = await fetchJson<{ entries?: VesselStockEntry[] }>("/api/vessel-entries");
-        if (body && Array.isArray(body.entries)) {
-          set({ entries: body.entries, loaded: true });
+        if (useVesselStockLedgerStore.getState().loaded) return;
+        if (!loadVesselLedgerRequest) {
+          loadVesselLedgerRequest = (async () => {
+            const { flushOutbox } = await import("@/lib/outbox");
+            await flushOutbox();
+            const body = await fetchJson<{ entries?: VesselStockEntry[] }>("/api/vessel-entries");
+            if (body && Array.isArray(body.entries)) {
+              set({ entries: body.entries, loaded: true });
+            }
+          })().finally(() => {
+            loadVesselLedgerRequest = null;
+          });
         }
+        await loadVesselLedgerRequest;
       },
     }),
     {

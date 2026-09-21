@@ -584,6 +584,20 @@ Supersedes §1 (Phase 2 is now), §13.13 (mock gate replaced), and UI-only roles
 | `7c24e68` | migration tool: add /migrate tool, data migration scripts, and site content management (db:migrate/db:check/db:seed-admin, /migrate page with idempotent replay) |
 | `ee1c4c9` | accounts: add employee account management and authentication infrastructure (AccountsManager, authSession, employee default permissions: all true except canViewFinance/canViewOtherEmployeeRates) |
 | `8f62edb` | spec: add V9-V11 addenda documenting backend migration, auth, permissions, and project status |
+| `082d7d4` | fix: Vercel build — commit `src/lib/db.ts`, storeSync/outbox/localMigration libs + `@neondatabase/serverless` dep (were untracked; 48 Turbopack errors) |
+| `1eba764` | feat: `scripts/db-seed-catalog.mjs` (`db:seed-catalog`) — idempotent seed of ingredients/templates/courses from TS sources; live seed: 182 ingredients, 2 templates, 82 dishes, 16 links |
+| `064d327` | chore: commit `.env.example`, migration docs, site SQL, Neon functions scaffold |
+| `0fb1d39` | feat: Settings — remove ingredient-prices + migrate cards, add Export-to-Excel (.xlsx, 14 sheets); delete `/migrate`, MigrateManager, localMigration |
+| `ae7ab94` | feat: remove Rental (`/utensils`) page + nav + search entries (−1080 lines); event Rental tabs, utensil/vessel APIs, stores, tables, data kept |
+| `8e5f1e3` | feat: new events no longer preselect courses (`[]` = none; server holds zero legacy groups so no migration needed) + search/select-one-by-one UI with Select all/Clear + wider xl event form with 2-col course list |
+| `b88aa22` | feat: logins use username instead of email (migration `0005_username`, validation `^[a-z0-9._-]{3,30}$`, `ADMIN_USERNAME` in seed script) |
+| `e0c8f37` | feat: 3 view permissions (migration `0006`: `canViewEmployees/Website/ExportExcel`, all OFF by default) + login placeholders + sign-in focus-ring removal + first-load skeletons |
+| `000ad6e` | feat: remove mark-used feature from invoice (Used column, badges, stock `used`-writes; historic `used` rows kept read-only) |
+| `4df60a1` | feat: text-free spinner app-wide; dashboard loads events on mount |
+| `6b2fc82` | perf (P0): parallel API queries, lazy PDF/Excel chunks, store load dedup, single-variant lists (measured 310→206ms per event read) |
+| `41bfa04` | fix: dedupe ingredients 551→182 live (old browser migrations had tripled rows); catalog variant merge; 409 on duplicate names |
+| `b9a8831` | feat: Ingredients tab in mobile bottom bar; centered + button |
+| `bd9108a` | feat: dashboard 2×2 stat grid (plain CSS), event costs in finance totals, `(123)-456-7890` phones, hidden scrollbars, `preferredText` undefined-guard |
 
 ### Verified on Neon DB (live tests green)
 - **Migrations**: all 4 (0001_auth → 0004_operations) applied via `npm run db:migrate`; idempotent on re-run
@@ -596,3 +610,32 @@ Supersedes §1 (Phase 2 is now), §13.13 (mock gate replaced), and UI-only roles
 
 ### Deliberately left out of git
 - `hello.ts`, `neon.ts` (root scratch files), `.env` (credential env-var file, gitignored), `.neon` gitignore entry — user's own Neon experiments, untouched.
+
+---
+
+## 22. Session log 2026-09-20 — current truth + next steps (for AI handoff)
+
+### What is live right now
+- **Branch:** `dev` on `origin/dev` (Vercel previews build `dev`; `main` untouched). HEAD `bd9108a`, working tree clean except scratch logs.
+- **Neon project `mampalli-catering-crm`:** migrations `0001`–`0006` applied. Contents: **182 ingredients** (unique names), **2 seed templates** (Saapadu 42 courses, Biriyani 40 courses) + 1 user template, 84 dishes, 18 dish links, **2 users** (1 admin, 1 restricted employee login), 0 events/groups at last check.
+- **Auth:** username-based (`username` UNIQUE, lowercased). Login tries DB (bcrypt) first, legacy env-HMAC fallback only when `DATABASE_URL` unset. First admin seeded via `ADMIN_USERNAME`/`ADMIN_PASSWORD` (local `.env` still says `ADMIN_EMAIL` — rename before re-seeding).
+- **Permissions (7 flags, server-enforced):** `canViewFinance`, `canViewOtherEmployeeRates`, `canManageEmployees`, `canManageSettings`, `canViewEmployees`, `canViewWebsite`, `canExportExcel`. New logins: everything true except finance/rates/view/export (all false). Admin always full; self/admin edits 403. Enforcement: finance routes → finance flag; employees GET → view-employees; site-content GET → view-website; POST site → manage-settings; users routes → manage-employees; masked pay preserved on PATCH. UI mirrors all of it (nav, search, pages, export card, no-access cards).
+- **UI map (current):** `/` dashboard = 4-card 2×2 grid (Orders always; Amount/Expenses/Pending finance-gated) + Upcoming + Pending-payments; `/events` (+`/[id]` detail with ingredients/staff/rental tabs, manual course picking, xl form); `/templates`, `/ingredients`, `/employees` (+Logins & access), `/finance` (event-linked totals), `/follow-ups`, `/settings` (language, document lang, Excel export gated), `/site-manager` (gated), public `/site`. **No** `/utensils`, **no** `/migrate`. Mobile bar: Dashboard · Events · + · Ingredients · More. Login: placeholders, no focus ring (scoped). All loading states: text-free spinner. Scrollbars hidden globally (scroll still works).
+- **Data rules:** stable seed ids (`ing-*`, `tpl-*`, `dish-*`); `ON CONFLICT DO NOTHING` + `RETURNING *` writes (conflict falls back to SELECT so replays return the row); NUMERIC arrives as string over HTTP (coerce with `Number()`); ingredient refs are plain TEXT (dangling tolerated); `ingredients` POST 409s on duplicate names.
+- **Perf state:** API reads/writes parallelized; `@react-pdf/renderer` + `xlsx` load on click only (light `printLines.ts` for render); all 10 stores dedupe loads via `loaded` + shared in-flight promise; lists render table XOR cards via `(max-width: 639px)` media query. Measured: single-event read 310ms → 206ms live.
+
+### Known issues / open threads (do these next)
+1. **Undefined-label crash under investigation:** user reported `can't access property "en", label is undefined` (Firefox wording = `preferredText` got `undefined`). Full static audit found every key valid; `preferredText` now renders `""` + logs a dev stack instead of crashing. NEXT: get repro page/action from user (or read the dev console stack) and fix the data path that smuggles `undefined` through a cast.
+2. **Deferred P1/P2 perf:** `lucide-react` missing from `optimizePackageImports`; zod/RHF statically bundled in 11 gated modals (→ `next/dynamic`); `useMemo`/`useDeferredValue` gaps (Templates/Events managers, MobileSearchOverlay); `persist` still mirrors the whole server into localStorage (unbounded for events/ledgers); in-memory login rate-limit Map (per-instance, leaks — needs DB/Redis store); two `setValue`-in-effect derivations (EventFormModal total, IngredientFormModal autofill).
+3. **Non-admin dashboard shows 1 card** (Orders only) — by design; confirm with user before changing.
+4. **Utensil/vessel APIs + tables remain** (event Rental tabs depend on them) though the page is gone — intentional.
+5. **Historic `used` stock rows remain readable** but nothing writes them anymore — intentional.
+6. **`main` never merged** — decide merge strategy (merge `dev` → `main` when previews are accepted).
+7. **`.env.example` documents `ADMIN_USERNAME`;** real `.env` is local-only (gitignored) — Vercel env vars must be kept in sync manually (`DATABASE_URL`, `AUTH_SESSION_SECRET`, `AUTH_USERNAME/PASSWORD` legacy fallback).
+
+### How to work in this repo (conventions Claude should follow)
+- `npm run build` must stay green (tsc + Turbopack); verify with `npx tsc --noEmit`.
+- DB changes go in `db/migrations/NNNN_name.sql` (idempotent, `$$`-aware splitter) + `npm run db:migrate`; NEVER destructive SQL without asking.
+- API routes: session/permission gate first (`requirePermission`), client-id upserts, `RETURNING *` with SELECT fallback on conflict.
+- UI is bilingual (EN/TA via `ui.*` in `src/lib/i18n.ts` + `<Bilingual>`); never hardcode user-facing strings.
+- Commit per workstream on `dev`; only push when the user says "push".

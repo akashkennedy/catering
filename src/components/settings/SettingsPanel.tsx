@@ -5,7 +5,6 @@ import { Box, Button, SegmentedControl, Stack, Text, Title } from "@mantine/core
 
 import { Bilingual } from "@/components/Bilingual";
 import { ThemeControl } from "@/components/ThemeControl";
-import { exportDatabaseToExcel } from "@/lib/exportExcel";
 import { ui } from "@/lib/i18n";
 import { useAuthStore } from "@/store/auth";
 import {
@@ -27,16 +26,20 @@ export function SettingsPanel() {
     setExporting(true);
     setExportStatus("idle");
     try {
-      // Let the button paint its loading state before the synchronous export.
+      // Let the button paint its loading state before the export starts.
+      // The exporter (and xlsx) loads only on demand, not with this page.
       setTimeout(() => {
-        try {
-          exportDatabaseToExcel();
-          setExportStatus("done");
-        } catch {
-          setExportStatus("failed");
-        } finally {
-          setExporting(false);
-        }
+        void (async () => {
+          try {
+            const { exportDatabaseToExcel } = await import("@/lib/exportExcel");
+            await exportDatabaseToExcel();
+            setExportStatus("done");
+          } catch {
+            setExportStatus("failed");
+          } finally {
+            setExporting(false);
+          }
+        })();
       }, 50);
     } catch {
       setExportStatus("failed");

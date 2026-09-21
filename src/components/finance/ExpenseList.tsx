@@ -2,6 +2,7 @@
 
 import { ActionIcon, Badge, Card, Group, Stack, Table, Text } from "@mantine/core";
 import { Trash } from "lucide-react";
+import { useMediaQuery } from "@mantine/hooks";
 
 import { Bilingual } from "@/components/Bilingual";
 import { ui, preferredText } from "@/lib/i18n";
@@ -17,6 +18,45 @@ type ExpenseListProps = {
 
 export function ExpenseList({ expenses, onDelete }: ExpenseListProps) {
   const uiLanguage = useSettingsStore((state) => state.uiLanguage);
+  // Render only the matching list variant (table xor cards) instead of
+  // mounting both and hiding one with CSS.
+  const isMobile = useMediaQuery("(max-width: 639px)");
+  if (isMobile) {
+    return (
+      <Stack gap="sm">
+        {expenses.map((expense) => (
+          <Card key={expense.id} withBorder padding="md">
+            <Group justify="space-between" align="flex-start" wrap="nowrap">
+              <Stack gap={6}>
+                <Badge variant="light" size="sm" style={{ alignSelf: "flex-start" }}>
+                  {preferredText(ui.finance.categories[expense.category], uiLanguage)}
+                </Badge>
+                <Text size="sm" c="dimmed">
+                  {formatIndianDate(expense.date)}
+                </Text>
+                {expense.note ? (
+                  <Text size="sm" lineClamp={2}>
+                    {expense.note}
+                  </Text>
+                ) : null}
+              </Stack>
+              <Group gap="sm" align="flex-start" wrap="nowrap">
+                <Text fw={600}>{formatINR(expense.amount)}</Text>
+                <ActionIcon
+                  variant="subtle"
+                  color="kumkum"
+                  aria-label={`Delete expense on ${expense.date}`}
+                  onClick={() => onDelete(expense)}
+                >
+                  <Trash size={16} />
+                </ActionIcon>
+              </Group>
+            </Group>
+          </Card>
+        ))}
+      </Stack>
+    );
+  }
   return (
     <>
       <div className="hidden sm:block">
@@ -60,38 +100,6 @@ export function ExpenseList({ expenses, onDelete }: ExpenseListProps) {
           </Table.Tbody>
         </Table>
       </div>
-      <Stack gap="sm" className="sm:hidden">
-        {expenses.map((expense) => (
-          <Card key={expense.id} withBorder padding="md">
-            <Group justify="space-between" align="flex-start" wrap="nowrap">
-              <Stack gap={6}>
-                <Badge variant="light" size="sm" style={{ alignSelf: "flex-start" }}>
-                  {preferredText(ui.finance.categories[expense.category], uiLanguage)}
-                </Badge>
-                <Text size="sm" c="dimmed">
-                  {formatIndianDate(expense.date)}
-                </Text>
-                {expense.note ? (
-                  <Text size="sm" lineClamp={2}>
-                    {expense.note}
-                  </Text>
-                ) : null}
-              </Stack>
-              <Group gap="sm" align="flex-start" wrap="nowrap">
-                <Text fw={600}>{formatINR(expense.amount)}</Text>
-                <ActionIcon
-                  variant="subtle"
-                  color="kumkum"
-                  aria-label={`Delete expense on ${expense.date}`}
-                  onClick={() => onDelete(expense)}
-                >
-                  <Trash size={16} />
-                </ActionIcon>
-              </Group>
-            </Group>
-          </Card>
-        ))}
-      </Stack>
     </>
   );
 }

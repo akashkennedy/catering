@@ -21,7 +21,7 @@ const employeeSchema = z.object({
   name: z.string().trim().min(1, "Name is required"),
   phone: z.string().trim().refine(
     (val) => val === "" || validatePhone(val),
-    "Enter a valid 10-digit Indian mobile number"
+    "Enter a valid 10-digit phone number"
   ),
   defaultRate: z.coerce.number().min(0, "Rate must be 0 or more"),
 });

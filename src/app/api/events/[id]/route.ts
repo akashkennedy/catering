@@ -2,7 +2,6 @@ import { NextResponse } from "next/server";
 
 import { db } from "@/lib/db";
 import { requireSession } from "@/lib/requirePermission";
-import { resolveRequestSession } from "@/lib/authSession";
 import { eventSchema, fetchFullEvent, writeEventChildren } from "../route";
 
 export async function PATCH(
@@ -49,7 +48,8 @@ export async function PATCH(
   // Pay preservation: a user who cannot see others' pay must not be able
   // to overwrite it with masked zeros. Incoming toPay/paid are accepted
   // only for the user's own linked lines and brand-new lines.
-  const session = await resolveRequestSession();
+  // Reuses the already-resolved session instead of a second auth lookup.
+  const session = auth.session;
   let employees = data.employees;
   if (
     session &&
@@ -68,10 +68,13 @@ export async function PATCH(
     });
   }
   // Full child replace: stale groups/lines vanish via deletes.
-  await sql`DELETE FROM event_meal_groups WHERE event_id = ${id}`;
-  await sql`DELETE FROM event_ingredient_lines WHERE event_id = ${id}`;
-  await sql`DELETE FROM event_employee_lines WHERE event_id = ${id}`;
-  await sql`DELETE FROM event_utensil_lines WHERE event_id = ${id}`;
+  // The four deletes are independent — fire them together.
+  await Promise.all([
+    sql`DELETE FROM event_meal_groups WHERE event_id = ${id}`,
+    sql`DELETE FROM event_ingredient_lines WHERE event_id = ${id}`,
+    sql`DELETE FROM event_employee_lines WHERE event_id = ${id}`,
+    sql`DELETE FROM event_utensil_lines WHERE event_id = ${id}`,
+  ]);
   await writeEventChildren(sql, id, { ...data, employees, id });
   const full = await fetchFullEvent(sql, id);
   return NextResponse.json({ event: full });

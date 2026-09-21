@@ -57,12 +57,16 @@ export async function POST(request: Request) {
   const sql = db();
   const id = parsed.data.id ?? newId();
   const d = parsed.data;
-  await sql`
+  const inserted = (await sql`
     INSERT INTO stock_ledger_entries (id, ingredient_id, type, qty, date, event_id, note)
     VALUES (${id}, ${d.ingredientId}, ${d.type}, ${d.qty}, ${d.date}, ${d.eventId}, ${d.note})
     ON CONFLICT (id) DO NOTHING
-  `;
-  const rows = await sql`SELECT * FROM stock_ledger_entries WHERE id = ${id} LIMIT 1`;
+    RETURNING *
+  `) as Row[];
+  const rows =
+    inserted.length > 0
+      ? inserted
+      : ((await sql`SELECT * FROM stock_ledger_entries WHERE id = ${id} LIMIT 1`) as Row[]);
   if (rows.length === 0) {
     return NextResponse.json({ error: "Could not save stock entry." }, { status: 500 });
   }

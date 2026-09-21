@@ -43,6 +43,9 @@ function toRecord(entry: StockLedgerEntry) {
   };
 }
 
+// Shared in-flight load so simultaneous mounts fire a single request.
+let loadStockLedgerRequest: Promise<void> | null = null;
+
 export const useStockLedgerStore = create<StockLedgerState>()(
   persist(
     (set) => ({
@@ -73,12 +76,20 @@ export const useStockLedgerStore = create<StockLedgerState>()(
         );
       },
       loadStockLedger: async () => {
-        const { flushOutbox } = await import("@/lib/outbox");
-        await flushOutbox();
-        const body = await fetchJson<{ entries?: StockLedgerEntry[] }>("/api/stock-entries");
-        if (body && Array.isArray(body.entries)) {
-          set({ entries: body.entries, loaded: true });
+        if (useStockLedgerStore.getState().loaded) return;
+        if (!loadStockLedgerRequest) {
+          loadStockLedgerRequest = (async () => {
+            const { flushOutbox } = await import("@/lib/outbox");
+            await flushOutbox();
+            const body = await fetchJson<{ entries?: StockLedgerEntry[] }>("/api/stock-entries");
+            if (body && Array.isArray(body.entries)) {
+              set({ entries: body.entries, loaded: true });
+            }
+          })().finally(() => {
+            loadStockLedgerRequest = null;
+          });
         }
+        await loadStockLedgerRequest;
       },
     }),
     {

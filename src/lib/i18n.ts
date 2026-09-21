@@ -210,6 +210,8 @@ export const ui = {
     toPay: lab("To pay", "செலுத்த வேண்டியது"),
     paid: lab("Paid", "செலுத்தியது"),
     pending: lab("Pending", "நிலுவை"),
+    markPaid: lab("Mark paid", "செலுத்தியதாகக் குறி"),
+    markUnpaid: lab("Mark unpaid", "செலுத்தவில்லை எனக் குறி"),
     returned: lab("Returned", "திரும்பியது"),
     duration: lab("Duration", "காலம்"),
     utensil: lab("Utensil", "பாத்திரம்"),

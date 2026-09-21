@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
 
-import { db } from "@/lib/db";
+import { db, isDatabaseUnreachable } from "@/lib/db";
 import { requireSession } from "@/lib/requirePermission";
 import { resolveRequestSession } from "@/lib/authSession";
 import { EVENT_STATUS_PIPELINE, type CateringEvent } from "@/store/events";
@@ -219,7 +219,18 @@ export async function writeEventChildren(
 
 /** Lists every event with its related child records. */
 export async function GET() {
-  const session = await resolveRequestSession();
+  let session;
+  try {
+    session = await resolveRequestSession();
+  } catch (error) {
+    if (isDatabaseUnreachable(error)) {
+      return NextResponse.json(
+        { error: "Database temporarily unavailable. Please retry." },
+        { status: 503 }
+      );
+    }
+    throw error;
+  }
   if (!session) {
     return NextResponse.json({ error: "Not signed in." }, { status: 401 });
   }

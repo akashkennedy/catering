@@ -7,12 +7,18 @@ import {
   getSiteContentRow,
   publishSiteContentRow,
 } from "@/lib/siteDb";
+import {
+  PUBLISH_HOOK_URL,
+  buildLandingPayload,
+  validateLandingPayload,
+} from "@/lib/sitePublish";
 
 const businessSchema = z.object({
   phones: z.array(z.string()),
   whatsapp: z.string(),
   addressEn: z.string(),
   addressTa: z.string(),
+  serviceZones: z.array(z.string()).optional(),
 });
 
 const menuItemSchema = z.object({ en: z.string(), ta: z.string() });
@@ -32,6 +38,17 @@ const menuSchema = z.object({
   photoUrl: z.string(),
   templateId: z.string().nullable(),
   courses: z.array(courseSchema),
+  // Landing display extras (optional — manager sends them, old clients omit).
+  tabKey: z.string().optional(),
+  taglineEn: z.string().optional(),
+  taglineTa: z.string().optional(),
+  unitEn: z.string().optional(),
+  unitTa: z.string().optional(),
+  isVegOnly: z.boolean().optional(),
+  sideTitle: z.string().optional(),
+  sideDesc: z.string().optional(),
+  sideBadge: z.string().optional(),
+  sideImage: z.string().optional(),
 });
 
 const gallerySchema = z.object({
@@ -47,6 +64,7 @@ const testimonialSchema = z.object({
   quoteTa: z.string(),
   author: z.string(),
   event: z.string(),
+  eventTa: z.string().optional(),
   place: z.string(),
   rating: z.number().min(1).max(5),
   source: z.enum(["manual", "google"]),
@@ -96,7 +114,11 @@ export async function GET() {
 
 /**
  * Publish the website content doc (requires canManageSettings).
- * Best-effort: pings the website's revalidate endpoint when configured.
+ *
+ * Order: validate → write the DB row FIRST, then POST the landing publish
+ * hook. Never POST before the write commits; on write failure do NOT call
+ * the hook. The secret is read from Vercel env (`PUBLISH_SECRET`, same value
+ * as the landing's `PUBLISH_SECRET`).
  */
 export async function POST(request: Request) {
   const denied = await requirePublishPermission();
@@ -111,25 +133,92 @@ export async function POST(request: Request) {
   if (!parsed.success) {
     return NextResponse.json({ error: "Invalid site content payload." }, { status: 400 });
   }
+
+  // Map CRM doc → landing contract + validate before touching the DB.
+  const landing = buildLandingPayload(parsed.data);
+  const validation = validateLandingPayload(landing);
+  if (!validation.ok) {
+    return NextResponse.json(
+      { error: validation.errors.join(" ") || "Invalid site content." },
+      { status: 400 }
+    );
+  }
   try {
-    const updatedAt = await publishSiteContentRow(parsed.data);
-    let revalidated = false;
-    const revalidateUrl = process.env.SITE_REVALIDATE_URL;
-    const revalidateSecret = process.env.SITE_REVALIDATE_SECRET;
-    if (revalidateUrl && revalidateSecret) {
-      try {
-        const response = await fetch(revalidateUrl, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ secret: revalidateSecret }),
-        });
-        revalidated = response.ok;
-      } catch {
-        revalidated = false;
-      }
-    }
-    return NextResponse.json({ ok: true, updatedAt, revalidated });
+    JSON.parse(JSON.stringify(landing));
+  } catch {
+    return NextResponse.json({ error: "Site content does not serialize to JSON." }, { status: 400 });
+  }
+
+  // 1. Write the DB row FIRST.
+  let updatedAt: string;
+  try {
+    updatedAt = await publishSiteContentRow(landing);
   } catch (error) {
+    // Write failed → do NOT call the publish hook.
     return dbErrorResponse(error);
+  }
+
+  // 2. POST the landing publish hook (no body, Bearer secret).
+  // Secret comes from Vercel env — same secret as the landing's PUBLISH_SECRET.
+  const publishUrl =
+    process.env.SITE_PUBLISH_URL || process.env.SITE_REVALIDATE_URL || PUBLISH_HOOK_URL;
+  const publishSecret =
+    process.env.PUBLISH_SECRET || process.env.SITE_REVALIDATE_SECRET || "";
+  if (!publishSecret) {
+    return NextResponse.json({
+      ok: true,
+      updatedAt,
+      published: false,
+      publishError:
+        "Saved to database, but PUBLISH_SECRET is not set in Vercel env — the live site still shows stale content.",
+      warnings: validation.warnings,
+    });
+  }
+  try {
+    const response = await fetch(publishUrl, {
+      method: "POST",
+      headers: { Authorization: `Bearer ${publishSecret}` },
+    });
+    if (response.status === 401) {
+      return NextResponse.json({
+        ok: true,
+        updatedAt,
+        published: false,
+        publishError:
+          "Saved to database, but the publish secret was rejected (401). Check PUBLISH_SECRET in Vercel — the live site still shows stale content.",
+        warnings: validation.warnings,
+      });
+    }
+    let hookOk = response.ok;
+    try {
+      const hookBody = (await response.json()) as { ok?: boolean };
+      hookOk = response.ok && hookBody.ok === true;
+    } catch {
+      hookOk = false;
+    }
+    if (!hookOk) {
+      return NextResponse.json({
+        ok: true,
+        updatedAt,
+        published: false,
+        publishError: `Saved to database, but the publish hook returned ${response.status} — the live site still shows stale content.`,
+        warnings: validation.warnings,
+      });
+    }
+    return NextResponse.json({
+      ok: true,
+      updatedAt,
+      published: true,
+      warnings: validation.warnings,
+    });
+  } catch {
+    return NextResponse.json({
+      ok: true,
+      updatedAt,
+      published: false,
+      publishError:
+        "Saved to database, but the publish hook could not be reached — the live site still shows stale content.",
+      warnings: validation.warnings,
+    });
   }
 }

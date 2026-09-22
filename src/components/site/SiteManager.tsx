@@ -81,10 +81,20 @@ function PublishCard() {
   const uiLanguage = useSettingsStore((state) => state.uiLanguage);
   const [busy, setBusy] = useState<"publish" | "pull" | null>(null);
   const [error, setError] = useState("");
+  const [notice, setNotice] = useState("");
   const [pullOpened, setPullOpened] = useState(false);
 
   const readError = async (response: Response, fallback: string): Promise<string> => {
     if (response.status === 503) return preferredText(ui.site.dbMissing, uiLanguage);
+    if (response.status === 401) {
+      try {
+        const body = (await response.json()) as { error?: string };
+        if (body.error) return body.error;
+      } catch {
+        /* fall through */
+      }
+      return "Publish secret rejected (401). Check PUBLISH_SECRET in Vercel.";
+    }
     try {
       const body = (await response.json()) as { error?: string };
       return body.error || fallback;
@@ -96,6 +106,7 @@ function PublishCard() {
   const publish = async () => {
     setBusy("publish");
     setError("");
+    setNotice("");
     try {
       const state = useSiteContentStore.getState();
       const response = await fetch("/api/site-content", {
@@ -113,9 +124,27 @@ function PublishCard() {
         setError(await readError(response, preferredText(ui.site.publishFailed, uiLanguage)));
         return;
       }
-      const body = (await response.json()) as { updatedAt?: string };
+      const body = (await response.json()) as {
+        updatedAt?: string;
+        published?: boolean;
+        publishError?: string;
+        warnings?: string[];
+      };
       state.setLastPublishedAt(
         typeof body.updatedAt === "string" ? body.updatedAt : new Date().toISOString()
+      );
+      if (body.published === false) {
+        setError(
+          body.publishError ||
+            "Saved to database, but the site still shows stale content (publish hook failed)."
+        );
+        return;
+      }
+      const warnings = (body.warnings ?? []).filter(Boolean);
+      setNotice(
+        warnings.length
+          ? `Published. Notes: ${warnings.join(" ")}`
+          : "Published — live site refreshed."
       );
     } catch {
       setError(preferredText(ui.site.publishFailed, uiLanguage));
@@ -166,6 +195,11 @@ function PublishCard() {
           {error}
         </Text>
       )}
+      {notice && (
+        <Text size="sm" c="green" mb="sm">
+          {notice}
+        </Text>
+      )}
       <Group>
         <Button onClick={publish} loading={busy === "publish"}>
           <Bilingual label={ui.site.publish} />
@@ -211,6 +245,9 @@ function BusinessCard() {
   const [whatsapp, setWhatsapp] = useState(business.whatsapp);
   const [addressEn, setAddressEn] = useState(business.addressEn);
   const [addressTa, setAddressTa] = useState(business.addressTa);
+  const [zonesText, setZonesText] = useState<string>(
+    (business.serviceZones ?? []).join("\n")
+  );
   const [touched, setTouched] = useState(false);
 
   const phoneErrors = phones.map((phone) =>
@@ -288,17 +325,29 @@ function BusinessCard() {
           onChange={(e) => setAddressTa(e.currentTarget.value)}
           minRows={2}
         />
+        <Textarea
+          label="Service zones (one per line — landing contact + footer)"
+          value={zonesText}
+          onChange={(e) => setZonesText(e.currentTarget.value)}
+          minRows={3}
+          placeholder={"Thiruvarambu\nMarthandam\nNagercoil"}
+        />
         <Group justify="flex-end">
           <Button
             disabled={!canSave}
             onClick={() => {
               setTouched(true);
               if (!canSave) return;
+              const zones = zonesText
+                .split("\n")
+                .map((z) => z.trim())
+                .filter(Boolean);
               setBusiness({
                 phones: phones.map((phone) => phone.trim()).filter(Boolean),
                 whatsapp: stripDigits(whatsapp),
                 addressEn: addressEn.trim(),
-                addressTa: addressTa.trim(),
+                addressTa: addressTa.trim() || addressEn.trim(),
+                serviceZones: zones.length ? zones : [...business.serviceZones],
               });
             }}
           >
@@ -347,6 +396,17 @@ const menuSchema = z.object({
   price: z.coerce.number().min(0, "Price must be 0 or more"),
   photoUrl: z.string(),
   templateId: z.string().nullable(),
+  // Landing display extras — mirror the live site tabs/cards.
+  tabKey: z.string(),
+  taglineEn: z.string(),
+  taglineTa: z.string(),
+  unitEn: z.string(),
+  unitTa: z.string(),
+  isVegOnly: z.boolean(),
+  sideTitle: z.string(),
+  sideDesc: z.string(),
+  sideBadge: z.string(),
+  sideImage: z.string(),
 });
 
 type MenuFormValues = z.infer<typeof menuSchema>;
@@ -380,6 +440,16 @@ function MenuFormModal({
         price: 0,
         photoUrl: "",
         templateId: null,
+        tabKey: "",
+        taglineEn: "",
+        taglineTa: "",
+        unitEn: "/ per leaf plate",
+        unitTa: "/ இலைக்கு",
+        isVegOnly: true,
+        sideTitle: "",
+        sideDesc: "",
+        sideBadge: "",
+        sideImage: "",
       },
     });
 
@@ -394,6 +464,16 @@ function MenuFormModal({
       price: target?.price ?? 0,
       photoUrl: target?.photoUrl ?? "",
       templateId: target?.templateId ?? null,
+      tabKey: target?.tabKey ?? target?.nameEn ?? "",
+      taglineEn: target?.taglineEn ?? "",
+      taglineTa: target?.taglineTa ?? "",
+      unitEn: target?.unitEn ?? "/ per leaf plate",
+      unitTa: target?.unitTa ?? "/ இலைக்கு",
+      isVegOnly: target?.isVegOnly ?? true,
+      sideTitle: target?.sideTitle ?? "",
+      sideDesc: target?.sideDesc ?? "",
+      sideBadge: target?.sideBadge ?? "",
+      sideImage: target?.sideImage ?? "",
     });
     setCourses(
       (target?.courses ?? []).map((course) => ({
@@ -414,21 +494,32 @@ function MenuFormModal({
   }
 
   const onSubmit = (values: MenuFormValues) => {
+    const photo = values.photoUrl.trim() || "/images/img_02.jpg";
     const input: SiteMenuInput = {
       nameEn: values.nameEn.trim(),
-      nameTa: values.nameTa.trim(),
+      nameTa: values.nameTa.trim() || values.nameEn.trim(),
       tagEn: values.tagEn.trim(),
-      tagTa: values.tagTa.trim(),
+      tagTa: values.tagTa.trim() || values.tagEn.trim(),
       descEn: values.descEn.trim(),
-      descTa: values.descTa.trim(),
+      descTa: values.descTa.trim() || values.descEn.trim(),
       price: values.price,
-      photoUrl: values.photoUrl.trim(),
+      photoUrl: photo,
       templateId: values.templateId,
+      tabKey: values.tabKey.trim() || values.nameEn.trim(),
+      taglineEn: values.taglineEn.trim() || values.descEn.trim(),
+      taglineTa: values.taglineTa.trim() || values.taglineEn.trim() || values.descEn.trim(),
+      unitEn: values.unitEn.trim() || "/ per leaf plate",
+      unitTa: values.unitTa.trim() || "/ இலைக்கு",
+      isVegOnly: values.isVegOnly,
+      sideTitle: values.sideTitle.trim(),
+      sideDesc: values.sideDesc.trim(),
+      sideBadge: values.sideBadge.trim(),
+      sideImage: values.sideImage.trim() || photo,
       courses: courses
         .filter((course) => course.nameEn.trim() !== "")
         .map((course) => ({
           nameEn: course.nameEn.trim(),
-          nameTa: course.nameTa.trim(),
+          nameTa: course.nameTa.trim() || course.nameEn.trim(),
           items: parseItems(course.itemsText),
         })),
     };
@@ -464,6 +555,11 @@ function MenuFormModal({
               {...register("nameTa")}
             />
           </Group>
+          <TextInput
+            label="Site tab (landing menu tab)"
+            placeholder="Kerala Sadya (Kalyanam Special)"
+            {...register("tabKey")}
+          />
           <Group grow align="flex-start">
             <TextInput label={<Bilingual label={ui.site.tag} />} {...register("tagEn")} />
             <TextInput
@@ -471,6 +567,10 @@ function MenuFormModal({
               dir="auto"
               {...register("tagTa")}
             />
+          </Group>
+          <Group grow align="flex-start">
+            <TextInput label="Tagline (English)" {...register("taglineEn")} />
+            <TextInput label="Tagline (Tamil)" dir="auto" {...register("taglineTa")} />
           </Group>
           <Textarea
             label={<Bilingual label={ui.site.description} />}
@@ -498,10 +598,29 @@ function MenuFormModal({
             />
             <TextInput
               label={<Bilingual label={ui.site.photo} />}
-              placeholder={preferredText(ui.site.photoPlaceholder, uiLanguage)}
+              placeholder="/images/img_02.jpg"
               {...register("photoUrl")}
             />
           </Group>
+          <Group grow align="flex-start">
+            <TextInput label="Price unit (English)" {...register("unitEn")} />
+            <TextInput label="Price unit (Tamil)" dir="auto" {...register("unitTa")} />
+          </Group>
+          <Controller
+            name="isVegOnly"
+            control={control}
+            render={({ field }) => (
+              <Select
+                label="Pure veg?"
+                data={[
+                  { value: "veg", label: "Pure veg" },
+                  { value: "mixed", label: "Veg + non-veg counters" },
+                ]}
+                value={field.value ? "veg" : "mixed"}
+                onChange={(value) => field.onChange(value !== "mixed")}
+              />
+            )}
+          />
           <Controller
             name="templateId"
             control={control}
@@ -517,6 +636,23 @@ function MenuFormModal({
               />
             )}
           />
+          <Card withBorder padding="sm">
+            <Stack gap="xs">
+              <Text size="sm" fw={600}>
+                Side highlight (landing card beside this menu)
+              </Text>
+              <TextInput label="Highlight title" {...register("sideTitle")} />
+              <Textarea label="Highlight description" minRows={2} {...register("sideDesc")} />
+              <Group grow align="flex-start">
+                <TextInput label="Highlight badge" {...register("sideBadge")} />
+                <TextInput
+                  label="Highlight image"
+                  placeholder="/images/img_03.jpg"
+                  {...register("sideImage")}
+                />
+              </Group>
+            </Stack>
+          </Card>
           <div>
             <Text size="sm" fw={500} mb={4}>
               <Bilingual label={ui.site.courses} />
@@ -709,8 +845,26 @@ const gallerySchema = z
       if (!values.url.toLowerCase().includes("instagram.com/")) {
         ctx.addIssue({ code: z.ZodIssueCode.custom, path: ["url"], message: "Enter an Instagram post link." });
       }
-    } else if (!/^https?:\/\//i.test(values.url)) {
-      ctx.addIssue({ code: z.ZodIssueCode.custom, path: ["url"], message: "Enter a valid link." });
+    } else {
+      // Landing only serves site-hosted photos: /images/… or absolute URLs
+      // whose path starts with /images/. Never hotlink CDN URLs.
+      const url = values.url.trim();
+      const ok =
+        url.startsWith("/images/") ||
+        (() => {
+          try {
+            return new URL(url).pathname.startsWith("/images/");
+          } catch {
+            return false;
+          }
+        })();
+      if (!ok) {
+        ctx.addIssue({
+          code: z.ZodIssueCode.custom,
+          path: ["url"],
+          message: "Use a site image: /images/….jpg (no CDN hotlinks).",
+        });
+      }
     }
   });
 
@@ -789,12 +943,12 @@ function GalleryFormModal({
           />
           <TextInput
             label={<Bilingual label={ui.site.itemUrl} />}
-            placeholder={preferredText(ui.site.photoPlaceholder, uiLanguage)}
+            placeholder="/images/img_02.jpg"
             withAsterisk
             {...register("url")}
             error={errors.url?.message}
             description={
-              kind === "instagram" ? <Bilingual label={ui.site.instagramHint} /> : undefined
+              kind === "instagram" ? <Bilingual label={ui.site.instagramHint} /> : "Site-hosted only: /images/….jpg"
             }
           />
           <TextInput label={<Bilingual label={ui.site.caption} />} {...register("captionEn")} />
@@ -923,6 +1077,7 @@ const testimonialSchema = z.object({
   quoteTa: z.string(),
   author: z.string().trim().min(1, "Author name is required"),
   event: z.string(),
+  eventTa: z.string(),
   place: z.string(),
   rating: z.coerce.number().min(1).max(5),
   source: z.enum(["manual", "google"]),
@@ -953,6 +1108,7 @@ function TestimonialFormModal({
         quoteTa: "",
         author: "",
         event: "",
+        eventTa: "",
         place: "",
         rating: 5,
         source: "manual",
@@ -969,6 +1125,7 @@ function TestimonialFormModal({
         quoteTa: item?.quoteTa ?? "",
         author: item?.author ?? "",
         event: item?.event ?? "",
+        eventTa: item?.eventTa ?? "",
         place: item?.place ?? "",
         rating: item?.rating ?? 5,
         source: item?.source ?? "manual",
@@ -988,9 +1145,10 @@ function TestimonialFormModal({
         onSubmit={handleSubmit((values) => {
           const input: SiteTestimonialInput = {
             quoteEn: values.quoteEn.trim(),
-            quoteTa: values.quoteTa.trim(),
+            quoteTa: values.quoteTa.trim() || values.quoteEn.trim(),
             author: values.author.trim(),
             event: values.event.trim(),
+            eventTa: values.eventTa.trim() || values.event.trim(),
             place: values.place.trim(),
             rating: values.rating,
             source: values.source,
@@ -1041,8 +1199,9 @@ function TestimonialFormModal({
           </Group>
           <Group grow align="flex-start">
             <TextInput label={<Bilingual label={ui.site.occasion} />} {...register("event")} />
-            <TextInput label={<Bilingual label={ui.site.place} />} {...register("place")} />
+            <TextInput label="Occasion (Tamil)" dir="auto" {...register("eventTa")} />
           </Group>
+          <TextInput label="Location (landing shows event • location)" {...register("place")} />
           <Controller
             name="source"
             control={control}

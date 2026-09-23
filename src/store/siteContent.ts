@@ -9,56 +9,36 @@ function newId(): string {
   }
 }
 
-export type TestimonialSource = "manual" | "google";
+export type DishLine = { en: string; ta: string };
 
 export type SiteTestimonial = {
   id: string;
-  quoteEn: string;
-  quoteTa: string;
-  author: string;
-  event: string;
-  place: string;
   rating: number;
-  source: TestimonialSource;
-  profileUrl: string;
-  authorPhotoUrl: string;
-  googleReviewId: string;
-};
-
-export type SiteCourseGroup = {
-  id: string;
-  nameEn: string;
-  nameTa: string;
-  items: { en: string; ta: string }[];
+  /** English only — the landing translates when a visitor picks Tamil. */
+  review: string;
+  author: string;
+  location: string;
 };
 
 export type SiteMenu = {
   id: string;
   nameEn: string;
   nameTa: string;
-  tagEn: string;
-  tagTa: string;
-  descEn: string;
-  descTa: string;
+  imageUrl: string;
+  mainDishes: DishLine[];
+  sideDishes: DishLine[];
+  /** Price per plate in ₹ (0 hides the price). */
   price: number;
-  photoUrl: string;
-  templateId: string | null;
-  courses: SiteCourseGroup[];
 };
-
-export type GalleryKind = "photo" | "instagram";
-
-export function isGalleryKind(value: unknown): value is GalleryKind {
-  return value === "photo" || value === "instagram";
-}
 
 export type SiteGalleryItem = {
   id: string;
-  kind: GalleryKind;
-  url: string;
-  captionEn: string;
-  captionTa: string;
-  category: string;
+  /** Public Instagram post link, e.g. https://www.instagram.com/p/…. */
+  instagramUrl: string;
+  /** Shown when the embed fails to load. */
+  altTitle: string;
+  /** Old default image shown when the embed fails. */
+  fallbackImage: string;
 };
 
 export type SiteBusiness = {
@@ -66,60 +46,63 @@ export type SiteBusiness = {
   whatsapp: string;
   addressEn: string;
   addressTa: string;
+  serviceZones: string[];
 };
 
-export type SiteMenuInput = Omit<SiteMenu, "id" | "courses"> & {
-  courses: Omit<SiteCourseGroup, "id">[];
-};
+export const DEFAULT_SERVICE_ZONES = [
+  "Thiruvarambu",
+  "Marthandam",
+  "Nagercoil",
+  "Thuckalay",
+  "Kulasekharam",
+  "Kanyakumari",
+  "Karungal",
+  "Trivandrum Border",
+];
 
+/** Fallback pool shown when an Instagram embed fails (old default images). */
+export const DEFAULT_GALLERY_FALLBACKS = [
+  "/images/img_02.jpg",
+  "/images/img_03.jpg",
+  "/images/img_04.jpg",
+  "/images/img_05.jpg",
+  "/images/img_06.jpg",
+  "/images/img_07.jpg",
+];
+
+export const INSTAGRAM_PLACEHOLDER_URL = "https://www.instagram.com/p/PLACEHOLDER/";
+
+export type SiteMenuInput = Omit<SiteMenu, "id">;
 export type SiteTestimonialInput = Omit<SiteTestimonial, "id">;
 export type SiteGalleryInput = Omit<SiteGalleryItem, "id">;
 
-const IMG = "https://mampallicatering.vercel.app/images";
+const IMG = "/images";
 
 function seedTestimonials(): SiteTestimonial[] {
   return [
     {
       id: newId(),
-      quoteEn:
-        "For our daughter's wedding at Marthandam, we booked Mampalli for 1,800 guests. The Kerala Sadya was flawless! Guests from Trivandrum were praising the Ada Pradhaman and fresh crispy chips for weeks. The servers were so kind.",
-      quoteTa: "",
+      rating: 5,
+      review:
+        "For our daughter's wedding at Marthandam, we booked Mampalli for 1,800 guests. The Kerala Sadya was flawless! Guests were praising the Ada Pradhaman and fresh crispy chips for weeks.",
       author: "Anand & Priya Ramachandran",
-      event: "Daughter's Wedding Reception",
-      place: "Marthandam",
-      rating: 5,
-      source: "manual",
-      profileUrl: "",
-      authorPhotoUrl: "",
-      googleReviewId: "",
+      location: "Marthandam",
     },
     {
       id: newId(),
-      quoteEn:
-        "We held my father's 60th Shashti Poorthi pooja at Thiruvarambu. The traditional Tamil Virundhu was pure nostalgia. Drumstick sambar with authentic ghee aroma felt like our grandmother's feast. Truly exceptional service!",
-      quoteTa: "",
+      rating: 5,
+      review:
+        "We held my father's 60th Shashti Poorthi pooja at Thiruvarambu. The traditional Tamil Virundhu was pure nostalgia — drumstick sambar with authentic ghee aroma, just like grandmother's feast!",
       author: "Dr. K. Sundaram",
-      event: "60th Birthday Celebration (Shashti Poorthi)",
-      place: "Nagercoil",
-      rating: 5,
-      source: "manual",
-      profileUrl: "",
-      authorPhotoUrl: "",
-      googleReviewId: "",
+      location: "Nagercoil",
     },
     {
       id: newId(),
-      quoteEn:
-        "From the morning filter coffee and fluffy poori masala to the grand evening Biryani live counters, Mampalli managed our housewarming seamlessly. The kitchen space was left spotlessly clean afterward!",
-      quoteTa: "",
-      author: "Meera & Navin",
-      event: "Housewarming Ceremony (Grahapravesam)",
-      place: "Thuckalay",
       rating: 5,
-      source: "manual",
-      profileUrl: "",
-      authorPhotoUrl: "",
-      googleReviewId: "",
+      review:
+        "From morning filter coffee and fluffy poori masala to the grand evening Biryani live counters, Mampalli managed our housewarming seamlessly. Spotlessly clean kitchen afterward!",
+      author: "Meera & Navin",
+      location: "Thuckalay",
     },
   ];
 }
@@ -130,114 +113,89 @@ function seedMenus(): SiteMenu[] {
       id: newId(),
       nameEn: "Royal Travancore Wedding Sadya",
       nameTa: "ராயல் திருவிதாங்கூர் திருமண சாத்யா",
-      tagEn: "26 Items Traditional",
-      tagTa: "26 வகை பாரம்பரியம்",
-      descEn: "Authentic 26-course Grand Feast on Fresh Banana Leaf. Served ceremoniously with pure cow ghee poured atop steaming parippu and Kerala Red Matta / Ponni rice.",
-      descTa: "",
+      imageUrl: `${IMG}/img_03.jpg`,
       price: 280,
-      photoUrl: `${IMG}/img_03.jpg`,
-      templateId: null,
-      courses: [
-        {
-          id: newId(),
-          nameEn: "Core Feasts & Curries",
-          nameTa: "முக்கிய குழம்புகள்",
-          items: [
-            { en: "Kerala Red Matta Rice & Ponni Rice", ta: "" },
-            { en: "Parippu Curry & Steaming Fresh Cow Ghee", ta: "" },
-            { en: "Travancore Drumstick & Pumpkin Sambar", ta: "" },
-            { en: "Pepper Cumin Rasam & Moru Kachiathu", ta: "" },
-            { en: "Traditional Kalan & Tender Ash Gourd Olan", ta: "" },
-          ],
-        },
-        {
-          id: newId(),
-          nameEn: "Accompaniments & Crisps",
-          nameTa: "துணை உணவுகள்",
-          items: [
-            { en: "Classic Avial in Cold-Pressed Coconut Oil", ta: "" },
-            { en: "Beetroot & Cabbage Coconut Thoran", ta: "" },
-            { en: "Pineapple Kichadi & White Pumpkin Pachadi", ta: "" },
-            { en: "Nendran Banana Chips & Sharkara Varatti", ta: "" },
-            { en: "Ginger Puli Inji & Large Crispy Appalam", ta: "" },
-          ],
-        },
-        {
-          id: newId(),
-          nameEn: "Signature Double Payasam Finale",
-          nameTa: "இரட்டை பாயசம்",
-          items: [
-            { en: "Ada Pradhaman: rice flakes in dark jaggery, thick coconut milk & fried cashews", ta: "" },
-            { en: "Palada Payasam: slow-simmered rich milk delight", ta: "" },
-          ],
-        },
+      mainDishes: [
+        { en: "Kerala Red Matta Rice & Ponni Rice", ta: "கேரள மட்டை அரிசி & பொன்னி அரிசி" },
+        { en: "Parippu Curry & Steaming Fresh Cow Ghee", ta: "பருப்பு குழம்பு & தூய பசும் நெய்" },
+        { en: "Travancore Drumstick & Pumpkin Sambar", ta: "முருங்கை & பூசணி சாம்பார்" },
+        { en: "Pepper Cumin Rasam & Moru Kachiathu", ta: "மிளகு சீரக ரசம் & மோர்" },
+        { en: "Traditional Kalan & Tender Ash Gourd Olan", ta: "பாரம்பரிய காளன் & ஓலன்" },
+      ],
+      sideDishes: [
+        { en: "Classic Avial in Cold-Pressed Coconut Oil", ta: "செக்கு எண்ணெய் அவியல்" },
+        { en: "Beetroot & Cabbage Coconut Thoran", ta: "பீட்ரூட் & முட்டைகோஸ் தோரன்" },
+        { en: "Nendran Banana Chips & Sharkara Varatti", ta: "நேந்திரன் சிப்ஸ் & சர்க்கரை வரட்டி" },
+        { en: "Ada Pradhaman & Palada Payasam", ta: "அட பிரதமன் & பாலடை பாயசம்" },
       ],
     },
     {
       id: newId(),
       nameEn: "Tamil Virundhu Sappadu",
       nameTa: "தமிழ் விருந்து சாப்பாடு",
-      tagEn: "Kalyana Virundhu",
-      tagTa: "கல்யாண விருந்து",
-      descEn: "Grand Tamil wedding feast on fresh banana leaf with drumstick sambar, variety pachadis, poriyals and double payasam.",
-      descTa: "",
-      price: 0,
-      photoUrl: `${IMG}/img_02.jpg`,
-      templateId: null,
-      courses: [],
-    },
-    {
-      id: newId(),
-      nameEn: "Grand Celebration Feast",
-      nameTa: "பிரமாண்ட கொண்டாட்ட விருந்து",
-      tagEn: "Mega Events",
-      tagTa: "பெரிய நிகழ்வுகள்",
-      descEn: "Banquet-style feasts for 500 to 5,000+ guests with live counters and uniformed service.",
-      descTa: "",
-      price: 0,
-      photoUrl: `${IMG}/img_05.jpg`,
-      templateId: null,
-      courses: [],
+      imageUrl: `${IMG}/img_02.jpg`,
+      price: 250,
+      mainDishes: [
+        { en: "Ponni Rice & Paruppu Nei", ta: "பொன்னி அரிசி & பருப்பு நெய்" },
+        { en: "Drumstick Sambar & Rasam", ta: "முருங்கை சாம்பார் & ரசம்" },
+        { en: "Kalyana Poriyal & Kootu", ta: "கல்யாண பொரியல் & கூட்டு" },
+      ],
+      sideDishes: [
+        { en: "Paruppu Payasam & Kesari", ta: "பருப்பு பாயசம் & கேசரி" },
+        { en: "Curd Rice & Pickle", ta: "தயிர் சாதம் & ஊறுகாய்" },
+      ],
     },
     {
       id: newId(),
       nameEn: "Live Tiffin & Evening Counters",
       nameTa: "நேரடி டிபன் & மாலை கவுண்டர்கள்",
-      tagEn: "Interactive Counters",
-      tagTa: "நேரடி கவுண்டர்கள்",
-      descEn: "Filter coffee, poori masala, dosa varieties, Biryani and chaat counters served live.",
-      descTa: "",
-      price: 0,
-      photoUrl: `${IMG}/img_06.jpg`,
-      templateId: null,
-      courses: [],
+      imageUrl: `${IMG}/img_06.jpg`,
+      price: 180,
+      mainDishes: [
+        { en: "Filter Coffee & Poori Masala", ta: "பில்டர் காபி & பூரி மசாலா" },
+        { en: "Ghee Roast & Ven Pongal", ta: "நெய் ரோஸ்ட் & வெண் பொங்கல்" },
+      ],
+      sideDishes: [
+        { en: "Veg Biryani & Chaat Live", ta: "வெஜ் பிரியாணி & சாட்" },
+      ],
     },
   ];
 }
 
 function seedGallery(): SiteGalleryItem[] {
-  const photo = (
-    url: string,
-    captionEn: string,
-    category: string
-  ): SiteGalleryItem => ({ id: newId(), kind: "photo", url, captionEn, captionTa: "", category });
+  const item = (
+    instagramUrl: string,
+    altTitle: string,
+    fallbackImage: string
+  ): SiteGalleryItem => ({ id: newId(), instagramUrl, altTitle, fallbackImage });
   return [
-    photo(`${IMG}/img_02.jpg`, "2,500 Guests Vazhaillai Virundhu", "sadya"),
-    photo(`${IMG}/img_03.jpg`, "Heirloom Red Rice & Payasams", "sadya"),
-    photo(`${IMG}/img_04.jpg`, "Pure Brass Uruli Cooking", "kitchens"),
-    photo(`${IMG}/img_05.jpg`, "Marthandam Wedding Mandapam", "receptions"),
-    photo(`${IMG}/img_06.jpg`, "Interactive Live Tiffin Experience", "live"),
-    photo(`${IMG}/img_07.jpg`, "Ada Pradhaman & Ghee Halwa", "sadya"),
+    item(
+      "https://www.instagram.com/p/PLACEHOLDER_SADYA/",
+      "2,500 Guests Vazhaillai Virundhu",
+      `${IMG}/img_02.jpg`
+    ),
+    item(
+      "https://www.instagram.com/p/PLACEHOLDER_URULI/",
+      "Pure Brass Uruli Cooking",
+      `${IMG}/img_04.jpg`
+    ),
+    item(
+      "https://www.instagram.com/p/PLACEHOLDER_TIFFIN/",
+      "Interactive Live Tiffin Experience",
+      `${IMG}/img_06.jpg`
+    ),
   ];
 }
 
 function seedBusiness(): SiteBusiness {
   return {
-    phones: ["+91 94432 10000", "+91 98421 20000"],
+    phones: ["919443210000", "919842120000"],
     whatsapp: "919443210000",
     addressEn:
       "Mampalli Central Kitchen, Main Road, Thiruvarambu, Kanyakumari District, Tamil Nadu - 629161",
-    addressTa: "",
+    addressTa:
+      "மாம்பள்ளி மத்திய சமையலறை, மெயின் ரோடு, திருவரம்பு, கன்னியாகுமரி மாவட்டம், தமிழ் நாடு - 629161",
+    serviceZones: [...DEFAULT_SERVICE_ZONES],
   };
 }
 
@@ -265,14 +223,6 @@ type SiteContentState = RemoteSiteContent & {
   deleteTestimonial: (id: string) => void;
 };
 
-function withIds(input: SiteMenuInput): SiteMenu {
-  return {
-    ...input,
-    id: newId(),
-    courses: input.courses.map((course) => ({ ...course, id: newId() })),
-  };
-}
-
 function asStringArray(value: unknown): string[] {
   return Array.isArray(value) ? value.filter((item): item is string => typeof item === "string") : [];
 }
@@ -285,10 +235,28 @@ function asNumber(value: unknown, fallback: number): number {
   return typeof value === "number" && Number.isFinite(value) ? value : fallback;
 }
 
+function asDishLines(value: unknown): DishLine[] {
+  if (!Array.isArray(value)) return [];
+  return (value as Record<string, unknown>[])
+    .map((item) => ({ en: asString(item.en), ta: asString(item.ta) }))
+    .filter((item) => item.en !== "");
+}
+
+/** Flatten legacy course groups (or any item list) into dish lines. */
+function flattenLegacyCourses(courses: unknown): DishLine[] {
+  if (!Array.isArray(courses)) return [];
+  const lines: DishLine[] = [];
+  for (const course of courses as Record<string, unknown>[]) {
+    if (Array.isArray(course.items)) lines.push(...asDishLines(course.items));
+  }
+  return lines;
+}
+
 /**
  * Validate + normalize a content doc pulled from the database.
  * Returns null when the payload is unusable. Missing ids are regenerated
- * so older/alien payloads still load safely.
+ * so older payloads still load safely (legacy courses flatten into Main
+ * Dishes; legacy photo gallery items become embed-failure fallbacks).
  */
 export function normalizeRemoteContent(data: unknown): RemoteSiteContent | null {
   if (!data || typeof data !== "object") return null;
@@ -303,53 +271,66 @@ export function normalizeRemoteContent(data: unknown): RemoteSiteContent | null 
     whatsapp: asString(businessRaw.whatsapp),
     addressEn: asString(businessRaw.addressEn),
     addressTa: asString(businessRaw.addressTa),
+    serviceZones: asStringArray(businessRaw.serviceZones).length
+      ? asStringArray(businessRaw.serviceZones)
+      : [...DEFAULT_SERVICE_ZONES],
   };
-  const menus: SiteMenu[] = (doc.menus as Record<string, unknown>[]).map((raw) => ({
-    id: asString(raw.id) || newId(),
-    nameEn: asString(raw.nameEn),
-    nameTa: asString(raw.nameTa),
-    tagEn: asString(raw.tagEn),
-    tagTa: asString(raw.tagTa),
-    descEn: asString(raw.descEn),
-    descTa: asString(raw.descTa),
-    price: asNumber(raw.price, 0),
-    photoUrl: asString(raw.photoUrl),
-    templateId: typeof raw.templateId === "string" ? raw.templateId : null,
-    courses: Array.isArray(raw.courses)
-      ? (raw.courses as Record<string, unknown>[]).map((course) => ({
-          id: asString(course.id) || newId(),
-          nameEn: asString(course.nameEn),
-          nameTa: asString(course.nameTa),
-          items: Array.isArray(course.items)
-            ? (course.items as Record<string, unknown>[])
-                .map((item) => ({ en: asString(item.en), ta: asString(item.ta) }))
-                .filter((item) => item.en !== "")
-            : [],
-        }))
-      : [],
-  }));
-  const gallery: SiteGalleryItem[] = (doc.gallery as Record<string, unknown>[]).map((raw) => ({
-    id: asString(raw.id) || newId(),
-    kind: isGalleryKind(raw.kind) ? raw.kind : "photo",
-    url: asString(raw.url),
-    captionEn: asString(raw.captionEn),
-    captionTa: asString(raw.captionTa),
-    category: asString(raw.category) || "sadya",
-  }));
-  const testimonials: SiteTestimonial[] = (doc.testimonials as Record<string, unknown>[]).map(
-    (raw) => ({
+  const strOr = (value: unknown, fallback: string): string => {
+    const s = asString(value).trim();
+    return s || fallback;
+  };
+  const menus: SiteMenu[] = (doc.menus as Record<string, unknown>[]).map((raw) => {
+    const nameEn = asString(raw.nameEn);
+    const legacyMains = flattenLegacyCourses(raw.courses);
+    return {
       id: asString(raw.id) || newId(),
-      quoteEn: asString(raw.quoteEn),
-      quoteTa: asString(raw.quoteTa),
-      author: asString(raw.author),
-      event: asString(raw.event),
-      place: asString(raw.place),
-      rating: Math.min(5, Math.max(1, Math.round(asNumber(raw.rating, 5)))),
-      source: raw.source === "google" ? "google" : "manual",
-      profileUrl: asString(raw.profileUrl),
-      authorPhotoUrl: asString(raw.authorPhotoUrl),
-      googleReviewId: asString(raw.googleReviewId),
-    })
+      nameEn,
+      nameTa: strOr(raw.nameTa, nameEn),
+      imageUrl: asString(raw.imageUrl) || asString(raw.photoUrl) || `${IMG}/img_02.jpg`,
+      mainDishes: asDishLines(raw.mainDishes).length
+        ? asDishLines(raw.mainDishes)
+        : legacyMains,
+      sideDishes: asDishLines(raw.sideDishes),
+      price: asNumber(raw.price, 0),
+    };
+  });
+  const gallery: SiteGalleryItem[] = (doc.gallery as Record<string, unknown>[]).map(
+    (raw, index) => {
+      const instagramUrl = asString(raw.instagramUrl) || asString(raw.url);
+      const isInsta = instagramUrl.toLowerCase().includes("instagram.com/");
+      return {
+        id: asString(raw.id) || newId(),
+        instagramUrl,
+        altTitle:
+          asString(raw.altTitle) ||
+          asString(raw.captionEn) ||
+          `Gallery post ${index + 1}`,
+        // Legacy photo items (and anything non-Instagram) become the
+        // fallback image shown when the embed fails.
+        fallbackImage:
+          asString(raw.fallbackImage) ||
+          (!isInsta && instagramUrl
+            ? instagramUrl
+            : DEFAULT_GALLERY_FALLBACKS[index % DEFAULT_GALLERY_FALLBACKS.length]),
+      };
+    }
+  );
+  const testimonials: SiteTestimonial[] = (doc.testimonials as Record<string, unknown>[]).map(
+    (raw) => {
+      const nested = raw.quote;
+      const review =
+        nested && typeof nested === "object"
+          ? asString((nested as Record<string, unknown>).en) || asString(raw.quoteEn)
+          : asString(raw.review) || asString(raw.quoteEn);
+      return {
+        id: asString(raw.id) || newId(),
+        rating: Math.min(5, Math.max(1, Math.round(asNumber(raw.rating, 5)))),
+        review,
+        author: asString(raw.author),
+        location:
+          asString(raw.location) || asString(raw.place) || asString(raw.event),
+      };
+    }
   );
   return { business, menus, gallery, testimonials };
 }
@@ -381,24 +362,10 @@ export const useSiteContentStore = create<SiteContentState>()(
         }),
       setBusiness: (input) => set({ business: input }),
       addMenu: (input) =>
-        set((state) => ({ menus: [...state.menus, withIds(input)] })),
+        set((state) => ({ menus: [...state.menus, { ...input, id: newId() }] })),
       updateMenu: (id, input) =>
         set((state) => ({
-          menus: state.menus.map((menu) =>
-            menu.id === id
-              ? {
-                  ...input,
-                  id,
-                  courses: input.courses.map((course) => ({
-                    ...course,
-                    id:
-                      menu.courses.find(
-                        (c) => c.nameEn === course.nameEn && c.nameTa === course.nameTa
-                      )?.id ?? newId(),
-                  })),
-                }
-              : menu
-          ),
+          menus: state.menus.map((menu) => (menu.id === id ? { ...input, id } : menu)),
         })),
       deleteMenu: (id) =>
         set((state) => ({ menus: state.menus.filter((menu) => menu.id !== id) })),
@@ -426,28 +393,29 @@ export const useSiteContentStore = create<SiteContentState>()(
     {
       name: "catering-site",
       storage: createJSONStorage(() => localStorage),
-      version: 3,
+      version: 5,
       migrate: (persistedState) => {
         const state = persistedState as {
+          menus?: Array<Record<string, unknown>> | null;
           gallery?: Array<Record<string, unknown>> | null;
+          testimonials?: Array<Record<string, unknown>> | null;
           business?: Record<string, unknown> | null;
           lastPublishedAt?: unknown;
         } & Record<string, unknown>;
+        const normalized = normalizeRemoteContent({
+          business: state.business ?? {},
+          menus: state.menus ?? [],
+          gallery: state.gallery ?? [],
+          testimonials: state.testimonials ?? [],
+        });
         return {
           ...state,
           lastPublishedAt:
             typeof state.lastPublishedAt === "string" ? state.lastPublishedAt : null,
-          business: {
-            phones: [],
-            whatsapp: "",
-            addressEn: "",
-            addressTa: "",
-            ...(state.business ?? {}),
-          },
-          gallery: (state.gallery ?? []).map((raw) => ({
-            ...raw,
-            kind: isGalleryKind(raw.kind) ? raw.kind : "photo",
-          })),
+          business: normalized?.business ?? seedBusiness(),
+          menus: normalized?.menus ?? [],
+          gallery: normalized?.gallery ?? [],
+          testimonials: normalized?.testimonials ?? [],
         };
       },
     }

@@ -158,8 +158,9 @@ export function EventsCalendar({ events }: { events: CateringEvent[] }) {
                     border: isToday
                       ? "2px solid var(--accent-leaf)"
                       : "1px solid transparent",
-                    color: "var(--ink-muted)",
+                    color: "var(--ink)",
                     fontSize: "0.875rem",
+                    fontWeight: 600,
                   }}
                 >
                   {day}

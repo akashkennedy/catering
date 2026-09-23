@@ -13,7 +13,15 @@ Run `db/site-content.sql` once in the Neon SQL editor (shared database).
 | Variable | Value |
 |---|---|
 | `DATABASE_URL` | Neon **pooled** connection string (reads only; ideally a read-only role) |
-| `SITE_REVALIDATE_SECRET` | Long random string, shared with the CRM's `SITE_REVALIDATE_SECRET` |
+| `PUBLISH_SECRET` | Long random string, shared with the CRM's `PUBLISH_SECRET` |
+
+CRM side (Vercel → CRM project → Settings):
+
+| Variable | Value |
+|---|---|
+| `DATABASE_URL` | Same Neon pooled connection string (writes via `/api/site-content`) |
+| `SITE_PUBLISH_URL` | `https://mampallicatering.vercel.app/api/publish` |
+| `PUBLISH_SECRET` | Same value as the landing's `PUBLISH_SECRET` |
 
 ## 3. Website read layer (Next.js App Router)
 
@@ -22,21 +30,21 @@ Run `db/site-content.sql` once in the Neon SQL editor (shared database).
 import { neon } from "@neondatabase/serverless";
 
 export type WebsiteContent = {
-  business: { phones: string[]; whatsapp: string; addressEn: string; addressTa: string };
+  business: {
+    phones: string[]; whatsapp: string; addressEn: string; addressTa: string;
+    serviceZones?: string[];
+  };
   menus: {
-    id: string; nameEn: string; nameTa: string; tagEn: string; tagTa: string;
-    descEn: string; descTa: string; price: number; photoUrl: string;
-    templateId: string | null;
-    courses: { id: string; nameEn: string; nameTa: string; items: { en: string; ta: string }[] }[];
+    id?: string; nameEn: string; nameTa: string; imageUrl: string;
+    mainDishes: { en: string; ta: string }[];
+    sideDishes: { en: string; ta: string }[];
+    price: number; // per plate ₹, 0 hides the price
   }[];
   gallery: {
-    id: string; kind: "photo" | "instagram"; url: string;
-    captionEn: string; captionTa: string; category: string;
+    id?: string; instagramUrl: string; altTitle: string; fallbackImage: string;
   }[];
   testimonials: {
-    id: string; quoteEn: string; quoteTa: string; author: string; event: string;
-    place: string; rating: number; source: "manual" | "google"; profileUrl: string;
-    authorPhotoUrl: string; googleReviewId: string;
+    id?: string; rating: number; review: string; author: string; location: string;
   }[];
 };
 
@@ -65,29 +73,40 @@ or call `getWebsiteContent()` inside a component rendered with `export const rev
 
 ## 4. On-demand refresh endpoint (website project)
 
+The CRM POSTs with NO body and a Bearer secret. Return `{ ok: true }`
+with HTTP 200 on success; return 401 when the secret is wrong so the CRM
+can surface "secret rejected".
+
 ```ts
-// app/api/revalidate-site/route.ts
+// app/api/publish/route.ts
 import { NextResponse } from "next/server";
 import { revalidateTag } from "next/cache";
 
 export async function POST(request: Request) {
-  const body = (await request.json().catch(() => ({}))) as { secret?: string };
-  if (body.secret !== process.env.SITE_REVALIDATE_SECRET) {
-    return NextResponse.json({ error: "Forbidden." }, { status: 403 });
+  const auth = request.headers.get("authorization") ?? "";
+  if (auth !== `Bearer ${process.env.PUBLISH_SECRET}`) {
+    return NextResponse.json({ error: "Forbidden." }, { status: 401 });
   }
   revalidateTag("site-content");
   return NextResponse.json({ ok: true });
 }
 ```
 
-Point the CRM's `SITE_REVALIDATE_URL` at
-`https://mampallicatering.vercel.app/api/revalidate-site`.
+Point the CRM's `SITE_PUBLISH_URL` at
+`https://mampallicatering.vercel.app/api/publish`.
 
 ## 5. Field notes
 
-- `menus[].templateId` refers to CRM template ids — informational only for the website.
-- Instagram gallery items: render `blockquote.instagram-media` with
-  `data-instgrm-permalink={url}` + `https://www.instagram.com/embed.js`.
-- Google testimonials: show author + stars + "via Google" badge + `profileUrl` link
-  (required style once Places API sync lands; same fields already carry it).
+- `menus[]`: render meal name (`nameTa || nameEn`), single `imageUrl`,
+  **Main Dishes** list, **Side Dishes** list, and `price` per plate
+  (hide the price when `0`). Dish lines are `{ en, ta }` — show `ta || en`
+  when the visitor picks Tamil.
+- Gallery items are **Instagram-only**: render `blockquote.instagram-media`
+  with `data-instgrm-permalink={instagramUrl}` +
+  `https://www.instagram.com/embed.js`. When the embed fails (or offline),
+  render `fallbackImage` with `alt={altTitle}` + a "View on Instagram" link
+  to `instagramUrl`. No categories — one grid, document order.
+- Testimonials: show stars (`rating`), `review`, author, and location only.
+  `review` is English — when the visitor picks Tamil, translate it
+  landing-side (e.g. a small EN→TA map with English fallback).
 - Tamil-first display: use `nameTa || nameEn` (same fallback rule as the CRM).

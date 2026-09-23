@@ -38,6 +38,7 @@ import { newClientId } from "@/lib/storeSync";
 import {
   detectTransition,
   openConfirmedInvoice,
+  openEnquiryMenus,
   openFeedbackRequest,
   openPaymentReceived,
 } from "@/lib/statusTransitions";
@@ -260,7 +261,9 @@ export function EventFormModal({ opened, event, onClose }: EventFormModalProps) 
         utensils: event.utensils ?? [],
         ingredients: nextIngredients,
       });
-      if (transition === "confirmed") {
+      if (transition === "enquiry") {
+        openEnquiryMenus(nextEvent);
+      } else if (transition === "confirmed") {
         openConfirmedInvoice(nextEvent);
       } else if (transition === "paid") {
         openPaymentReceived(nextEvent);
@@ -271,7 +274,9 @@ export function EventFormModal({ opened, event, onClose }: EventFormModalProps) 
       const id = newClientId();
       const created: CateringEvent = { id, ...input };
       const transition = detectTransition(null, values.status);
-      if (transition === "confirmed") {
+      if (transition === "enquiry") {
+        openEnquiryMenus(created);
+      } else if (transition === "confirmed") {
         openConfirmedInvoice(created);
       } else if (transition === "paid") {
         openPaymentReceived(created);

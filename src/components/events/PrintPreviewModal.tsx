@@ -10,6 +10,7 @@ import { preferredText, ui } from "@/lib/i18n";
 import { useSettingsStore } from "@/store/settings";
 import { useMobileSheet } from "@/hooks/useMobileSheet";
 import { formatINR } from "@/lib/format";
+import { normalizeCustomerPhone } from "@/lib/phone";
 import type { Ingredient } from "@/store/ingredients";
 import type { CateringEvent, EventIngredientLine } from "@/store/events";
 import type { IngredientTag } from "@/lib/ingredientTags";
@@ -42,6 +43,14 @@ export function PrintPreviewModal({
   } | null>(null);
   const [generating, setGenerating] = useState<"buy" | "detailed" | null>(null);
   const [pdfLang, setPdfLang] = useState<PdfLang>(uiLanguage === "ta" ? "ta" : "en");
+  // The modal stays mounted while closed: resync the preview language with
+  // the current UI language whenever it transitions from closed to open.
+  // (Render-phase adjustment, same pattern as SiteManager's lastOpened.)
+  const [langOpened, setLangOpened] = useState(opened);
+  if (opened !== langOpened) {
+    setLangOpened(opened);
+    if (opened) setPdfLang(uiLanguage === "ta" ? "ta" : "en");
+  }
   // Render only the matching list variant (table xor cards) instead of
   // mounting both and hiding one with CSS.
   const isMobile = useMediaQuery("(max-width: 639px)");
@@ -183,8 +192,7 @@ export function PrintPreviewModal({
             <Bilingual label={ui.events.whatsappNote} />
           </Text>
           {(() => {
-            const digits = (event.phone ?? "").replace(/\D/g, "").replace(/^91(?=\d{10}$)/, "");
-            const valid = digits.length === 10;
+            const valid = normalizeCustomerPhone(event.phone ?? "") !== null;
             if (!valid) {
               return (
                 <Text size="sm" c="red">

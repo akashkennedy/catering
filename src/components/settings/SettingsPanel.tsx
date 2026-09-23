@@ -28,6 +28,7 @@ export function SettingsPanel() {
   const [exportStatus, setExportStatus] = useState<"idle" | "done" | "failed">("idle");
 
   const alertRows: { key: AlertKey; label: string }[] = [
+    { key: "enquiryMenus", label: preferredText(ui.settings.alertEnquiryMenus, uiLanguage) },
     { key: "confirmInvoice", label: preferredText(ui.settings.alertConfirmInvoice, uiLanguage) },
     { key: "paymentReceived", label: preferredText(ui.settings.alertPaymentReceived, uiLanguage) },
     { key: "feedbackRequest", label: preferredText(ui.settings.alertFeedbackRequest, uiLanguage) },

@@ -17,56 +17,27 @@ const businessSchema = z.object({
   serviceZones: z.array(z.string()).optional(),
 });
 
-const menuItemSchema = z.object({ en: z.string(), ta: z.string() });
-const courseSchema = z.object({
-  nameEn: z.string(),
-  nameTa: z.string(),
-  items: z.array(menuItemSchema),
-});
+const dishLineSchema = z.object({ en: z.string(), ta: z.string() });
 const menuSchema = z.object({
   nameEn: z.string(),
   nameTa: z.string(),
-  tagEn: z.string(),
-  tagTa: z.string(),
-  descEn: z.string(),
-  descTa: z.string(),
+  imageUrl: z.string(),
+  mainDishes: z.array(dishLineSchema),
+  sideDishes: z.array(dishLineSchema),
   price: z.number(),
-  photoUrl: z.string(),
-  templateId: z.string().nullable(),
-  courses: z.array(courseSchema),
-  // Landing display extras (optional — manager sends them, old clients omit).
-  tabKey: z.string().optional(),
-  taglineEn: z.string().optional(),
-  taglineTa: z.string().optional(),
-  unitEn: z.string().optional(),
-  unitTa: z.string().optional(),
-  isVegOnly: z.boolean().optional(),
-  sideTitle: z.string().optional(),
-  sideDesc: z.string().optional(),
-  sideBadge: z.string().optional(),
-  sideImage: z.string().optional(),
 });
 
 const gallerySchema = z.object({
-  kind: z.enum(["photo", "instagram"]),
-  url: z.string(),
-  captionEn: z.string(),
-  captionTa: z.string(),
-  category: z.string(),
+  instagramUrl: z.string(),
+  altTitle: z.string(),
+  fallbackImage: z.string(),
 });
 
 const testimonialSchema = z.object({
-  quoteEn: z.string(),
-  quoteTa: z.string(),
-  author: z.string(),
-  event: z.string(),
-  eventTa: z.string().optional(),
-  place: z.string(),
   rating: z.number().min(1).max(5),
-  source: z.enum(["manual", "google"]),
-  profileUrl: z.string(),
-  authorPhotoUrl: z.string(),
-  googleReviewId: z.string(),
+  review: z.string(),
+  author: z.string(),
+  location: z.string(),
 });
 
 const payloadSchema = z.object({
@@ -112,13 +83,12 @@ export async function GET() {
  * Publish the website content doc (requires canManageSettings).
  *
  * The landing (mampallicatering.vercel.app) reads the SAME `site_content`
- * row in the OLD flat shape:
+ * row in the flat shape:
  *   { business: { phones, whatsapp, addressEn, addressTa, serviceZones? },
- *     menus: [{ nameEn/nameTa/tagEn/tagTa/descEn/descTa/price/photoUrl/templateId/courses[] + additive extras }],
- *     gallery: [{ kind, url, captionEn/captionTa, category }],
- *     testimonials: [{ quoteEn/quoteTa, author, event/eventTa, place, rating, source, profileUrl, ... }] }
- * Extra keys are ignored by old landing builds, so we write the CRM doc
- * through AS-IS (flat) — never the nested LandingDoc transform.
+ *     menus: [{ nameEn/nameTa, imageUrl, mainDishes[{en,ta}], sideDishes[{en,ta}], price }],
+ *     gallery: [{ instagramUrl, altTitle, fallbackImage }],
+ *     testimonials: [{ rating, review (EN), author, location }] }
+ * We write the CRM doc through AS-IS — never transform it.
  *
  * Order: validate → write the DB row FIRST, then POST the landing publish
  * hook. Never POST before the write commits; on write failure do NOT call
@@ -153,13 +123,30 @@ export async function POST(request: Request) {
   }
   for (const menu of doc.menus) {
     if (!menu.nameEn.trim()) {
-      return NextResponse.json({ error: "A menu is missing its English name." }, { status: 400 });
+      return NextResponse.json({ error: "A menu is missing its meal name." }, { status: 400 });
     }
     if (!menu.nameTa.trim()) warnings.push(`Menu "${menu.nameEn}" missing Tamil name.`);
+    if (menu.mainDishes.length === 0) {
+      return NextResponse.json(
+        { error: `Menu "${menu.nameEn}" needs at least one main dish.` },
+        { status: 400 }
+      );
+    }
+  }
+  for (const item of doc.gallery) {
+    if (!item.instagramUrl.toLowerCase().includes("instagram.com/")) {
+      return NextResponse.json({ error: "A gallery item is not an Instagram link." }, { status: 400 });
+    }
+    if (!item.altTitle.trim()) {
+      return NextResponse.json({ error: "A gallery item is missing its alt title." }, { status: 400 });
+    }
   }
   for (const t of doc.testimonials) {
-    if (!t.author.trim() || !t.quoteEn.trim()) {
-      return NextResponse.json({ error: "A testimonial is missing author or quote." }, { status: 400 });
+    if (!t.author.trim() || !t.review.trim() || !t.location.trim()) {
+      return NextResponse.json(
+        { error: "A testimonial is missing reviewer, review, or location." },
+        { status: 400 }
+      );
     }
   }
 

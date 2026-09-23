@@ -30,21 +30,21 @@ CRM side (Vercel → CRM project → Settings):
 import { neon } from "@neondatabase/serverless";
 
 export type WebsiteContent = {
-  business: { phones: string[]; whatsapp: string; addressEn: string; addressTa: string };
+  business: {
+    phones: string[]; whatsapp: string; addressEn: string; addressTa: string;
+    serviceZones?: string[];
+  };
   menus: {
-    id: string; nameEn: string; nameTa: string; tagEn: string; tagTa: string;
-    descEn: string; descTa: string; price: number; photoUrl: string;
-    templateId: string | null;
-    courses: { id: string; nameEn: string; nameTa: string; items: { en: string; ta: string }[] }[];
+    id?: string; nameEn: string; nameTa: string; imageUrl: string;
+    mainDishes: { en: string; ta: string }[];
+    sideDishes: { en: string; ta: string }[];
+    price: number; // per plate ₹, 0 hides the price
   }[];
   gallery: {
-    id: string; kind: "photo" | "instagram"; url: string;
-    captionEn: string; captionTa: string; category: string;
+    id?: string; instagramUrl: string; altTitle: string; fallbackImage: string;
   }[];
   testimonials: {
-    id: string; quoteEn: string; quoteTa: string; author: string; event: string;
-    place: string; rating: number; source: "manual" | "google"; profileUrl: string;
-    authorPhotoUrl: string; googleReviewId: string;
+    id?: string; rating: number; review: string; author: string; location: string;
   }[];
 };
 
@@ -97,9 +97,16 @@ Point the CRM's `SITE_PUBLISH_URL` at
 
 ## 5. Field notes
 
-- `menus[].templateId` refers to CRM template ids — informational only for the website.
-- Instagram gallery items: render `blockquote.instagram-media` with
-  `data-instgrm-permalink={url}` + `https://www.instagram.com/embed.js`.
-- Google testimonials: show author + stars + "via Google" badge + `profileUrl` link
-  (required style once Places API sync lands; same fields already carry it).
+- `menus[]`: render meal name (`nameTa || nameEn`), single `imageUrl`,
+  **Main Dishes** list, **Side Dishes** list, and `price` per plate
+  (hide the price when `0`). Dish lines are `{ en, ta }` — show `ta || en`
+  when the visitor picks Tamil.
+- Gallery items are **Instagram-only**: render `blockquote.instagram-media`
+  with `data-instgrm-permalink={instagramUrl}` +
+  `https://www.instagram.com/embed.js`. When the embed fails (or offline),
+  render `fallbackImage` with `alt={altTitle}` + a "View on Instagram" link
+  to `instagramUrl`. No categories — one grid, document order.
+- Testimonials: show stars (`rating`), `review`, author, and location only.
+  `review` is English — when the visitor picks Tamil, translate it
+  landing-side (e.g. a small EN→TA map with English fallback).
 - Tamil-first display: use `nameTa || nameEn` (same fallback rule as the CRM).

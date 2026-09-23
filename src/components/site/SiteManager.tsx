@@ -9,14 +9,13 @@ import {
   Group,
   Modal,
   NumberInput,
-  Select,
   Stack,
   Text,
   Textarea,
   TextInput,
   Title,
 } from "@mantine/core";
-import { Plus, Trash } from "lucide-react";
+import { Check, Plus, Trash } from "lucide-react";
 import { Controller, useForm } from "react-hook-form";
 import { z } from "zod";
 
@@ -26,9 +25,8 @@ import { preferredText, ui } from "@/lib/i18n";
 import { useAuthStore } from "@/store/auth";
 import { useSettingsStore } from "@/store/settings";
 import { useMobileSheet } from "@/hooks/useMobileSheet";
-import { templateDisplayName, useTemplatesStore } from "@/store/templates";
 import {
-  normalizeRemoteContent,
+  DEFAULT_GALLERY_FALLBACKS,
   useSiteContentStore,
   type SiteGalleryInput,
   type SiteGalleryItem,
@@ -37,7 +35,6 @@ import {
   type SiteTestimonial,
   type SiteTestimonialInput,
 } from "@/store/siteContent";
-import { SITE_GALLERY_CATEGORIES, SITE_GALLERY_CATEGORY_LABELS } from "@/lib/siteCopy";
 
 function stripDigits(value: string): string {
   return value.replace(/\D/g, "");
@@ -79,10 +76,9 @@ function ConfirmModal({
 
 function PublishCard() {
   const uiLanguage = useSettingsStore((state) => state.uiLanguage);
-  const [busy, setBusy] = useState<"publish" | "pull" | null>(null);
+  const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
   const [notice, setNotice] = useState("");
-  const [pullOpened, setPullOpened] = useState(false);
 
   const readError = async (response: Response, fallback: string): Promise<string> => {
     if (response.status === 503) return preferredText(ui.site.dbMissing, uiLanguage);
@@ -104,7 +100,7 @@ function PublishCard() {
   };
 
   const publish = async () => {
-    setBusy("publish");
+    setBusy(true);
     setError("");
     setNotice("");
     try {
@@ -149,38 +145,7 @@ function PublishCard() {
     } catch {
       setError(preferredText(ui.site.publishFailed, uiLanguage));
     } finally {
-      setBusy(null);
-    }
-  };
-
-  const pull = async () => {
-    setPullOpened(false);
-    setBusy("pull");
-    setError("");
-    try {
-      const response = await fetch("/api/site-content", {
-        credentials: "same-origin",
-        cache: "no-store",
-      });
-      if (!response.ok) {
-        setError(await readError(response, preferredText(ui.site.publishFailed, uiLanguage)));
-        return;
-      }
-      const body = (await response.json()) as { data?: unknown; updatedAt?: string };
-      const content = normalizeRemoteContent(body.data);
-      if (!content) {
-        setError(preferredText(ui.site.publishFailed, uiLanguage));
-        return;
-      }
-      const state = useSiteContentStore.getState();
-      state.replaceAll(content);
-      state.setLastPublishedAt(
-        typeof body.updatedAt === "string" ? body.updatedAt : null
-      );
-    } catch {
-      setError(preferredText(ui.site.publishFailed, uiLanguage));
-    } finally {
-      setBusy(null);
+      setBusy(false);
     }
   };
 
@@ -201,20 +166,10 @@ function PublishCard() {
         </Text>
       )}
       <Group>
-        <Button onClick={publish} loading={busy === "publish"}>
+        <Button onClick={publish} loading={busy}>
           <Bilingual label={ui.site.publish} />
         </Button>
-        <Button variant="default" onClick={() => setPullOpened(true)} loading={busy === "pull"}>
-          <Bilingual label={ui.site.pull} />
-        </Button>
       </Group>
-      <ConfirmModal
-        opened={pullOpened}
-        title={preferredText(ui.site.pullTitle, uiLanguage)}
-        message={preferredText(ui.site.pullMessage, uiLanguage)}
-        onCancel={() => setPullOpened(false)}
-        onConfirm={pull}
-      />
     </div>
   );
 }
@@ -359,21 +314,6 @@ function BusinessCard() {
   );
 }
 
-type CourseDraft = {
-  key: string;
-  nameEn: string;
-  nameTa: string;
-  itemsText: string;
-};
-
-function draftKey(): string {
-  try {
-    return crypto.randomUUID();
-  } catch {
-    return `draft-${Date.now()}-${Math.floor(Math.random() * 1e6)}`;
-  }
-}
-
 function parseItems(text: string): { en: string; ta: string }[] {
   return text
     .split("\n")
@@ -386,27 +326,17 @@ function parseItems(text: string): { en: string; ta: string }[] {
     .filter((item) => item.en !== "");
 }
 
+function dishesToText(items: { en: string; ta: string }[]): string {
+  return items.map((item) => (item.ta ? `${item.en} | ${item.ta}` : item.en)).join("\n");
+}
+
 const menuSchema = z.object({
-  nameEn: z.string().trim().min(1, "Name is required"),
+  nameEn: z.string().trim().min(1, "Meal name is required"),
   nameTa: z.string(),
-  tagEn: z.string(),
-  tagTa: z.string(),
-  descEn: z.string(),
-  descTa: z.string(),
+  imageUrl: z.string().trim().min(1, "Image is required"),
   price: z.coerce.number().min(0, "Price must be 0 or more"),
-  photoUrl: z.string(),
-  templateId: z.string().nullable(),
-  // Landing display extras — mirror the live site tabs/cards.
-  tabKey: z.string(),
-  taglineEn: z.string(),
-  taglineTa: z.string(),
-  unitEn: z.string(),
-  unitTa: z.string(),
-  isVegOnly: z.boolean(),
-  sideTitle: z.string(),
-  sideDesc: z.string(),
-  sideBadge: z.string(),
-  sideImage: z.string(),
+  mainText: z.string().trim().min(1, "Add at least one main dish"),
+  sideText: z.string(),
 });
 
 type MenuFormValues = z.infer<typeof menuSchema>;
@@ -415,17 +345,16 @@ function MenuFormModal({
   opened,
   menu,
   onClose,
+  onSaved,
 }: {
   opened: boolean;
   menu: SiteMenu | null;
   onClose: () => void;
+  onSaved: (name: string) => void;
 }) {
-  const uiLanguage = useSettingsStore((state) => state.uiLanguage);
-  const sheet = useMobileSheet("full", "lg");
-  const templates = useTemplatesStore((state) => state.templates);
+  const sheet = useMobileSheet("sheet");
   const addMenu = useSiteContentStore((state) => state.addMenu);
   const updateMenu = useSiteContentStore((state) => state.updateMenu);
-  const [courses, setCourses] = useState<CourseDraft[]>([]);
 
   const { register, handleSubmit, reset, control, formState: { errors, isSubmitting } } =
     useForm<MenuFormValues>({
@@ -433,300 +362,105 @@ function MenuFormModal({
       defaultValues: {
         nameEn: "",
         nameTa: "",
-        tagEn: "",
-        tagTa: "",
-        descEn: "",
-        descTa: "",
+        imageUrl: "/images/img_02.jpg",
         price: 0,
-        photoUrl: "",
-        templateId: null,
-        tabKey: "",
-        taglineEn: "",
-        taglineTa: "",
-        unitEn: "/ per leaf plate",
-        unitTa: "/ இலைக்கு",
-        isVegOnly: true,
-        sideTitle: "",
-        sideDesc: "",
-        sideBadge: "",
-        sideImage: "",
+        mainText: "",
+        sideText: "",
       },
     });
-
-  const initFor = (target: SiteMenu | null) => {
-    reset({
-      nameEn: target?.nameEn ?? "",
-      nameTa: target?.nameTa ?? "",
-      tagEn: target?.tagEn ?? "",
-      tagTa: target?.tagTa ?? "",
-      descEn: target?.descEn ?? "",
-      descTa: target?.descTa ?? "",
-      price: target?.price ?? 0,
-      photoUrl: target?.photoUrl ?? "",
-      templateId: target?.templateId ?? null,
-      tabKey: target?.tabKey ?? target?.nameEn ?? "",
-      taglineEn: target?.taglineEn ?? "",
-      taglineTa: target?.taglineTa ?? "",
-      unitEn: target?.unitEn ?? "/ per leaf plate",
-      unitTa: target?.unitTa ?? "/ இலைக்கு",
-      isVegOnly: target?.isVegOnly ?? true,
-      sideTitle: target?.sideTitle ?? "",
-      sideDesc: target?.sideDesc ?? "",
-      sideBadge: target?.sideBadge ?? "",
-      sideImage: target?.sideImage ?? "",
-    });
-    setCourses(
-      (target?.courses ?? []).map((course) => ({
-        key: course.id,
-        nameEn: course.nameEn,
-        nameTa: course.nameTa,
-        itemsText: course.items
-          .map((item) => (item.ta ? `${item.en} | ${item.ta}` : item.en))
-          .join("\n"),
-      }))
-    );
-  };
 
   const [lastOpened, setLastOpened] = useState(false);
   if (opened !== lastOpened) {
     setLastOpened(opened);
-    if (opened) initFor(menu);
+    if (opened) {
+      reset({
+        nameEn: menu?.nameEn ?? "",
+        nameTa: menu?.nameTa ?? "",
+        imageUrl: menu?.imageUrl ?? "/images/img_02.jpg",
+        price: menu?.price ?? 0,
+        mainText: dishesToText(menu?.mainDishes ?? []),
+        sideText: dishesToText(menu?.sideDishes ?? []),
+      });
+    }
   }
 
   const onSubmit = (values: MenuFormValues) => {
-    const photo = values.photoUrl.trim() || "/images/img_02.jpg";
+    const nameEn = values.nameEn.trim();
     const input: SiteMenuInput = {
-      nameEn: values.nameEn.trim(),
-      nameTa: values.nameTa.trim() || values.nameEn.trim(),
-      tagEn: values.tagEn.trim(),
-      tagTa: values.tagTa.trim() || values.tagEn.trim(),
-      descEn: values.descEn.trim(),
-      descTa: values.descTa.trim() || values.descEn.trim(),
+      nameEn,
+      nameTa: values.nameTa.trim() || nameEn,
+      imageUrl: values.imageUrl.trim(),
       price: values.price,
-      photoUrl: photo,
-      templateId: values.templateId,
-      tabKey: values.tabKey.trim() || values.nameEn.trim(),
-      taglineEn: values.taglineEn.trim() || values.descEn.trim(),
-      taglineTa: values.taglineTa.trim() || values.taglineEn.trim() || values.descEn.trim(),
-      unitEn: values.unitEn.trim() || "/ per leaf plate",
-      unitTa: values.unitTa.trim() || "/ இலைக்கு",
-      isVegOnly: values.isVegOnly,
-      sideTitle: values.sideTitle.trim(),
-      sideDesc: values.sideDesc.trim(),
-      sideBadge: values.sideBadge.trim(),
-      sideImage: values.sideImage.trim() || photo,
-      courses: courses
-        .filter((course) => course.nameEn.trim() !== "")
-        .map((course) => ({
-          nameEn: course.nameEn.trim(),
-          nameTa: course.nameTa.trim() || course.nameEn.trim(),
-          items: parseItems(course.itemsText),
-        })),
+      mainDishes: parseItems(values.mainText),
+      sideDishes: parseItems(values.sideText),
     };
     if (menu) updateMenu(menu.id, input);
     else addMenu(input);
     onClose();
+    onSaved(nameEn);
   };
-
-  const templateOptions = templates.map((template) => ({
-    value: template.id,
-    label: templateDisplayName(template, uiLanguage),
-  }));
 
   return (
     <Modal
       opened={opened}
       onClose={onClose}
-      title={<Bilingual label={menu ? ui.templates.editTitle : ui.templates.addTemplate} />}
+      title={<Bilingual label={ui.site.menus} />}
       {...sheet}
     >
       <form onSubmit={handleSubmit(onSubmit)}>
         <Stack gap="sm">
           <Group grow align="flex-start">
             <TextInput
-              label={<Bilingual label={ui.templates.englishName} />}
+              label="Meal name (English)"
               withAsterisk
+              placeholder="Royal Travancore Wedding Sadya"
               {...register("nameEn")}
               error={errors.nameEn?.message}
             />
             <TextInput
-              label={<Bilingual label={ui.templates.tamilName} />}
+              label="Meal name (Tamil)"
               dir="auto"
+              placeholder="ராயல் திருவிதாங்கூர் திருமண சாத்யா"
               {...register("nameTa")}
             />
           </Group>
           <TextInput
-            label="Site tab (landing menu tab)"
-            placeholder="Kerala Sadya (Kalyanam Special)"
-            {...register("tabKey")}
-          />
-          <Group grow align="flex-start">
-            <TextInput label={<Bilingual label={ui.site.tag} />} {...register("tagEn")} />
-            <TextInput
-              label={<Bilingual label={ui.site.tag} />}
-              dir="auto"
-              {...register("tagTa")}
-            />
-          </Group>
-          <Group grow align="flex-start">
-            <TextInput label="Tagline (English)" {...register("taglineEn")} />
-            <TextInput label="Tagline (Tamil)" dir="auto" {...register("taglineTa")} />
-          </Group>
-          <Textarea
-            label={<Bilingual label={ui.site.description} />}
-            {...register("descEn")}
-          />
-          <Textarea
-            label={<Bilingual label={ui.site.description} />}
-            dir="auto"
-            {...register("descTa")}
-          />
-          <Group grow align="flex-start">
-            <Controller
-              name="price"
-              control={control}
-              render={({ field }) => (
-                <NumberInput
-                  label={<Bilingual label={ui.site.price} />}
-                  min={0}
-                  allowNegative={false}
-                  leftSection="₹"
-                  {...field}
-                  error={errors.price?.message}
-                />
-              )}
-            />
-            <TextInput
-              label={<Bilingual label={ui.site.photo} />}
-              placeholder="/images/img_02.jpg"
-              {...register("photoUrl")}
-            />
-          </Group>
-          <Group grow align="flex-start">
-            <TextInput label="Price unit (English)" {...register("unitEn")} />
-            <TextInput label="Price unit (Tamil)" dir="auto" {...register("unitTa")} />
-          </Group>
-          <Controller
-            name="isVegOnly"
-            control={control}
-            render={({ field }) => (
-              <Select
-                label="Pure veg?"
-                data={[
-                  { value: "veg", label: "Pure veg" },
-                  { value: "mixed", label: "Veg + non-veg counters" },
-                ]}
-                value={field.value ? "veg" : "mixed"}
-                onChange={(value) => field.onChange(value !== "mixed")}
-              />
-            )}
+            label="Image"
+            withAsterisk
+            placeholder="/images/img_02.jpg"
+            description="Single meal photo — site-hosted /images/… path"
+            {...register("imageUrl")}
+            error={errors.imageUrl?.message}
           />
           <Controller
-            name="templateId"
+            name="price"
             control={control}
             render={({ field }) => (
-              <Select
-                label={<Bilingual label={ui.site.linkedTemplate} />}
-                data={templateOptions}
-                searchable
-                clearable
+              <NumberInput
+                label="Price per plate (₹, 0 hides price)"
+                min={0}
+                allowNegative={false}
+                leftSection="₹"
                 {...field}
-                value={field.value ?? null}
-                onChange={(value) => field.onChange(value ?? null)}
+                error={errors.price?.message}
               />
             )}
           />
-          <Card withBorder padding="sm">
-            <Stack gap="xs">
-              <Text size="sm" fw={600}>
-                Side highlight (landing card beside this menu)
-              </Text>
-              <TextInput label="Highlight title" {...register("sideTitle")} />
-              <Textarea label="Highlight description" minRows={2} {...register("sideDesc")} />
-              <Group grow align="flex-start">
-                <TextInput label="Highlight badge" {...register("sideBadge")} />
-                <TextInput
-                  label="Highlight image"
-                  placeholder="/images/img_03.jpg"
-                  {...register("sideImage")}
-                />
-              </Group>
-            </Stack>
-          </Card>
-          <div>
-            <Text size="sm" fw={500} mb={4}>
-              <Bilingual label={ui.site.courses} />
-            </Text>
-            <Stack gap="sm">
-              {courses.map((course, index) => (
-                <Card key={course.key} withBorder padding="sm">
-                  <Stack gap="xs">
-                    <Group justify="space-between">
-                      <Text size="sm" fw={600}>
-                        {index + 1}
-                      </Text>
-                      <ActionIcon
-                        variant="subtle"
-                        color="kumkum"
-                        aria-label="Remove course"
-                        onClick={() => setCourses(courses.filter((_, idx) => idx !== index))}
-                      >
-                        <Trash size={16} />
-                      </ActionIcon>
-                    </Group>
-                    <Group grow align="flex-start">
-                      <TextInput
-                        placeholder="English"
-                        value={course.nameEn}
-                        onChange={(e) =>
-                          setCourses(
-                            courses.map((item, idx) =>
-                              idx === index ? { ...item, nameEn: e.currentTarget.value } : item
-                            )
-                          )
-                        }
-                      />
-                      <TextInput
-                        placeholder="தமிழ்"
-                        dir="auto"
-                        value={course.nameTa}
-                        onChange={(e) =>
-                          setCourses(
-                            courses.map((item, idx) =>
-                              idx === index ? { ...item, nameTa: e.currentTarget.value } : item
-                            )
-                          )
-                        }
-                      />
-                    </Group>
-                    <Textarea
-                      label={<Bilingual label={ui.site.itemsOnePerLine} />}
-                      minRows={2}
-                      value={course.itemsText}
-                      onChange={(e) =>
-                        setCourses(
-                          courses.map((item, idx) =>
-                            idx === index ? { ...item, itemsText: e.currentTarget.value } : item
-                          )
-                        )
-                      }
-                    />
-                  </Stack>
-                </Card>
-              ))}
-              <Button
-                variant="light"
-                size="xs"
-                leftSection={<Plus size={14} />}
-                onClick={() =>
-                  setCourses([...courses, { key: draftKey(), nameEn: "", nameTa: "", itemsText: "" }])
-                }
-              >
-                <Bilingual label={ui.templates.addDish} />
-              </Button>
-            </Stack>
-          </div>
-          <Group justify="flex-end" mt="md" className="form-actions">
+          <Textarea
+            label="Main dishes — one per line (English | Tamil)"
+            withAsterisk
+            minRows={4}
+            placeholder={"Kerala Red Matta Rice & Ponni Rice | கேரள மட்டை அரிசி\nParippu Curry & Cow Ghee | பருப்பு குழம்பு & நெய்"}
+            {...register("mainText")}
+            error={errors.mainText?.message}
+          />
+          <Textarea
+            label="Side dishes — one per line (English | Tamil)"
+            minRows={3}
+            placeholder={"Nendran Banana Chips | நேந்திரன் சிப்ஸ்\nAda Pradhaman | அட பிரதமன்"}
+            {...register("sideText")}
+          />
+          <Group justify="flex-end" className="form-actions">
             <Button variant="default" onClick={onClose}>
               <Bilingual label={ui.common.cancel} />
             </Button>
@@ -747,6 +481,14 @@ function MenusManager() {
   const [formOpened, setFormOpened] = useState(false);
   const [editing, setEditing] = useState<SiteMenu | null>(null);
   const [deleting, setDeleting] = useState<SiteMenu | null>(null);
+  const [savedName, setSavedName] = useState<string | null>(null);
+
+  const handleSaved = (name: string) => {
+    setSavedName(name);
+    window.setTimeout(() => {
+      setSavedName((current) => (current === name ? null : current));
+    }, 4000);
+  };
 
   return (
     <div className="dash-card">
@@ -764,6 +506,14 @@ function MenusManager() {
           <Bilingual label={ui.common.add} />
         </Button>
       </Group>
+      {savedName && (
+        <Group gap="xs" mb="sm" c="green">
+          <Check size={16} />
+          <Text size="sm" fw={600}>
+            Saved — “{savedName}”
+          </Text>
+        </Group>
+      )}
       {menus.length === 0 ? (
         <Text size="sm" c="dimmed">
           <Bilingual label={ui.site.emptyMenus} />
@@ -797,8 +547,8 @@ function MenusManager() {
                     {uiLanguage === "ta" ? menu.nameTa.trim() || menu.nameEn : menu.nameEn}
                   </Text>
                   <Text size="xs" c="dimmed">
-                    {menu.courses.length} courses
-                    {menu.price > 0 ? ` · ₹${menu.price}` : ""}
+                    {menu.mainDishes.length} mains · {menu.sideDishes.length} sides
+                    {menu.price > 0 ? ` · ₹${menu.price}/plate` : ""}
                   </Text>
                 </Stack>
                 <ActionIcon
@@ -817,7 +567,12 @@ function MenusManager() {
           ))}
         </Stack>
       )}
-      <MenuFormModal opened={formOpened} menu={editing} onClose={() => setFormOpened(false)} />
+      <MenuFormModal
+        opened={formOpened}
+        menu={editing}
+        onClose={() => setFormOpened(false)}
+        onSaved={handleSaved}
+      />
       <ConfirmModal
         opened={deleting !== null}
         title={preferredText(ui.templates.deleteTitle, uiLanguage)}
@@ -832,41 +587,17 @@ function MenusManager() {
   );
 }
 
-const gallerySchema = z
-  .object({
-    kind: z.enum(["photo", "instagram"]),
-    url: z.string().trim().min(1, "Link is required"),
-    captionEn: z.string(),
-    captionTa: z.string(),
-    category: z.string().min(1, "Category is required"),
-  })
-  .superRefine((values, ctx) => {
-    if (values.kind === "instagram") {
-      if (!values.url.toLowerCase().includes("instagram.com/")) {
-        ctx.addIssue({ code: z.ZodIssueCode.custom, path: ["url"], message: "Enter an Instagram post link." });
-      }
-    } else {
-      // Landing only serves site-hosted photos: /images/… or absolute URLs
-      // whose path starts with /images/. Never hotlink CDN URLs.
-      const url = values.url.trim();
-      const ok =
-        url.startsWith("/images/") ||
-        (() => {
-          try {
-            return new URL(url).pathname.startsWith("/images/");
-          } catch {
-            return false;
-          }
-        })();
-      if (!ok) {
-        ctx.addIssue({
-          code: z.ZodIssueCode.custom,
-          path: ["url"],
-          message: "Use a site image: /images/….jpg (no CDN hotlinks).",
-        });
-      }
-    }
-  });
+const gallerySchema = z.object({
+  instagramUrl: z
+    .string()
+    .trim()
+    .min(1, "Instagram link is required")
+    .refine((url) => url.toLowerCase().includes("instagram.com/"), {
+      message: "Enter an Instagram post link.",
+    }),
+  altTitle: z.string().trim().min(1, "Alt title is required"),
+  fallbackImage: z.string().trim().min(1, "Fallback image is required"),
+});
 
 type GalleryFormValues = z.infer<typeof gallerySchema>;
 
@@ -879,28 +610,28 @@ function GalleryFormModal({
   item: SiteGalleryItem | null;
   onClose: () => void;
 }) {
-  const uiLanguage = useSettingsStore((state) => state.uiLanguage);
   const sheet = useMobileSheet("sheet");
   const addGalleryItem = useSiteContentStore((state) => state.addGalleryItem);
   const updateGalleryItem = useSiteContentStore((state) => state.updateGalleryItem);
 
-  const { register, handleSubmit, reset, control, watch, formState: { errors, isSubmitting } } =
+  const { register, handleSubmit, reset, formState: { errors, isSubmitting } } =
     useForm<GalleryFormValues>({
       resolver: zodResolver(gallerySchema),
-      defaultValues: { kind: "photo", url: "", captionEn: "", captionTa: "", category: "sadya" },
+      defaultValues: {
+        instagramUrl: "https://www.instagram.com/p/PLACEHOLDER/",
+        altTitle: "",
+        fallbackImage: DEFAULT_GALLERY_FALLBACKS[0],
+      },
     });
-  const kind = watch("kind");
 
   const [lastOpened, setLastOpened] = useState(false);
   if (opened !== lastOpened) {
     setLastOpened(opened);
     if (opened) {
       reset({
-        kind: item?.kind ?? "photo",
-        url: item?.url ?? "",
-        captionEn: item?.captionEn ?? "",
-        captionTa: item?.captionTa ?? "",
-        category: item?.category ?? "sadya",
+        instagramUrl: item?.instagramUrl ?? "https://www.instagram.com/p/PLACEHOLDER/",
+        altTitle: item?.altTitle ?? "",
+        fallbackImage: item?.fallbackImage ?? DEFAULT_GALLERY_FALLBACKS[0],
       });
     }
   }
@@ -915,11 +646,9 @@ function GalleryFormModal({
       <form
         onSubmit={handleSubmit((values) => {
           const input: SiteGalleryInput = {
-            kind: values.kind,
-            url: values.url.trim(),
-            captionEn: values.captionEn.trim(),
-            captionTa: values.captionTa.trim(),
-            category: values.category,
+            instagramUrl: values.instagramUrl.trim(),
+            altTitle: values.altTitle.trim(),
+            fallbackImage: values.fallbackImage.trim(),
           };
           if (item) updateGalleryItem(item.id, input);
           else addGalleryItem(input);
@@ -927,49 +656,26 @@ function GalleryFormModal({
         })}
       >
         <Stack gap="sm">
-          <Controller
-            name="kind"
-            control={control}
-            render={({ field }) => (
-              <Select
-                label={<Bilingual label={ui.site.category} />}
-                data={[
-                  { value: "photo", label: preferredText(ui.site.kindPhoto, uiLanguage) },
-                  { value: "instagram", label: preferredText(ui.site.kindInstagram, uiLanguage) },
-                ]}
-                {...field}
-              />
-            )}
-          />
           <TextInput
-            label={<Bilingual label={ui.site.itemUrl} />}
-            placeholder="/images/img_02.jpg"
+            label="Instagram post link"
+            placeholder="https://www.instagram.com/p/…"
             withAsterisk
-            {...register("url")}
-            error={errors.url?.message}
-            description={
-              kind === "instagram" ? <Bilingual label={ui.site.instagramHint} /> : "Site-hosted only: /images/….jpg"
-            }
+            {...register("instagramUrl")}
+            error={errors.instagramUrl?.message}
+            description="Public post — embedded on the landing gallery."
           />
-          <TextInput label={<Bilingual label={ui.site.caption} />} {...register("captionEn")} />
           <TextInput
-            label={<Bilingual label={ui.site.caption} />}
-            dir="auto"
-            {...register("captionTa")}
+            label="Alt title (shown if the embed fails to load)"
+            withAsterisk
+            placeholder="2,500 Guests Vazhaillai Virundhu"
+            {...register("altTitle")}
+            error={errors.altTitle?.message}
           />
-          <Controller
-            name="category"
-            control={control}
-            render={({ field }) => (
-              <Select
-                label={<Bilingual label={ui.site.category} />}
-                data={SITE_GALLERY_CATEGORIES.map((value) => ({
-                  value,
-                  label: preferredText(SITE_GALLERY_CATEGORY_LABELS[value], uiLanguage),
-                }))}
-                {...field}
-              />
-            )}
+          <TextInput
+            label="Fallback image (shown if the embed fails to load)"
+            placeholder="/images/img_02.jpg"
+            {...register("fallbackImage")}
+            error={errors.fallbackImage?.message}
           />
           <Group justify="flex-end" className="form-actions">
             <Button variant="default" onClick={onClose}>
@@ -1022,7 +728,7 @@ function GalleryManager() {
               padding="sm"
               role="button"
               tabIndex={0}
-              aria-label={item.captionEn}
+              aria-label={item.altTitle}
               style={{ cursor: "pointer" }}
               onClick={() => {
                 setEditing(item);
@@ -1037,14 +743,18 @@ function GalleryManager() {
               }}
             >
               <Group justify="space-between" wrap="nowrap">
-                <Text size="sm" fw={500} truncate>
-                  {item.kind === "instagram" ? "IG · " : ""}
-                  {uiLanguage === "ta" ? item.captionTa.trim() || item.captionEn : item.captionEn}
-                </Text>
+                <Stack gap={0} style={{ minWidth: 0 }}>
+                  <Text size="sm" fw={500} truncate>
+                    IG · {item.altTitle}
+                  </Text>
+                  <Text size="xs" c="dimmed" truncate>
+                    {item.instagramUrl}
+                  </Text>
+                </Stack>
                 <ActionIcon
                   variant="subtle"
                   color="kumkum"
-                  aria-label="Delete photo"
+                  aria-label="Delete post"
                   onClick={(e) => {
                     e.stopPropagation();
                     setDeleting(item);
@@ -1061,7 +771,7 @@ function GalleryManager() {
       <ConfirmModal
         opened={deleting !== null}
         title={preferredText(ui.templates.deleteTitle, uiLanguage)}
-        message={deleting ? `Delete "${deleting.captionEn}"?` : ""}
+        message={deleting ? `Delete "${deleting.altTitle}"?` : ""}
         onCancel={() => setDeleting(null)}
         onConfirm={() => {
           if (deleting) deleteGalleryItem(deleting.id);
@@ -1073,15 +783,10 @@ function GalleryManager() {
 }
 
 const testimonialSchema = z.object({
-  quoteEn: z.string().trim().min(1, "Review text is required"),
-  quoteTa: z.string(),
-  author: z.string().trim().min(1, "Author name is required"),
-  event: z.string(),
-  eventTa: z.string(),
-  place: z.string(),
+  review: z.string().trim().min(1, "Review text is required"),
+  author: z.string().trim().min(1, "Reviewer name is required"),
+  location: z.string().trim().min(1, "Location is required"),
   rating: z.coerce.number().min(1).max(5),
-  source: z.enum(["manual", "google"]),
-  profileUrl: z.string(),
 });
 
 type TestimonialFormValues = z.infer<typeof testimonialSchema>;
@@ -1095,7 +800,6 @@ function TestimonialFormModal({
   item: SiteTestimonial | null;
   onClose: () => void;
 }) {
-  const uiLanguage = useSettingsStore((state) => state.uiLanguage);
   const sheet = useMobileSheet("sheet");
   const addTestimonial = useSiteContentStore((state) => state.addTestimonial);
   const updateTestimonial = useSiteContentStore((state) => state.updateTestimonial);
@@ -1104,15 +808,10 @@ function TestimonialFormModal({
     useForm<TestimonialFormValues>({
       resolver: zodResolver(testimonialSchema),
       defaultValues: {
-        quoteEn: "",
-        quoteTa: "",
+        review: "",
         author: "",
-        event: "",
-        eventTa: "",
-        place: "",
+        location: "",
         rating: 5,
-        source: "manual",
-        profileUrl: "",
       },
     });
 
@@ -1121,15 +820,10 @@ function TestimonialFormModal({
     setLastOpened(opened);
     if (opened) {
       reset({
-        quoteEn: item?.quoteEn ?? "",
-        quoteTa: item?.quoteTa ?? "",
+        review: item?.review ?? "",
         author: item?.author ?? "",
-        event: item?.event ?? "",
-        eventTa: item?.eventTa ?? "",
-        place: item?.place ?? "",
+        location: item?.location ?? "",
         rating: item?.rating ?? 5,
-        source: item?.source ?? "manual",
-        profileUrl: item?.profileUrl ?? "",
       });
     }
   }
@@ -1144,17 +838,10 @@ function TestimonialFormModal({
       <form
         onSubmit={handleSubmit((values) => {
           const input: SiteTestimonialInput = {
-            quoteEn: values.quoteEn.trim(),
-            quoteTa: values.quoteTa.trim() || values.quoteEn.trim(),
+            review: values.review.trim(),
             author: values.author.trim(),
-            event: values.event.trim(),
-            eventTa: values.eventTa.trim() || values.event.trim(),
-            place: values.place.trim(),
+            location: values.location.trim(),
             rating: values.rating,
-            source: values.source,
-            profileUrl: values.profileUrl.trim(),
-            authorPhotoUrl: item?.authorPhotoUrl ?? "",
-            googleReviewId: item?.googleReviewId ?? "",
           };
           if (item) updateTestimonial(item.id, input);
           else addTestimonial(input);
@@ -1163,21 +850,15 @@ function TestimonialFormModal({
       >
         <Stack gap="sm">
           <Textarea
-            label={<Bilingual label={ui.site.quote} />}
+            label="Review (English)"
             withAsterisk
             minRows={3}
-            {...register("quoteEn")}
-            error={errors.quoteEn?.message}
-          />
-          <Textarea
-            label={<Bilingual label={ui.site.quoteTa} />}
-            dir="auto"
-            minRows={2}
-            {...register("quoteTa")}
+            {...register("review")}
+            error={errors.review?.message}
           />
           <Group grow align="flex-start">
             <TextInput
-              label={<Bilingual label={ui.site.author} />}
+              label="Reviewer name"
               withAsterisk
               {...register("author")}
               error={errors.author?.message}
@@ -1187,7 +868,7 @@ function TestimonialFormModal({
               control={control}
               render={({ field }) => (
                 <NumberInput
-                  label={<Bilingual label={ui.site.rating} />}
+                  label="Stars (1–5)"
                   min={1}
                   max={5}
                   allowNegative={false}
@@ -1197,29 +878,12 @@ function TestimonialFormModal({
               )}
             />
           </Group>
-          <Group grow align="flex-start">
-            <TextInput label={<Bilingual label={ui.site.occasion} />} {...register("event")} />
-            <TextInput label="Occasion (Tamil)" dir="auto" {...register("eventTa")} />
-          </Group>
-          <TextInput label="Location (landing shows event • location)" {...register("place")} />
-          <Controller
-            name="source"
-            control={control}
-            render={({ field }) => (
-              <Select
-                label={<Bilingual label={ui.site.source} />}
-                data={[
-                  { value: "manual", label: preferredText(ui.site.sourceManual, uiLanguage) },
-                  { value: "google", label: preferredText(ui.site.sourceGoogle, uiLanguage) },
-                ]}
-                {...field}
-              />
-            )}
-          />
           <TextInput
-            label={<Bilingual label={ui.site.profileUrl} />}
-            placeholder={preferredText(ui.site.photoPlaceholder, uiLanguage)}
-            {...register("profileUrl")}
+            label="Location"
+            withAsterisk
+            placeholder="Marthandam"
+            {...register("location")}
+            error={errors.location?.message}
           />
           <Group justify="flex-end" className="form-actions">
             <Button variant="default" onClick={onClose}>
@@ -1289,11 +953,11 @@ function TestimonialsManager() {
               <Group justify="space-between" wrap="nowrap">
                 <Stack gap={0} style={{ minWidth: 0 }}>
                   <Text size="sm" fw={600} truncate>
-                    {item.author} · {Math.min(5, Math.max(1, Math.round(item.rating)))}/5
-                    {item.source === "google" ? " · Google" : ""}
+                    {item.author} · {Math.min(5, Math.max(1, Math.round(item.rating)))}/5 ·{" "}
+                    {item.location}
                   </Text>
                   <Text size="xs" c="dimmed" truncate>
-                    {uiLanguage === "ta" ? item.quoteTa.trim() || item.quoteEn : item.quoteEn}
+                    {item.review}
                   </Text>
                 </Stack>
                 <ActionIcon

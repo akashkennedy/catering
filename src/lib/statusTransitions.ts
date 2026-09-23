@@ -1,8 +1,14 @@
 import type { CateringEvent, EventStatus } from "@/store/events";
 import { formatINR } from "@/lib/format";
+import { formatIndianDate } from "@/lib/date";
 import { eventBalance } from "@/lib/eventFinances";
 import { ui, preferredText } from "@/lib/i18n";
 import { useSettingsStore, type AlertKey } from "@/store/settings";
+import {
+  useTemplatesStore,
+  templateDisplayName,
+  dishDisplayName,
+} from "@/store/templates";
 import {
   buildWhatsAppMessage,
   makeInvoiceNumber,
@@ -10,7 +16,7 @@ import {
   type PdfLang,
 } from "@/lib/pdf";
 
-export type StatusTransition = "confirmed" | "paid" | "completed" | null;
+export type StatusTransition = "enquiry" | "confirmed" | "paid" | "completed" | null;
 
 /** Classifies an event status change. `prev: null` = brand-new event. */
 export function detectTransition(
@@ -18,7 +24,13 @@ export function detectTransition(
   next: EventStatus
 ): StatusTransition {
   if (prev === next) return null;
-  if (next === "confirmed" || next === "paid" || next === "completed") return next;
+  if (
+    next === "enquiry" ||
+    next === "confirmed" ||
+    next === "paid" ||
+    next === "completed"
+  )
+    return next;
   return null;
 }
 
@@ -36,6 +48,52 @@ function docLang(): PdfLang {
 
 function isAlertEnabled(key: AlertKey): boolean {
   return useSettingsStore.getState().alerts[key] !== false;
+}
+
+/** Menu list text for a newly enquired event. False = disabled or no valid number. */
+export function openEnquiryMenus(event: CateringEvent): boolean {
+  if (!isAlertEnabled("enquiryMenus")) return false;
+  return openWhatsAppChat(event.phone, enquiryMenusMessage(event, docLang()));
+}
+
+function enquiryMenusMessage(event: CateringEvent, lang: PdfLang): string {
+  const templates = useTemplatesStore.getState().templates;
+  const lines = [
+    "Mampalli Cloud Kitchen and Catering",
+    preferredText(ui.autoMsg.enquiryGreeting, lang),
+    `${event.name}`,
+    `${preferredText(ui.common.date, lang)}: ${event.date ? formatIndianDate(event.date) : "—"}`,
+    `${preferredText(ui.events.totalHeadcount, lang)}: ${event.headcount}`,
+    preferredText(ui.autoMsg.enquiryMenusTitle, lang),
+  ];
+  const groups = event.mealGroups ?? [];
+  if (groups.length > 0) {
+    groups.forEach((group, index) => {
+      const template = templates.find((item) => item.id === group.templateId) ?? null;
+      const templateName = template ? templateDisplayName(template, lang) : "—";
+      lines.push(`${preferredText(ui.events.mealNumber(index + 1), lang)}: ${templateName}`);
+      const dishes = (template?.dishes ?? []).filter((dish) =>
+        group.selectedDishIds.includes(dish.id)
+      );
+      if (dishes.length === 0) {
+        lines.push(`  ${preferredText(ui.autoMsg.enquiryNoDishes, lang)}`);
+      } else {
+        for (const dish of dishes) {
+          lines.push(`  • ${dishDisplayName(dish, lang)}`);
+        }
+      }
+    });
+  } else if (event.templateId) {
+    const template = templates.find((item) => item.id === event.templateId) ?? null;
+    if (template) {
+      lines.push(`${templateDisplayName(template, lang)}`);
+      for (const dish of template.dishes) {
+        lines.push(`  • ${dishDisplayName(dish, lang)}`);
+      }
+    }
+  }
+  lines.push(preferredText(ui.events.thankYou, lang));
+  return lines.join("\n");
 }
 
 /** Detailed invoice text for a newly confirmed event. False = disabled or no valid number. */

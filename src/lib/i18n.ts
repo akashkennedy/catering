@@ -523,6 +523,7 @@ export const ui = {
       "Choose which automatic WhatsApp messages and reminders are sent.",
       "எந்த தானியங்கி வாட்ஸ்அப் செய்திகள் மற்றும் நினைவூட்டல்கள் அனுப்பப்படும் என்பதைத் தேர்ந்தெடுக்கவும்."
     ),
+    alertEnquiryMenus: lab("Menus when event is moved to enquiry", "நிகழ்வு விசாரணைக்கு மாறும்போது மெனுக்கள்"),
     alertConfirmInvoice: lab("Invoice when event is confirmed", "நிகழ்வு உறுதியானதும் விலைப்பட்டியல்"),
     alertPaymentReceived: lab("Payment received message", "கட்டணம் பெறப்பட்ட செய்தி"),
     alertFeedbackRequest: lab("Feedback request when event is completed", "நிகழ்வு முடிந்ததும் கருத்து கோரிக்கை"),
@@ -585,6 +586,9 @@ export const ui = {
     line2: lab("Reconnect to the network to load all features.", "அனைத்து அம்சங்களுக்கும் நெட்வொர்க்குடன் மீண்டும் இணையவும்."),
   },
   autoMsg: {
+    enquiryGreeting: lab("Here are our menus for your event:", "உங்கள் நிகழ்வுக்கான எங்கள் மெனுக்கள்:"),
+    enquiryMenusTitle: lab("Menus:", "மெனுக்கள்:"),
+    enquiryNoDishes: lab("(no dishes selected yet)", "(இன்னும் உணவுகள் தேர்வு செய்யப்படவில்லை)"),
     paymentThanks: lab("Payment received — thank you!", "கட்டணம் பெறப்பட்டது — நன்றி!"),
     amountPaid: lab("Amount paid", "செலுத்திய தொகை"),
     feedbackThanks: lab(

@@ -54,6 +54,7 @@ import { EVENT_STATUS_OPTIONS } from "./EventFormModal";
 import {
   detectTransition,
   openConfirmedInvoice,
+  openEnquiryMenus,
   openFeedbackRequest,
   openPaymentReceived,
 } from "@/lib/statusTransitions";
@@ -181,7 +182,9 @@ export function EventDetail() {
   const handleStatusChange = (status: CateringEventInput["status"]) => {
     const transition = detectTransition(event.status, status);
     update({ status });
-    if (transition === "confirmed") {
+    if (transition === "enquiry") {
+      openEnquiryMenus({ ...event, status });
+    } else if (transition === "confirmed") {
       openConfirmedInvoice({ ...event, status });
     } else if (transition === "paid") {
       openPaymentReceived({ ...event, status });

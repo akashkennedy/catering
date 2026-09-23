@@ -5,6 +5,7 @@ export type DefaultLanguage = "en" | "ta";
 export type UiLanguage = "en" | "ta";
 
 export type AlertKey =
+  | "enquiryMenus"
   | "confirmInvoice"
   | "paymentReceived"
   | "feedbackRequest"
@@ -12,6 +13,7 @@ export type AlertKey =
   | "paymentOverdue";
 
 export const DEFAULT_ALERTS: Record<AlertKey, boolean> = {
+  enquiryMenus: true,
   confirmInvoice: true,
   paymentReceived: true,
   feedbackRequest: true,

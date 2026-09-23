@@ -617,6 +617,9 @@ Supersedes §1 (Phase 2 is now), §13.13 (mock gate replaced), and UI-only roles
 | `81f2cef` | feat(settings): 5 alert toggles (confirm/paid/feedback/eve/overdue, persisted v2) |
 | `42be726` | docs(spec): V12 addendum, status table, live snapshot refresh (spec-only) |
 | `8b7fb70` | fix(mobile): 10 missing Mantine CSS layers, invoice buttons stack on phones, scrollable event tabs; assign-to-event `?? []` hardening (§24) |
+| `8dd7d7b` | feat(site): wire Publish to landing hook, 3 landing-matched mock menus, manager inputs (§25) |
+| `e03c99f` | feat(site): external live preview, flat-shape publish to shared Neon row; internal `/site` removed (§25) |
+| `6369134` | feat(site): simplified menus, Instagram gallery, trimmed testimonials; Pull removed; v5 store (§25) |
 
 ### Verified on Neon DB (live tests green)
 - **Migrations**: all 7 (0001_auth → 0007_stock_price) applied via `npm run db:migrate`; idempotent on re-run
@@ -641,7 +644,7 @@ Supersedes §1 (Phase 2 is now), §13.13 (mock gate replaced), and UI-only roles
 - **Neon project `mampalli-catering-crm`:** migrations `0001`–`0007` applied (`0007_stock_price` adds `price` to `stock_ledger_entries`). Contents: **182 ingredients** (unique names), **3 templates** (Saapadu 42 courses, Biriyani 40 courses + 1 user template), 84 dishes, 18 dish links, **1 event**, **4 users** (admins `akashkennedy` + `reju` + legacy `akashkennedy1@gmail.com`, restricted employee `abinesh123`).
 - **Auth:** username-based (`username` UNIQUE, lowercased). Login tries DB (bcrypt) first, legacy env-HMAC fallback only when `DATABASE_URL` unset. Wrong passwords show the invalid-credentials Alert; caps-lock warns inline. First admin seeded via `ADMIN_USERNAME`/`ADMIN_PASSWORD`. Local `.env` now uses `ADMIN_USERNAME=akashkennedy` / `AUTH_USERNAME=akashkennedy` (keep-password rename of `akashkennedy1` done directly in DB; `reju`/`reju` admin created directly in DB with bcrypt-12 — note `reju` is 4 chars, below the 8-char minimum enforced by the seed script and the users API, so it can log in but cannot be re-set via UI).
 - **Permissions (7 flags, server-enforced):** `canViewFinance`, `canViewOtherEmployeeRates`, `canManageEmployees`, `canManageSettings`, `canViewEmployees`, `canViewWebsite`, `canExportExcel`. New logins: everything true except finance/rates/view/export (all false). Admin always full; self/admin edits 403. UI mirrors all of it (nav, search, pages, export card, no-access cards). Sidebar + mobile More drawer both hide `/finance`, `/employees`, `/site-manager` per `canViewFinance` / `canViewEmployees` / `canViewWebsite`.
-- **UI map (current):** `/` dashboard (`OverviewGrid` 2×2 stat grid + Upcoming + Payment Status, single column); `/events` (search, date filter, status filter, list/calendar view toggle pinned right, delete confirm) + `/[id]` detail (invoice button, headcount/pricing, meals editor, status select, Ingredients/Employees/Rental tabs — tab list scrolls horizontally on phones, §24); `/templates`, `/ingredients`, `/inventory` (purchase tracker + assign-to-event, §23), `/employees` (+Logins & access), `/finance` (event-linked totals), `/follow-ups`, `/settings` (theme card on all breakpoints, 5 alert toggles, UI language, document language, Excel export gated), `/site-manager` (gated), public `/site`. **No** `/utensils`, `/calculator`, `/migrate`, `/vendors`. Desktop sidebar: New Event button on top, nav Dashboard · Events · Follow-up · Templates · Ingredients · Inventory · Employees · Website · Finance, Settings + Logout pinned at bottom (no theme row — theme lives only in Settings). Mobile bar: Dashboard · Events · center Plus FAB (opens full event form) · Ingredients · More drawer (Templates, Inventory, Employees, Follow-up, Website, Finance, Settings, same permission gating). All loading states: text-free spinner. Scrollbars hidden globally.
+- **UI map (current):** `/` dashboard (`OverviewGrid` 2×2 stat grid + Upcoming + Payment Status, single column); `/events` (search, date filter, status filter, list/calendar view toggle pinned right, delete confirm) + `/[id]` detail (invoice button, headcount/pricing, meals editor, status select, Ingredients/Employees/Rental tabs — tab list scrolls horizontally on phones, §24); `/templates`, `/ingredients`, `/inventory` (purchase tracker + assign-to-event, §23), `/employees` (+Logins & access), `/finance` (event-linked totals), `/follow-ups`, `/settings` (theme card on all breakpoints, 5 alert toggles, UI language, document language, Excel export gated), `/site-manager` (gated; public `/site` removed in §25). **No** `/utensils`, `/calculator`, `/migrate`, `/vendors`. Desktop sidebar: New Event button on top, nav Dashboard · Events · Follow-up · Templates · Ingredients · Inventory · Employees · Website · Finance, Settings + Logout pinned at bottom (no theme row — theme lives only in Settings). Mobile bar: Dashboard · Events · center Plus FAB (opens full event form) · Ingredients · More drawer (Templates, Inventory, Employees, Follow-up, Website, Finance, Settings, same permission gating). All loading states: text-free spinner. Scrollbars hidden globally.
 - **Invoices:** centered bold brand header + invoice-no-only header; monolingual EN/TA PDFs with preview language toggle; WhatsApp send to customer number from the preview modal.
 - **Automations:** confirm→invoice chat, paid→receipt text, completed→feedback-request chat (all auto-open `wa.me`, document language, invalid numbers skipped); eve-of-event + 7-day payment-overdue in bell + one-shot pushes; five Settings toggles gate everything.
 - **Data rules:** stable seed ids (`ing-*`, `tpl-*`, `dish-*`); `ON CONFLICT DO NOTHING` + `RETURNING *` writes (conflict falls back to SELECT so replays return the row); NUMERIC arrives as string over HTTP (coerce with `Number()`); ingredient refs are plain TEXT (dangling tolerated); `ingredients` POST 409s on duplicate names; `addEvent` accepts an optional client id and returns it.
@@ -673,7 +676,7 @@ Supersedes §1 (Phase 2 is now), §13.13 (mock gate replaced), and UI-only roles
 - **Status automations (`src/lib/statusTransitions.ts`):** `detectTransition(prev, next)` on every status save (`EventDetail` + `EventFormModal`; `addEvent` accepts/returns the id so new-as-confirmed invoices number correctly, chat opened synchronously to dodge popup blockers). Confirm → detailed invoice chat (document language); paid → receipt text (`ui.autoMsg`); completed → WhatsApp feedback request (stars + review reply; staff adds the testimonial manually in Site Manager). Invalid customer numbers skip silently.
 - **Auto reminders (`src/lib/autoReminders.ts`):** eve-of-event (tomorrow + open status) and payment-overdue (completed + balance owed + 7d after event day) surface in the bell (`NotificationCenter`, session dismiss) and as one-shot browser pushes (`ReminderNotifier`, localStorage fired-keys, same permission guards as stored reminders).
 - **Alert toggles (Settings):** five switches (`confirmInvoice`, `paymentReceived`, `feedbackRequest`, `eventEve`, `paymentOverdue`, all default on, persisted `catering-settings` v2) gate all WhatsApp opens, bell items, and pushes. Theme toggle lives only in Settings now (§13.3 superseded). Login shows an invalid-credentials Alert (`Alert.layer.css` import added) + caps-lock warning.
-- **Routes (actual):** `/`, `/events`, `/events/[id]`, `/templates`, `/ingredients`, `/inventory`, `/employees`, `/finance`, `/follow-ups`, `/settings`, `/site-manager`, `/dev-seed`, public `/site`. No `/utensils`, `/calculator`, `/migrate`, `/vendors`.
+- **Routes (actual):** `/`, `/events`, `/events/[id]`, `/templates`, `/ingredients`, `/inventory`, `/employees`, `/finance`, `/follow-ups`, `/settings`, `/site-manager`, `/dev-seed` (public `/site` removed in §25). No `/utensils`, `/calculator`, `/migrate`, `/vendors`.
 
 ---
 
@@ -699,3 +702,43 @@ User report (light mode, phone): on the event detail page some buttons showed no
 ### 24.4 Assign-to-event hardening (same push)
 
 - `AssignToEventModal` spread `...event.ingredients` directly; legacy/cached events with `ingredients: undefined` would throw. Now `...(event.ingredients ?? [])` — staged lines and the `updateEvent` call unchanged.
+
+---
+
+## 25. V14 Addendum — website publishing rework: external preview, flat publish, simplified editors (current)
+
+Supersedes §§17–18 on content shapes and refresh endpoints, and removes the public `/site` route from the §22 UI map / §23 route list. Branch still `dev` on `origin/dev` (Vercel previews build `dev`; `main` untouched). HEAD `6369134`, working tree clean after push.
+
+### 25.1 External-only Live Preview, internal `/site` deleted
+
+- `SiteManager` header Preview button opens `https://mampallicatering.vercel.app` in a new tab (plain external anchor). Deleted `src/app/site/page.tsx` + `loading.tsx` and the now-unused `SitePage.tsx` / `SiteSections.tsx` (~850 lines).
+- Removed the `isPublicSitePath` login bypass from `AuthGate.tsx` + `AppLayout.tsx` — every CRM page now requires login. The old internal URL 404s by construction.
+
+### 25.2 Publish flow (verified live against Neon + landing hook)
+
+- `POST /api/site-content` (requires `canManageSettings`): zod-validates the flat payload → writes `site_content` row `id='default'` FIRST → then `POST $SITE_PUBLISH_URL` with NO body and header `Authorization: Bearer $PUBLISH_SECRET`, expecting HTTP 200 + `{ ok: true }`. Never pings before the write commits; 401 surfaces "secret rejected", missing secret / hook failure surface "saved to database, but stale".
+- Env (Vercel, both projects share values): CRM `SITE_PUBLISH_URL=https://mampallicatering.vercel.app/api/publish` + `PUBLISH_SECRET`; landing `DATABASE_URL` (same Neon project `mampalli-catering-crm`) + `PUBLISH_SECRET`. Legacy `SITE_REVALIDATE_URL/SECRET` aliases still honored as fallback.
+- Proven end-to-end 2026-09-23: user Publish wrote the row (3 menus, 6→3 gallery, 3 testimonials, full business row); hook returned ok ("Published — live site refreshed."); live HTML picked up the new menu copy + digits-only phones. Probe `POST /api/publish` with a dummy secret returns 401, confirming the landing route exists and checks auth.
+
+### 25.3 Simplified content shapes (store `catering-site` v5)
+
+- **Menu:** `{ id, nameEn, nameTa, imageUrl (single), mainDishes[{en,ta}], sideDishes[{en,ta}], price (₹/plate, 0 hides) }`. Dropped: tag/desc/`photoUrl`, `templateId` link, `tabKey/tagline/unit/isVegOnly/side*` extras, course groups. Editor: meal name En+Ta, image, price, two one-per-line textareas (`English | Tamil`). Saving shows a transient green **"Saved ✓ {name}"** notice above the menu list.
+- **Gallery (Instagram-only, no categories):** `{ id, instagramUrl, altTitle, fallbackImage }`. Editor validates `instagram.com/` in the link; `fallbackImage` prefilled by cycling the 6 old defaults (`/images/img_02…07.jpg`). Embed fails/offline → landing renders fallback `<img alt={altTitle}>` + post link. Prefill uses `instagram.com/p/PLACEHOLDER_*` links — replace with real public post URLs for embeds to render.
+- **Testimonial:** `{ id, rating, review (EN), author, location }`. Dropped `quoteTa`, `event/eventTa`, `source`, `profileUrl`, google fields. Tamil translation of `review` is a landing-side job (EN fallback).
+- **Business:** unchanged (phones, WhatsApp digits, address En+Ta, serviceZones).
+- v5 `migrate` funnels every old shape through `normalizeRemoteContent()`: legacy courses flatten into Main Dishes (Side empty), legacy photo gallery items become embed-failure fallbacks, `quoteEn→review`, `place/location/event→location`, missing ids regenerated.
+- `sitePublish.ts` trimmed to contract types + URL/helpers (legacy nested `buildLandingPayload`/`validateLandingPayload` deleted — nothing imported them). `db/WEBSITE_INTEGRATION.md` §§2–5 rewritten for `/api/publish` (Bearer, no body, 401 = wrong secret) and the new read-layer types/field notes.
+
+### 25.4 Publish card: Load-from-database removed
+
+- `PublishCard` is Publish-only (Publish to website + last-published stamp + error/notice lines). Pull button, confirm modal, and pull logic deleted. Local edits live in the zustand `catering-site` cache until Publish writes Neon + pings the hook.
+
+### 25.5 Landing lockstep (other repo — must be done there)
+
+- The landing must render menu tabs/gallery/testimonial lists **from the DB arrays** (no fixed tab list, no hardcoded fallback merged on top when the DB is reachable) or adds/deletes won't appear — proven symptom seen live: a 4th stale "Grand Celebration Feast" tab persisted after the DB row had 3 menus, while card content refreshed fine.
+- Reviews arrive English-only; the landing translates when a visitor picks Tamil.
+
+### 25.6 Verification (this push)
+
+- `npx tsc --noEmit` clean; `npm run lint` 0 errors (only the 3 pre-existing warnings in NotificationCenter/EventFormModal/EventUtensilFormModal).
+- Neon row re-seeded to the new shapes pre-commit (3 menus, 3 gallery placeholders, 3 testimonials, full business). After deploying, open `/site-manager` (v4 cache auto-migrates), review the prefill, hit **Publish to website**, then swap placeholder Instagram links for real post URLs.

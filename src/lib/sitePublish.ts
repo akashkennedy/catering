@@ -1,9 +1,13 @@
 /**
- * CRM → landing payload transform for `site_content` (id='default').
+ * Shared `site_content` (id='default') contract for
+ * https://mampallicatering.vercel.app + the CRM site-manager.
  *
- * The landing page (https://mampallicatering.vercel.app) reads the NeonDB
- * table `site_content`, row id='default', column `data` (jsonb) and caches
- * aggressively. After every write we MUST POST its publish hook.
+ * The landing reads the NeonDB row in the OLD flat shape (business flat,
+ * menus flat with courses/items, gallery flat, testimonials flat with
+ * quoteEn/quoteTa + event/place). Extra keys are ignored by old landing
+ * builds, so the CRM writes its doc through AS-IS. After every write we
+ * MUST POST its publish hook (`POST $SITE_PUBLISH_URL`, no body, header
+ * `Authorization: Bearer $PUBLISH_SECRET`, expect HTTP 200 + { ok: true }).
  *
  * Server-only (no secrets here). The secret lives in Vercel env
  * (`PUBLISH_SECRET`, same value as the landing's `PUBLISH_SECRET`) and is
@@ -11,6 +15,10 @@
  *
  * Data contract (top-level keys NEVER renamed/deleted):
  *   menus[], gallery[], business{}, testimonials[]
+ *
+ * NOTE: `buildLandingPayload` / `validateLandingPayload` below are legacy
+ * nested-shape helpers and are NO LONGER used by `/api/site-content`
+ * (the landing expects flat). Kept only to avoid breaking imports.
  */
 
 export const PUBLISH_HOOK_URL =

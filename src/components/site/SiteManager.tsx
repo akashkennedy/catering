@@ -1338,7 +1338,13 @@ export function SiteManager() {
         <Title order={2}>
           <Bilingual label={ui.site.manager} />
         </Title>
-        <Button component="a" href="/site" target="_blank" rel="noreferrer" variant="light">
+        <Button
+          component="a"
+          href="https://mampallicatering.vercel.app"
+          target="_blank"
+          rel="noreferrer"
+          variant="light"
+        >
           <Bilingual label={ui.site.preview} />
         </Button>
       </Group>

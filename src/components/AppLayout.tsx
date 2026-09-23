@@ -30,7 +30,6 @@ import {
 } from "lucide-react";
 
 import { Bilingual } from "@/components/Bilingual";
-import { isPublicSitePath } from "@/components/auth/AuthGate";
 import { MobileBottomNav } from "@/components/MobileBottomNav";
 import { MobileSearchOverlay } from "@/components/MobileSearchOverlay";
 import { NotificationCenter } from "@/components/NotificationCenter";
@@ -77,10 +76,6 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
     if (item.href === "/site-manager" && !permissions.canViewWebsite) return false;
     return true;
   });
-
-  if (isPublicSitePath(pathname ?? "")) {
-    return <>{children}</>;
-  }
 
   return (
     <AppShell

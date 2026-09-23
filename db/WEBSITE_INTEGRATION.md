@@ -13,7 +13,15 @@ Run `db/site-content.sql` once in the Neon SQL editor (shared database).
 | Variable | Value |
 |---|---|
 | `DATABASE_URL` | Neon **pooled** connection string (reads only; ideally a read-only role) |
-| `SITE_REVALIDATE_SECRET` | Long random string, shared with the CRM's `SITE_REVALIDATE_SECRET` |
+| `PUBLISH_SECRET` | Long random string, shared with the CRM's `PUBLISH_SECRET` |
+
+CRM side (Vercel → CRM project → Settings):
+
+| Variable | Value |
+|---|---|
+| `DATABASE_URL` | Same Neon pooled connection string (writes via `/api/site-content`) |
+| `SITE_PUBLISH_URL` | `https://mampallicatering.vercel.app/api/publish` |
+| `PUBLISH_SECRET` | Same value as the landing's `PUBLISH_SECRET` |
 
 ## 3. Website read layer (Next.js App Router)
 
@@ -65,23 +73,27 @@ or call `getWebsiteContent()` inside a component rendered with `export const rev
 
 ## 4. On-demand refresh endpoint (website project)
 
+The CRM POSTs with NO body and a Bearer secret. Return `{ ok: true }`
+with HTTP 200 on success; return 401 when the secret is wrong so the CRM
+can surface "secret rejected".
+
 ```ts
-// app/api/revalidate-site/route.ts
+// app/api/publish/route.ts
 import { NextResponse } from "next/server";
 import { revalidateTag } from "next/cache";
 
 export async function POST(request: Request) {
-  const body = (await request.json().catch(() => ({}))) as { secret?: string };
-  if (body.secret !== process.env.SITE_REVALIDATE_SECRET) {
-    return NextResponse.json({ error: "Forbidden." }, { status: 403 });
+  const auth = request.headers.get("authorization") ?? "";
+  if (auth !== `Bearer ${process.env.PUBLISH_SECRET}`) {
+    return NextResponse.json({ error: "Forbidden." }, { status: 401 });
   }
   revalidateTag("site-content");
   return NextResponse.json({ ok: true });
 }
 ```
 
-Point the CRM's `SITE_REVALIDATE_URL` at
-`https://mampallicatering.vercel.app/api/revalidate-site`.
+Point the CRM's `SITE_PUBLISH_URL` at
+`https://mampallicatering.vercel.app/api/publish`.
 
 ## 5. Field notes
 

@@ -7,11 +7,7 @@ import {
   getSiteContentRow,
   publishSiteContentRow,
 } from "@/lib/siteDb";
-import {
-  PUBLISH_HOOK_URL,
-  buildLandingPayload,
-  validateLandingPayload,
-} from "@/lib/sitePublish";
+import { PUBLISH_HOOK_URL } from "@/lib/sitePublish";
 
 const businessSchema = z.object({
   phones: z.array(z.string()),
@@ -115,6 +111,15 @@ export async function GET() {
 /**
  * Publish the website content doc (requires canManageSettings).
  *
+ * The landing (mampallicatering.vercel.app) reads the SAME `site_content`
+ * row in the OLD flat shape:
+ *   { business: { phones, whatsapp, addressEn, addressTa, serviceZones? },
+ *     menus: [{ nameEn/nameTa/tagEn/tagTa/descEn/descTa/price/photoUrl/templateId/courses[] + additive extras }],
+ *     gallery: [{ kind, url, captionEn/captionTa, category }],
+ *     testimonials: [{ quoteEn/quoteTa, author, event/eventTa, place, rating, source, profileUrl, ... }] }
+ * Extra keys are ignored by old landing builds, so we write the CRM doc
+ * through AS-IS (flat) — never the nested LandingDoc transform.
+ *
  * Order: validate → write the DB row FIRST, then POST the landing publish
  * hook. Never POST before the write commits; on write failure do NOT call
  * the hook. The secret is read from Vercel env (`PUBLISH_SECRET`, same value
@@ -134,25 +139,34 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "Invalid site content payload." }, { status: 400 });
   }
 
-  // Map CRM doc → landing contract + validate before touching the DB.
-  const landing = buildLandingPayload(parsed.data);
-  const validation = validateLandingPayload(landing);
-  if (!validation.ok) {
-    return NextResponse.json(
-      { error: validation.errors.join(" ") || "Invalid site content." },
-      { status: 400 }
-    );
-  }
+  // Flat-shape sanity: JSON must round-trip. Warnings only — old landing
+  // renders empty lists as null sections, so zero menus/testimonials is allowed.
+  const doc = parsed.data;
   try {
-    JSON.parse(JSON.stringify(landing));
+    JSON.parse(JSON.stringify(doc));
   } catch {
     return NextResponse.json({ error: "Site content does not serialize to JSON." }, { status: 400 });
   }
+  const warnings: string[] = [];
+  if (doc.menus.length === 0) {
+    warnings.push("Zero menus — the site falls back to its built-in menus.");
+  }
+  for (const menu of doc.menus) {
+    if (!menu.nameEn.trim()) {
+      return NextResponse.json({ error: "A menu is missing its English name." }, { status: 400 });
+    }
+    if (!menu.nameTa.trim()) warnings.push(`Menu "${menu.nameEn}" missing Tamil name.`);
+  }
+  for (const t of doc.testimonials) {
+    if (!t.author.trim() || !t.quoteEn.trim()) {
+      return NextResponse.json({ error: "A testimonial is missing author or quote." }, { status: 400 });
+    }
+  }
 
-  // 1. Write the DB row FIRST.
+  // 1. Write the DB row FIRST (flat shape — what the landing reads).
   let updatedAt: string;
   try {
-    updatedAt = await publishSiteContentRow(landing);
+    updatedAt = await publishSiteContentRow(doc);
   } catch (error) {
     // Write failed → do NOT call the publish hook.
     return dbErrorResponse(error);
@@ -171,7 +185,7 @@ export async function POST(request: Request) {
       published: false,
       publishError:
         "Saved to database, but PUBLISH_SECRET is not set in Vercel env — the live site still shows stale content.",
-      warnings: validation.warnings,
+      warnings,
     });
   }
   try {
@@ -186,7 +200,7 @@ export async function POST(request: Request) {
         published: false,
         publishError:
           "Saved to database, but the publish secret was rejected (401). Check PUBLISH_SECRET in Vercel — the live site still shows stale content.",
-        warnings: validation.warnings,
+        warnings,
       });
     }
     let hookOk = response.ok;
@@ -202,14 +216,14 @@ export async function POST(request: Request) {
         updatedAt,
         published: false,
         publishError: `Saved to database, but the publish hook returned ${response.status} — the live site still shows stale content.`,
-        warnings: validation.warnings,
+        warnings,
       });
     }
     return NextResponse.json({
       ok: true,
       updatedAt,
       published: true,
-      warnings: validation.warnings,
+      warnings,
     });
   } catch {
     return NextResponse.json({
@@ -218,7 +232,7 @@ export async function POST(request: Request) {
       published: false,
       publishError:
         "Saved to database, but the publish hook could not be reached — the live site still shows stale content.",
-      warnings: validation.warnings,
+      warnings,
     });
   }
 }

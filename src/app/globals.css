@@ -722,6 +722,32 @@ body {
   }
 }
 
+/* Small fonts bolder with full opacity, all screens (size unchanged).
+   Covers event cards/detail/calendar + all other xs/sm text.
+   `var(--ink)` adapts to light/dark. */
+.mantine-Text-root[data-size="xs"],
+.mantine-Text-root[data-size="sm"],
+.mantine-Text-root[style*="font-size-xs"],
+.mantine-Text-root[style*="font-size-sm"] {
+  font-weight: 600;
+  opacity: 1;
+}
+
+.mantine-Text-root[style*="dimmed"],
+.mantine-Anchor-root[style*="dimmed"],
+.mantine-Table-td[style*="dimmed"],
+td[style*="dimmed"],
+th[style*="dimmed"] {
+  color: var(--ink) !important;
+  opacity: 1 !important;
+  font-weight: 600;
+}
+
+.mantine-Badge-root {
+  opacity: 1;
+  font-weight: 700;
+}
+
 /* Public site (/site) — minimal landing styles on app theme tokens. */
 .site-header {
   position: sticky;

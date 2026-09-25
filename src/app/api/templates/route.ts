@@ -5,16 +5,11 @@ import { db } from "@/lib/db";
 import { requireSession } from "@/lib/requirePermission";
 import type { FoodTemplate, TemplateDish } from "@/store/templates";
 
-const dishIngredientSchema = z.object({
-  ingredientId: z.string(),
-  qtyPer100: z.number().finite().min(0),
-});
-
 const dishSchema = z.object({
   id: z.string().min(1).optional(),
+  courseId: z.string().min(1),
   nameEn: z.string(),
   nameTa: z.string(),
-  ingredients: z.array(dishIngredientSchema),
 });
 
 const templateSchema = z.object({
@@ -30,7 +25,48 @@ function newId(prefix: string): string {
   return `${prefix}-${Date.now()}-${Math.floor(Math.random() * 1e6)}`;
 }
 
-/** Loads a template with its ordered dishes and ingredient rows. */
+type CourseRow = {
+  id: string;
+  nameEn: string;
+  nameTa: string;
+  ingredients: TemplateDish["ingredients"];
+};
+
+/** Loads linked courses (with ingredient lines) for the given ids. */
+async function fetchLinkedCourses(
+  sql: ReturnType<typeof db>,
+  courseIds: string[]
+): Promise<Map<string, CourseRow>> {
+  const byId = new Map<string, CourseRow>();
+  const unique = [...new Set(courseIds.filter(Boolean))];
+  if (unique.length === 0) return byId;
+  const courseRows = (await sql`
+    SELECT * FROM courses WHERE id = ANY(${unique})
+  `) as Row[];
+  const itemRows = (await sql`
+    SELECT * FROM course_ingredients WHERE course_id = ANY(${unique})
+  `) as Row[];
+  const itemsByCourse = new Map<string, TemplateDish["ingredients"]>();
+  for (const item of itemRows) {
+    const list = itemsByCourse.get(String(item.course_id)) ?? [];
+    list.push({
+      ingredientId: String(item.ingredient_id),
+      qtyPer100: Number(item.qty_per_100) || 0,
+    });
+    itemsByCourse.set(String(item.course_id), list);
+  }
+  for (const course of courseRows) {
+    byId.set(String(course.id), {
+      id: String(course.id),
+      nameEn: String(course.name_en ?? ""),
+      nameTa: String(course.name_ta ?? ""),
+      ingredients: itemsByCourse.get(String(course.id)) ?? [],
+    });
+  }
+  return byId;
+}
+
+/** Loads a template with its linked courses resolved into dishes. */
 export async function fetchFullTemplate(
   sql: ReturnType<typeof db>,
   templateId: string
@@ -41,22 +77,41 @@ export async function fetchFullTemplate(
   const dishRows = (await sql`
     SELECT * FROM template_dishes WHERE template_id = ${templateId} ORDER BY position ASC, id ASC
   `) as Row[];
-  // Per-dish ingredient reads are independent — fire them together.
-  const ingredientLists = (await Promise.all(
+  const courses = await fetchLinkedCourses(
+    sql,
+    dishRows.map((dishRow) => String(dishRow.course_id ?? ""))
+  );
+  // Legacy embedded rows (pre-course era) are kept as a fallback so no
+  // ingredient data is lost in transition; course lines win on conflicts.
+  const legacyLists = (await Promise.all(
     dishRows.map((dishRow) =>
       sql`SELECT * FROM template_dish_ingredients WHERE dish_id = ${String(dishRow.id)}`
     )
   )) as Row[][];
   const dishes: TemplateDish[] = dishRows.map((dishRow, index) => {
-    const ingredientRows = ingredientLists[index] ?? [];
+    const courseId = String(dishRow.course_id ?? "");
+    const course = courseId ? courses.get(courseId) : undefined;
+    const seen = new Set<string>();
+    const ingredients: TemplateDish["ingredients"] = [];
+    for (const item of course?.ingredients ?? []) {
+      seen.add(item.ingredientId);
+      ingredients.push(item);
+    }
+    for (const item of legacyLists[index] ?? []) {
+      const ingredientId = String(item.ingredient_id);
+      if (seen.has(ingredientId)) continue;
+      seen.add(ingredientId);
+      ingredients.push({
+        ingredientId,
+        qtyPer100: Number(item.qty_per_100) || 0,
+      });
+    }
     return {
       id: String(dishRow.id),
-      nameEn: String(dishRow.name_en ?? ""),
-      nameTa: String(dishRow.name_ta ?? ""),
-      ingredients: ingredientRows.map((item) => ({
-        ingredientId: String(item.ingredient_id),
-        qtyPer100: Number(item.qty_per_100) || 0,
-      })),
+      courseId,
+      nameEn: course?.nameEn || String(dishRow.name_en ?? ""),
+      nameTa: course?.nameTa || String(dishRow.name_ta ?? ""),
+      ingredients,
     };
   });
   return {
@@ -67,38 +122,34 @@ export async function fetchFullTemplate(
   };
 }
 
-/** Persists the complete dish and ingredient hierarchy for a template. */
+/** Persists the template's course links (names stored as offline snapshots). */
 async function writeDishes(
   sql: ReturnType<typeof db>,
   templateId: string,
   dishes: z.infer<typeof dishSchema>[]
 ): Promise<void> {
-  // NOTE: link rows must be deleted before re-inserting (stale links would
-  // linger), so each dish needs delete-then-insert ordering. Dishes run in
-  // parallel; within a dish the statements stay sequential.
-  await Promise.all(
-    dishes.map(async (dish, position) => {
-      const dishId = dish.id ?? newId("dish");
-      await sql`
-        INSERT INTO template_dishes (id, template_id, name_en, name_ta, position)
-        VALUES (${dishId}, ${templateId}, ${dish.nameEn}, ${dish.nameTa}, ${position})
+  // In-place sync: matching rows are updated (existing ids and their legacy
+  // fallback ingredient rows survive), only dishes omitted from the save are
+  // deleted. One transaction so the link set never halves on failure.
+  const dishIds = dishes.map((dish) => dish.id ?? newId("dish"));
+  await sql.transaction((txn) => [
+    ...dishes.map((dish, position) =>
+      txn`
+        INSERT INTO template_dishes (id, template_id, course_id, name_en, name_ta, position)
+        VALUES (${dishIds[position]}, ${templateId}, ${dish.courseId}, ${dish.nameEn}, ${dish.nameTa}, ${position})
         ON CONFLICT (id) DO UPDATE SET
           template_id = EXCLUDED.template_id,
+          course_id = EXCLUDED.course_id,
           name_en = EXCLUDED.name_en,
           name_ta = EXCLUDED.name_ta,
           position = EXCLUDED.position
-      `;
-      await sql`DELETE FROM template_dish_ingredients WHERE dish_id = ${dishId}`;
-      await Promise.all(
-        dish.ingredients.map((item) =>
-          sql`
-            INSERT INTO template_dish_ingredients (id, dish_id, ingredient_id, qty_per_100)
-            VALUES (${newId("tdi")}, ${dishId}, ${item.ingredientId}, ${item.qtyPer100})
-          `
-        )
-      );
-    })
-  );
+      `
+    ),
+    txn`
+      DELETE FROM template_dishes
+      WHERE template_id = ${templateId} AND NOT (id = ANY(${dishIds}))
+    `,
+  ]);
 }
 
 /** Lists every template with its complete dish hierarchy. */

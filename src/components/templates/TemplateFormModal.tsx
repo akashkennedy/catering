@@ -24,7 +24,7 @@ import {
   type FieldErrors,
 } from "react-hook-form";
 import { z } from "zod";
-import { useEffect } from "react";
+import { useEffect, useRef, useState } from "react";
 
 import { Bilingual } from "@/components/Bilingual";
 import { ui, preferredText } from "@/lib/i18n";
@@ -34,6 +34,7 @@ import { useIngredientsStore, type Ingredient } from "@/store/ingredients";
 import { formatINR } from "@/lib/format";
 import { normalizeUnit } from "@/lib/units";
 import { suggestTamilName } from "@/lib/ingredientTranslations";
+import { fetchOnlineTamil, getCachedOnlineTamil } from "@/lib/translateTamil";
 import {
   useTemplatesStore,
   type FoodTemplate,
@@ -214,7 +215,7 @@ export function TemplateFormModal({ opened, template, onClose }: TemplateFormMod
     control,
     setValue,
     getValues,
-    formState: { errors, isSubmitting },
+    formState: { errors, isSubmitting, dirtyFields },
   } = useForm<TemplateFormValues>({
     resolver: zodResolver(templateSchema),
     defaultValues: toFormValues(null),
@@ -241,7 +242,11 @@ export function TemplateFormModal({ opened, template, onClose }: TemplateFormMod
       : ingredient.name,
   }));
   const masterById = new Map(ingredients.map((ingredient) => [ingredient.id, ingredient]));
+  const watchedNameEn = useWatch({ control, name: "nameEn" }) ?? "";
   const watchedDishes = useWatch({ control, name: "dishes" }) ?? [];
+  const [translatingName, setTranslatingName] = useState(false);
+  const nameRequestId = useRef(0);
+  const dishesRequestId = useRef(0);
 
   const autoFillTamil = (path: "nameTa" | `dishes.${number}.nameTa`, englishValue: string) => {
     const current = getValues(path);
@@ -250,15 +255,138 @@ export function TemplateFormModal({ opened, template, onClose }: TemplateFormMod
     if (suggestion) setValue(path, suggestion, { shouldValidate: false });
   };
 
+  // Keep Tamil in sync while the user hasn't manually edited it.
+  // Empty-check alone goes stale after the first keystroke, so gate on dirtyFields.
+  // Never clobber saved Tamil when editing: only live-sync for new templates/dishes.
+  useEffect(() => {
+    if (!opened) return;
+    if (dirtyFields.nameTa) return;
+    const englishValue = (watchedNameEn ?? "").trim();
+    if (!englishValue) return;
+    const current = (getValues("nameTa") ?? "").trim();
+    if (template?.nameTa?.trim() && current) return;
+    const suggestion = suggestTamilName(englishValue);
+    if (suggestion && suggestion !== current) {
+      setValue("nameTa", suggestion, { shouldValidate: false });
+    }
+  }, [watchedNameEn, dirtyFields.nameTa, opened, template, getValues, setValue]);
+
+  useEffect(() => {
+    if (!opened) return;
+    const originalTaByDishId = new Map(
+      (template?.dishes ?? []).map((dish) => [dish.id, (dish.nameTa ?? "").trim()])
+    );
+    watchedDishes.forEach((dish, dishIndex) => {
+      const dishDirty = (dirtyFields.dishes?.[dishIndex] as { nameTa?: boolean } | undefined)
+        ?.nameTa;
+      if (dishDirty) return;
+      const englishValue = (dish?.nameEn ?? "").trim();
+      if (!englishValue) return;
+      const path = `dishes.${dishIndex}.nameTa` as const;
+      const current = (getValues(path) ?? "").trim();
+      const dishId = (dish as { id?: string } | undefined)?.id;
+      if (dishId && originalTaByDishId.get(dishId) && current) return;
+      const suggestion = suggestTamilName(englishValue);
+      if (suggestion && suggestion !== current) {
+        setValue(path, suggestion, { shouldValidate: false });
+      }
+    });
+  }, [watchedDishes, dirtyFields.dishes, opened, template, setValue, getValues]);
+
+  // Online-first enhancement: offline dict paints instantly above; this
+  // replaces the auto value with the wider-coverage API translation.
+  // Never touches manually edited or previously saved Tamil.
+  useEffect(() => {
+    if (!opened) return;
+    if (dirtyFields.nameTa) return;
+    const englishValue = (watchedNameEn ?? "").trim();
+    if (englishValue.length < 2) return;
+    if (template?.nameTa?.trim() && (getValues("nameTa") ?? "").trim()) return;
+    const cached = getCachedOnlineTamil(englishValue);
+    if (cached?.tamil) {
+      const current = (getValues("nameTa") ?? "").trim();
+      if (!current || current === suggestTamilName(englishValue)) {
+        setValue("nameTa", cached.tamil, { shouldValidate: false });
+      }
+      return;
+    }
+    const requestId = ++nameRequestId.current;
+    const timer = setTimeout(() => {
+      void (async () => {
+        if (typeof navigator !== "undefined" && !navigator.onLine) return;
+        setTranslatingName(true);
+        try {
+          const result = await fetchOnlineTamil(englishValue);
+          if (requestId !== nameRequestId.current) return;
+          if (!result?.tamil) return;
+          if ((getValues("nameEn") ?? "").trim() !== englishValue) return;
+          const current = (getValues("nameTa") ?? "").trim();
+          if (!current || current === suggestTamilName(englishValue)) {
+            setValue("nameTa", result.tamil, { shouldValidate: false });
+          }
+        } finally {
+          if (requestId === nameRequestId.current) setTranslatingName(false);
+        }
+      })();
+    }, 600);
+    return () => clearTimeout(timer);
+  }, [watchedNameEn, dirtyFields.nameTa, opened, template, getValues, setValue]);
+
+  useEffect(() => {
+    if (!opened) return;
+    const snapshot = watchedDishes.map((dish) => ({
+      id: (dish as { id?: string } | undefined)?.id,
+      nameEn: (dish?.nameEn ?? "").trim(),
+    }));
+    if (snapshot.every((dish) => dish.nameEn.length < 2)) return;
+    const requestId = ++dishesRequestId.current;
+    const timer = setTimeout(() => {
+      void (async () => {
+        if (typeof navigator !== "undefined" && !navigator.onLine) return;
+        const originalTaByDishId = new Map(
+          (template?.dishes ?? []).map((dish) => [dish.id, (dish.nameTa ?? "").trim()])
+        );
+        await Promise.all(
+          snapshot.map(async (dish, dishIndex) => {
+            if (!dish.nameEn || dish.nameEn.length < 2) return;
+            const path = `dishes.${dishIndex}.nameTa` as const;
+            const dishDirty = (
+              dirtyFields.dishes?.[dishIndex] as { nameTa?: boolean } | undefined
+            )?.nameTa;
+            if (dishDirty) return;
+            const current = (getValues(path) ?? "").trim();
+            if (dish.id && originalTaByDishId.get(dish.id) && current) return;
+            if (current && current !== suggestTamilName(dish.nameEn)) return;
+            const result = await fetchOnlineTamil(dish.nameEn);
+            if (requestId !== dishesRequestId.current) return;
+            const latest = (getValues(path) ?? "").trim();
+            if (!latest || latest === suggestTamilName(dish.nameEn)) {
+              if (result?.tamil && result.tamil !== latest) {
+                setValue(path, result.tamil, { shouldValidate: false });
+              }
+            }
+          })
+        );
+      })();
+    }, 700);
+    return () => clearTimeout(timer);
+  }, [watchedDishes, dirtyFields.dishes, opened, template, getValues, setValue]);
+
+  const backfillTamil = (englishValue: string, tamilValue: string): string => {
+    const ta = (tamilValue ?? "").trim();
+    if (ta) return ta;
+    return suggestTamilName((englishValue ?? "").trim());
+  };
+
   const onSubmit = (values: TemplateFormValues) => {
     const input: FoodTemplateInput = {
       nameEn: values.nameEn.trim(),
-      nameTa: values.nameTa.trim(),
+      nameTa: backfillTamil(values.nameEn, values.nameTa),
       dishes: values.dishes
         .map((dish) => ({
           ...dish,
           nameEn: dish.nameEn.trim(),
-          nameTa: dish.nameTa.trim(),
+          nameTa: backfillTamil(dish.nameEn, dish.nameTa),
         }))
         .filter((dish) => dish.nameEn !== ""),
     };
@@ -304,6 +432,11 @@ export function TemplateFormModal({ opened, template, onClose }: TemplateFormMod
               error={errors.nameTa?.message}
             />
           </Group>
+          {translatingName && (
+            <Text size="xs" c="dimmed" mt={-8}>
+              Translating…
+            </Text>
+          )}
 
           {dishFields.length === 0 && (
             <Text size="sm" c="dimmed">

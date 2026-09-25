@@ -10,7 +10,8 @@
     "db:migrate": "node --env-file=.env scripts/db-migrate.mjs",
     "db:check": "node --env-file=.env scripts/db-check.mjs",
     "db:seed-admin": "node --env-file=.env scripts/db-seed-admin.mjs",
-    "db:seed-catalog": "node --env-file=.env scripts/db-seed-catalog.mjs"
+    "db:seed-catalog": "node --env-file=.env scripts/db-seed-catalog.mjs",
+    "db:seed-mock": "node --env-file=.env scripts/db-seed-mock-courses.mjs"
   },
   "dependencies": {
     "@hookform/resolvers": "^5.9.1",

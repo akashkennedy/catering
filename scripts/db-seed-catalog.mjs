@@ -1,14 +1,15 @@
 /**
- * Seeds the business catalog into Neon: ingredients, food templates
- * (meals), template dishes (courses) and dish-ingredient links.
+ * Seeds the business catalog into Neon: ingredients, reusable courses,
+ * food templates (meals) and template-to-course links.
  *
  * Sources (single source of truth, same as the app):
  * - src/lib/ingredientCatalog.ts  (INGREDIENT_CATALOG, wins on conflicts)
  * - src/lib/legacySeed.ts         (LEGACY_MEALS: Saapadu, Biriyani + courses)
  *
- * Idempotent — stable ids (`ing-<slug>`, `tpl-<slug>`, `dish-<tpl>-<nn>`)
- * with ON CONFLICT upserts, so re-running never duplicates. Dish links are
- * rebuilt per dish (delete + insert); links are not referenced elsewhere.
+ * Idempotent — stable ids (`ing-<slug>`, `course-<slug>`, `tpl-<slug>`,
+ * `dish-<tpl>-<nn>`) with ON CONFLICT upserts, so re-running never
+ * duplicates. Course links are rebuilt per course (delete + insert); links
+ * are not referenced elsewhere.
  *
  * Also removes the one leftover "Rice" probe row (id below) that predates
  * the seed, so the real catalog Rice seeds cleanly.
@@ -47,6 +48,7 @@ const sql = neon(url);
 const stats = {
   ingredientsUpserted: 0,
   ingredientsSkippedDuplicate: 0,
+  coursesUpserted: 0,
   templatesUpserted: 0,
   dishesUpserted: 0,
   linksWritten: 0,
@@ -80,7 +82,8 @@ const ingredientIdByName = new Map(
   ingredients.map((ing) => [ing.name.trim().toLowerCase(), ing.id])
 );
 
-// --- Templates + dishes + links ---
+// --- Courses (reusable masters, one per legacy course name) + templates ---
+const coursesByKey = new Map();
 const templates = [];
 for (const meal of LEGACY_MEALS) {
   const templateId = `tpl-${slug(meal.nameEn)}`;
@@ -88,30 +91,41 @@ for (const meal of LEGACY_MEALS) {
   let position = 0;
   for (const course of meal.courses ?? []) {
     if (!String(course.nameEn ?? "").trim()) continue;
-    const dishId = `dish-${slug(meal.nameEn)}-${String(position).padStart(2, "0")}`;
-    const links = [];
-    for (const item of course.items ?? []) {
-      const ingredientId = ingredientIdByName.get(
-        String(item.nameEn ?? "").trim().toLowerCase()
-      );
-      if (!ingredientId) {
-        warnings.push(
-          `No ingredient match for "${item.nameEn}" in ${meal.nameEn} > ${course.nameEn} — skipped`
+    const courseKey = String(course.nameEn).trim().toLowerCase();
+    let courseEntry = coursesByKey.get(courseKey);
+    if (!courseEntry) {
+      const links = [];
+      for (const item of course.items ?? []) {
+        const ingredientId = ingredientIdByName.get(
+          String(item.nameEn ?? "").trim().toLowerCase()
         );
-        continue;
+        if (!ingredientId) {
+          warnings.push(
+            `No ingredient match for "${item.nameEn}" in ${meal.nameEn} > ${course.nameEn} — skipped`
+          );
+          continue;
+        }
+        links.push({
+          id: `ci-${slug(course.nameEn)}-${slug(item.nameEn)}`,
+          ingredientId,
+          qtyPer100: Number(item.qtyPer100) || 0,
+        });
       }
-      links.push({
-        id: `tdi-${slug(course.nameEn)}-${slug(item.nameEn)}`,
-        ingredientId,
-        qtyPer100: Number(item.qtyPer100) || 0,
-      });
+      courseEntry = {
+        id: `course-${slug(course.nameEn)}`,
+        nameEn: String(course.nameEn).trim(),
+        nameTa: String(course.nameTa ?? "").trim(),
+        links,
+      };
+      coursesByKey.set(courseKey, courseEntry);
     }
+    const dishId = `dish-${slug(meal.nameEn)}-${String(position).padStart(2, "0")}`;
     dishes.push({
       id: dishId,
-      nameEn: String(course.nameEn).trim(),
-      nameTa: String(course.nameTa ?? "").trim(),
+      courseId: courseEntry.id,
+      nameEn: courseEntry.nameEn,
+      nameTa: courseEntry.nameTa,
       position,
-      links,
     });
     position += 1;
   }
@@ -122,22 +136,22 @@ for (const meal of LEGACY_MEALS) {
     dishes,
   });
 }
+const courses = [...coursesByKey.values()];
 
 if (dryRun) {
   console.log("DRY RUN — no writes.");
   console.log(`Ingredients to upsert: ${ingredients.length} (${stats.ingredientsSkippedDuplicate} duplicates skipped)`);
+  console.log(`Courses to upsert: ${courses.length}`);
   console.log(`Templates to upsert: ${templates.length}`);
   console.log(
     `Dishes to upsert: ${templates.reduce((n, t) => n + t.dishes.length, 0)}`
   );
   console.log(
-    `Dish links to write: ${templates.reduce(
-      (n, t) => n + t.dishes.reduce((m, d) => m + d.links.length, 0),
-      0
-    )}`
+    `Course links to write: ${courses.reduce((n, c) => n + c.links.length, 0)}`
   );
   console.log(`Probe rows to delete: 1 (${PROBE_RICE_ID})`);
   console.log("Sample ingredient:", JSON.stringify(ingredients[0]));
+  console.log("Sample course:", JSON.stringify(courses[0]?.nameEn));
   console.log("Sample template:", JSON.stringify(templates[0]?.nameEn));
   for (const w of warnings) console.log(`WARN: ${w}`);
   process.exit(0);
@@ -168,6 +182,29 @@ for (const ing of ingredients) {
   stats.ingredientsUpserted += 1;
 }
 
+for (const course of courses) {
+  await sql`
+    INSERT INTO courses (id, name_en, name_ta, updated_at)
+    VALUES (${course.id}, ${course.nameEn}, ${course.nameTa}, NOW())
+    ON CONFLICT (id) DO UPDATE SET
+      name_en = EXCLUDED.name_en,
+      name_ta = EXCLUDED.name_ta,
+      updated_at = NOW()
+  `;
+  stats.coursesUpserted += 1;
+  await sql`DELETE FROM course_ingredients WHERE course_id = ${course.id}`;
+  for (const link of course.links) {
+    await sql`
+      INSERT INTO course_ingredients (id, course_id, ingredient_id, qty_per_100)
+      VALUES (${link.id}, ${course.id}, ${link.ingredientId}, ${link.qtyPer100})
+      ON CONFLICT (id) DO UPDATE SET
+        ingredient_id = EXCLUDED.ingredient_id,
+        qty_per_100 = EXCLUDED.qty_per_100
+    `;
+    stats.linksWritten += 1;
+  }
+}
+
 for (const template of templates) {
   await sql`
     INSERT INTO food_templates (id, name_en, name_ta, updated_at)
@@ -180,32 +217,23 @@ for (const template of templates) {
   stats.templatesUpserted += 1;
   for (const dish of template.dishes) {
     await sql`
-      INSERT INTO template_dishes (id, template_id, name_en, name_ta, position)
-      VALUES (${dish.id}, ${template.id}, ${dish.nameEn}, ${dish.nameTa}, ${dish.position})
+      INSERT INTO template_dishes (id, template_id, course_id, name_en, name_ta, position)
+      VALUES (${dish.id}, ${template.id}, ${dish.courseId}, ${dish.nameEn}, ${dish.nameTa}, ${dish.position})
       ON CONFLICT (id) DO UPDATE SET
         template_id = EXCLUDED.template_id,
+        course_id = EXCLUDED.course_id,
         name_en = EXCLUDED.name_en,
         name_ta = EXCLUDED.name_ta,
         position = EXCLUDED.position
     `;
     stats.dishesUpserted += 1;
-    await sql`DELETE FROM template_dish_ingredients WHERE dish_id = ${dish.id}`;
-    for (const link of dish.links) {
-      await sql`
-        INSERT INTO template_dish_ingredients (id, dish_id, ingredient_id, qty_per_100)
-        VALUES (${link.id}, ${dish.id}, ${link.ingredientId}, ${link.qtyPer100})
-        ON CONFLICT (id) DO UPDATE SET
-          ingredient_id = EXCLUDED.ingredient_id,
-          qty_per_100 = EXCLUDED.qty_per_100
-      `;
-      stats.linksWritten += 1;
-    }
   }
 }
 
 console.log(
-  `Done: ${stats.ingredientsUpserted} ingredients, ${stats.templatesUpserted} templates, ` +
-    `${stats.dishesUpserted} dishes, ${stats.linksWritten} dish links ` +
+  `Done: ${stats.ingredientsUpserted} ingredients, ${stats.coursesUpserted} courses, ` +
+    `${stats.templatesUpserted} templates, ${stats.dishesUpserted} dishes, ` +
+    `${stats.linksWritten} course links ` +
     `(${stats.probeRowsDeleted} probe row deleted, ${stats.ingredientsSkippedDuplicate} duplicates skipped).`
 );
 for (const w of warnings) console.log(`WARN: ${w}`);

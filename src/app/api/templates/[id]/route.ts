@@ -5,20 +5,15 @@ import { db } from "@/lib/db";
 import { requireSession } from "@/lib/requirePermission";
 import { fetchFullTemplate } from "../route";
 
-const dishIngredientSchema = z.object({
-  ingredientId: z.string(),
-  qtyPer100: z.number().finite().min(0),
-});
-
 const templatePatchSchema = z.object({
   nameEn: z.string(),
   nameTa: z.string(),
   dishes: z.array(
     z.object({
       id: z.string().min(1).optional(),
+      courseId: z.string(),
       nameEn: z.string(),
       nameTa: z.string(),
-      ingredients: z.array(dishIngredientSchema),
     })
   ),
 });
@@ -54,7 +49,7 @@ export async function PATCH(
     UPDATE food_templates SET name_en = ${parsed.data.nameEn}, name_ta = ${parsed.data.nameTa}, updated_at = NOW()
     WHERE id = ${id}
   `;
-  // Full replace of dishes: removed dishes vanish via cascade.
+  // Full replace of course links: removed dishes vanish via cascade.
   await sql`DELETE FROM template_dishes WHERE template_id = ${id}`;
   // Dish/link inserts are independent — positions/ids assigned first, then
   // fired together.
@@ -62,15 +57,9 @@ export async function PATCH(
   parsed.data.dishes.forEach((dish, position) => {
     const dishId = dish.id ?? newId("dish");
     writes.push(sql`
-      INSERT INTO template_dishes (id, template_id, name_en, name_ta, position)
-      VALUES (${dishId}, ${id}, ${dish.nameEn}, ${dish.nameTa}, ${position})
+      INSERT INTO template_dishes (id, template_id, course_id, name_en, name_ta, position)
+      VALUES (${dishId}, ${id}, ${dish.courseId}, ${dish.nameEn}, ${dish.nameTa}, ${position})
     `);
-    for (const item of dish.ingredients) {
-      writes.push(sql`
-        INSERT INTO template_dish_ingredients (id, dish_id, ingredient_id, qty_per_100)
-        VALUES (${newId("tdi")}, ${dishId}, ${item.ingredientId}, ${item.qtyPer100})
-      `);
-    }
   });
   await Promise.all(writes);
   const full = await fetchFullTemplate(sql, id);

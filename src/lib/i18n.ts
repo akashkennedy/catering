@@ -461,6 +461,30 @@ export const ui = {
     qtyMin: lab("Qty must be 0 or more", "அளவு 0 அல்லது அதற்கு மேல் இருக்க வேண்டும்"),
     addIngredient: lab("Add ingredient", "பொருள் சேர்க்க"),
     addDish: lab("Add dish", "உணவு சேர்க்க"),
+    coursesTab: lab("Courses", "வகைகள்"),
+    templatesTab: lab("Templates", "டெம்ப்ளேட்டுகள்"),
+    addCourse: lab("Add course", "வகை சேர்க்க"),
+    createCourse: lab("Create Course", "வகை உருவாக்கு"),
+    editCourse: lab("Edit Course", "வகையைத் திருத்து"),
+    deleteCourse: lab("Delete course", "வகையை நீக்கு"),
+    coursesEmpty: lab(
+      "No courses yet. Create one to reuse across templates.",
+      "இன்னும் வகைகள் இல்லை. டெம்ப்ளேட்டுகளில் மீண்டும் பயன்படுத்த ஒன்றை உருவாக்கவும்."
+    ),
+    searchCourses: lab("Search courses…", "வகைகளைத் தேடு…"),
+    selectCourse: lab("Select course", "வகையைத் தேர்ந்தெடுக்கவும்"),
+    pickCourseNote: lab(
+      "Pick a saved course, or create a new one with its ingredients.",
+      "சேமித்த வகையைத் தேர்ந்தெடுக்கவும் அல்லது பொருட்களுடன் புதிய வகையை உருவாக்கவும்."
+    ),
+    saveAsCourse: lab("Save as course", "வகையாகச் சேமி"),
+    unlinkCourse: lab("Unlink", "தொடர்பை நீக்கு"),
+    unknownCourse: lab("Unknown course", "தெரியாத வகை"),
+    noIngredientsOnCourse: lab("No ingredients on this course yet.", "இந்த வகையில் இன்னும் பொருட்கள் இல்லை."),
+    deleteCourseBlocked: lab(
+      "This course is used in templates and cannot be deleted.",
+      "இந்த வகை டெம்ப்ளேட்டுகளில் பயன்படுத்தப்படுகிறது, நீக்க முடியாது."
+    ),
   },
   employees: {
     addEmployee: lab("Add Employee", "ஊழியர் சேர்க்க"),
@@ -651,6 +675,14 @@ export const ui = {
   dishNumber: (n: number): Label => ({
     en: `Dish ${n}`,
     ta: `உணவு ${n}`,
+  }),
+  coursesTitle: (count: number): Label => ({
+    en: `${count} ${count === 1 ? "course" : "courses"}`,
+    ta: `${count} வகைகள்`,
+  }),
+  usedInTemplates: (count: number): Label => ({
+    en: `Used in ${count} ${count === 1 ? "template" : "templates"}`,
+    ta: `${count} டெம்ப்ளேட்டுகளில் பயன்பாடு`,
   }),
 } as const;
 

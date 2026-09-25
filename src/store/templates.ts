@@ -8,6 +8,8 @@ export type TemplateIngredient = {
 
 export type TemplateDish = {
   id: string;
+  /** Linked course master. Empty only for legacy pre-course cache rows. */
+  courseId: string;
   nameEn: string;
   nameTa: string;
   ingredients: TemplateIngredient[];
@@ -164,7 +166,7 @@ export const useTemplatesStore = create<TemplatesState>()(
       name: "catering-templates",
       storage: createJSONStorage(() => localStorage),
       partialize: (state) => ({ templates: state.templates }),
-      version: 1,
+      version: 2,
       migrate: (persistedState) => {
         const state = persistedState as {
           templates?: Array<Record<string, unknown>> | null;
@@ -193,8 +195,10 @@ export const useTemplatesStore = create<TemplatesState>()(
                   : legacyDishName;
               const dishNameTa =
                 typeof dish.nameTa === "string" ? (dish.nameTa as string) : "";
+              const courseId =
+                typeof dish.courseId === "string" ? (dish.courseId as string) : "";
               delete dish.name;
-              return { ...dish, nameEn: dishNameEn, nameTa: dishNameTa };
+              return { ...dish, courseId, nameEn: dishNameEn, nameTa: dishNameTa };
             });
             delete template.name;
             return { ...template, nameEn, nameTa, dishes };

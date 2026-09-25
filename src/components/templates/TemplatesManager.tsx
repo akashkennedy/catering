@@ -1,13 +1,14 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { Button, Group, Modal, Stack, Text, TextInput, Title } from "@mantine/core";
+import { Button, Group, Modal, Stack, Tabs, Text, TextInput, Title } from "@mantine/core";
 import { Plus, Search } from "lucide-react";
 import { useMediaQuery } from "@mantine/hooks";
 
 import { TemplateCards } from "./TemplateCards";
 import { TemplateFormModal } from "./TemplateFormModal";
 import { TemplateTable } from "./TemplateTable";
+import { CoursesManager } from "./CoursesManager";
 import { Bilingual } from "@/components/Bilingual";
 import { ListPageSkeleton } from "@/components/LoadingSkeletons";
 import { preferredText, ui } from "@/lib/i18n";
@@ -44,16 +45,30 @@ export function TemplatesManager() {
           <Title order={2}>
             <Bilingual label={ui.nav.templates} />
           </Title>
-          <Button
-            leftSection={<Plus size={18} />}
-            onClick={() => {
-              setEditingTemplate(null);
-              setFormOpened(true);
-            }}
-          >
-            <Bilingual label={ui.templates.addTemplate} />
-          </Button>
         </Group>
+
+        <Tabs defaultValue="templates" mb="md">
+          <Tabs.List>
+            <Tabs.Tab value="templates">
+              <Bilingual label={ui.templates.templatesTab} />
+            </Tabs.Tab>
+            <Tabs.Tab value="courses">
+              <Bilingual label={ui.templates.coursesTab} />
+            </Tabs.Tab>
+          </Tabs.List>
+
+          <Tabs.Panel value="templates" pt="md">
+            <Group justify="flex-end" mb="md">
+              <Button
+                leftSection={<Plus size={18} />}
+                onClick={() => {
+                  setEditingTemplate(null);
+                  setFormOpened(true);
+                }}
+              >
+                <Bilingual label={ui.templates.addTemplate} />
+              </Button>
+            </Group>
 
         {templates.length > 0 && (
           <TextInput
@@ -95,6 +110,12 @@ export function TemplatesManager() {
             onDelete={setDeletingTemplate}
           />
         )}
+          </Tabs.Panel>
+
+          <Tabs.Panel value="courses" pt="md">
+            <CoursesManager />
+          </Tabs.Panel>
+        </Tabs>
       </div>
 
       <TemplateFormModal opened={formOpened} template={editingTemplate} onClose={() => setFormOpened(false)} />

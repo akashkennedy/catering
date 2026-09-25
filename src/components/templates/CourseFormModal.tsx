@@ -207,7 +207,15 @@ export function CourseFormModal({ opened, course, onClose, onSaved }: CourseForm
       title={<Bilingual label={course ? ui.templates.editCourse : ui.templates.createCourse} />}
       {...sheet}
     >
-      <form onSubmit={handleSubmit(onSubmit)}>
+      <form
+        onSubmit={(event) => {
+          // The course modal can open from inside the template modal: stop
+          // the submit event bubbling through the React portal tree so a
+          // course save never submits the template form.
+          event.stopPropagation();
+          void handleSubmit(onSubmit)(event);
+        }}
+      >
         <Stack gap="md">
           <Group grow align="flex-start">
             <TextInput

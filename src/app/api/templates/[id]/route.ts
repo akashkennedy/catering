@@ -11,7 +11,7 @@ const templatePatchSchema = z.object({
   dishes: z.array(
     z.object({
       id: z.string().min(1).optional(),
-      courseId: z.string(),
+      courseId: z.string().min(1),
       nameEn: z.string(),
       nameTa: z.string(),
     })
@@ -45,23 +45,32 @@ export async function PATCH(
   if (existing.length === 0) {
     return NextResponse.json({ error: "Template not found." }, { status: 404 });
   }
-  await sql`
-    UPDATE food_templates SET name_en = ${parsed.data.nameEn}, name_ta = ${parsed.data.nameTa}, updated_at = NOW()
-    WHERE id = ${id}
-  `;
-  // Full replace of course links: removed dishes vanish via cascade.
-  await sql`DELETE FROM template_dishes WHERE template_id = ${id}`;
-  // Dish/link inserts are independent — positions/ids assigned first, then
-  // fired together.
-  const writes: Promise<unknown>[] = [];
-  parsed.data.dishes.forEach((dish, position) => {
-    const dishId = dish.id ?? newId("dish");
-    writes.push(sql`
-      INSERT INTO template_dishes (id, template_id, course_id, name_en, name_ta, position)
-      VALUES (${dishId}, ${id}, ${dish.courseId}, ${dish.nameEn}, ${dish.nameTa}, ${position})
-    `);
-  });
-  await Promise.all(writes);
+  // In-place sync: matching rows are updated (existing ids and their legacy
+  // fallback ingredient rows survive), only dishes omitted from the save are
+  // deleted. One transaction so the link set never halves on failure.
+  const dishIds = parsed.data.dishes.map((dish) => dish.id ?? newId("dish"));
+  await sql.transaction((txn) => [
+    txn`
+      UPDATE food_templates SET name_en = ${parsed.data.nameEn}, name_ta = ${parsed.data.nameTa}, updated_at = NOW()
+      WHERE id = ${id}
+    `,
+    ...parsed.data.dishes.map((dish, position) =>
+      txn`
+        INSERT INTO template_dishes (id, template_id, course_id, name_en, name_ta, position)
+        VALUES (${dishIds[position]}, ${id}, ${dish.courseId}, ${dish.nameEn}, ${dish.nameTa}, ${position})
+        ON CONFLICT (id) DO UPDATE SET
+          template_id = EXCLUDED.template_id,
+          course_id = EXCLUDED.course_id,
+          name_en = EXCLUDED.name_en,
+          name_ta = EXCLUDED.name_ta,
+          position = EXCLUDED.position
+      `
+    ),
+    txn`
+      DELETE FROM template_dishes
+      WHERE template_id = ${id} AND NOT (id = ANY(${dishIds}))
+    `,
+  ]);
   const full = await fetchFullTemplate(sql, id);
   return NextResponse.json({ template: full });
 }

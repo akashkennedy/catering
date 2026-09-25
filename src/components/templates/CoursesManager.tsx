@@ -84,6 +84,12 @@ export function CoursesManager() {
     : courses;
 
   const confirmDelete = async (course: Course) => {
+    const localUsage = usageByCourseId.get(course.id) ?? 0;
+    if (localUsage > 0) {
+      setDeletingCourse(null);
+      setBlockedCourse({ course, usedBy: localUsage });
+      return;
+    }
     const result = await deleteCourse(course.id);
     setDeletingCourse(null);
     if (!result.ok) {

@@ -94,6 +94,21 @@ export const useCoursesStore = create<CoursesState>()(
         }
       },
       deleteCourse: async (id) => {
+        // Local usage pre-check: never send or queue a DELETE for a course
+        // templates still reference.
+        const { useTemplatesStore } = await import("@/store/templates");
+        const usedBy = useTemplatesStore
+          .getState()
+          .templates.reduce(
+            (count, template) =>
+              count + template.dishes.filter((dish) => dish.courseId === id).length,
+            0
+          );
+        if (usedBy > 0) return { ok: false, usedBy };
+        const removeLocal = () =>
+          set((state) => ({
+            courses: state.courses.filter((course) => course.id !== id),
+          }));
         try {
           const response = await fetch(`/api/courses/${encodeURIComponent(id)}`, {
             method: "DELETE",
@@ -103,17 +118,20 @@ export const useCoursesStore = create<CoursesState>()(
             const body = (await response.json()) as { usedBy?: number };
             return { ok: false, usedBy: Number(body.usedBy ?? 0) };
           }
-          if (!response.ok) {
-            const { queueOp } = await import("@/lib/outbox");
-            queueOp({ method: "DELETE", path: `/api/courses/${encodeURIComponent(id)}` });
+          if (response.ok) {
+            removeLocal();
+            return { ok: true };
           }
+          const { queueOp } = await import("@/lib/outbox");
+          queueOp({ method: "DELETE", path: `/api/courses/${encodeURIComponent(id)}` });
         } catch {
           const { queueOp } = await import("@/lib/outbox");
           queueOp({ method: "DELETE", path: `/api/courses/${encodeURIComponent(id)}` });
         }
-        set((state) => ({
-          courses: state.courses.filter((course) => course.id !== id),
-        }));
+        // Optimistic removal only when the server didn't refuse: the local
+        // pre-check passed, so no links are known. A 409 above returns early
+        // with local state untouched.
+        removeLocal();
         return { ok: true };
       },
       loadCourses: async () => {

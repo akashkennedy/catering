@@ -7,7 +7,7 @@ import type { FoodTemplate, TemplateDish } from "@/store/templates";
 
 const dishSchema = z.object({
   id: z.string().min(1).optional(),
-  courseId: z.string(),
+  courseId: z.string().min(1),
   nameEn: z.string(),
   nameTa: z.string(),
 });
@@ -128,17 +128,28 @@ async function writeDishes(
   templateId: string,
   dishes: z.infer<typeof dishSchema>[]
 ): Promise<void> {
-  // Full replace of links: removed dishes vanish via cascade.
-  await sql`DELETE FROM template_dishes WHERE template_id = ${templateId}`;
-  await Promise.all(
-    dishes.map((dish, position) => {
-      const dishId = dish.id ?? newId("dish");
-      return sql`
+  // In-place sync: matching rows are updated (existing ids and their legacy
+  // fallback ingredient rows survive), only dishes omitted from the save are
+  // deleted. One transaction so the link set never halves on failure.
+  const dishIds = dishes.map((dish) => dish.id ?? newId("dish"));
+  await sql.transaction((txn) => [
+    ...dishes.map((dish, position) =>
+      txn`
         INSERT INTO template_dishes (id, template_id, course_id, name_en, name_ta, position)
-        VALUES (${dishId}, ${templateId}, ${dish.courseId}, ${dish.nameEn}, ${dish.nameTa}, ${position})
-      `;
-    })
-  );
+        VALUES (${dishIds[position]}, ${templateId}, ${dish.courseId}, ${dish.nameEn}, ${dish.nameTa}, ${position})
+        ON CONFLICT (id) DO UPDATE SET
+          template_id = EXCLUDED.template_id,
+          course_id = EXCLUDED.course_id,
+          name_en = EXCLUDED.name_en,
+          name_ta = EXCLUDED.name_ta,
+          position = EXCLUDED.position
+      `
+    ),
+    txn`
+      DELETE FROM template_dishes
+      WHERE template_id = ${templateId} AND NOT (id = ANY(${dishIds}))
+    `,
+  ]);
 }
 
 /** Lists every template with its complete dish hierarchy. */

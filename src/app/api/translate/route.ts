@@ -1,5 +1,7 @@
 import { NextResponse } from "next/server";
 
+import { requireSession } from "@/lib/requirePermission";
+
 export const dynamic = "force-dynamic";
 
 const MAX_TEXT_LENGTH = 500;
@@ -97,6 +99,8 @@ async function tryMyMemory(text: string, from: string, to: string): Promise<stri
  * names only — hard offline dictionary in the client remains the fallback.
  */
 export async function GET(request: Request) {
+  const auth = await requireSession();
+  if ("response" in auth) return auth.response;
   const { searchParams } = new URL(request.url);
   const text = (searchParams.get("text") ?? "").trim();
   const from = (searchParams.get("from") ?? "en").trim().toLowerCase() || "en";
@@ -117,16 +121,24 @@ export async function GET(request: Request) {
 
   const google = await tryGoogle(text, from, to);
   if (google) {
-    const result = { tamil: google, source: containsTamilScript(google) ? "google" : "google-unverified" };
-    cacheSet(key, result);
-    return NextResponse.json({ ...result, cached: false });
+    // Tamil targets only accept Tamil-script output; anything else falls
+    // through to MyMemory. Other target languages keep the non-empty check.
+    const tamilTarget = to === "ta" || to.startsWith("ta-");
+    if (!tamilTarget || containsTamilScript(google)) {
+      const result = { tamil: google, source: "google" };
+      cacheSet(key, result);
+      return NextResponse.json({ ...result, cached: false });
+    }
   }
 
   const memory = await tryMyMemory(text, from, to);
   if (memory) {
-    const result = { tamil: memory, source: "mymemory" };
-    cacheSet(key, result);
-    return NextResponse.json({ ...result, cached: false });
+    const tamilTarget = to === "ta" || to.startsWith("ta-");
+    if (!tamilTarget || containsTamilScript(memory)) {
+      const result = { tamil: memory, source: "mymemory" };
+      cacheSet(key, result);
+      return NextResponse.json({ ...result, cached: false });
+    }
   }
 
   return NextResponse.json({ tamil: "", source: "none" }, { status: 502 });

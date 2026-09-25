@@ -202,22 +202,43 @@ export function TemplateFormModal({ opened, template, onClose }: TemplateFormMod
     return suggestTamilName((englishValue ?? "").trim());
   };
 
-  const onSubmit = (values: TemplateFormValues) => {
+  const onSubmit = async (values: TemplateFormValues) => {
+    // Server requires a non-empty courseId per dish. Named-but-unlinked
+    // legacy rows are provisioned as courses (keeping their stored
+    // ingredients) instead of being dropped or rejected.
+    const dishes: FoodTemplate["dishes"] = [];
+    for (const dish of values.dishes) {
+      if (!dish.courseId) {
+        if (!dish.nameEn.trim()) continue;
+        const original = template?.dishes.find((d) => d.id === dish.id);
+        const created = await addCourse({
+          nameEn: dish.nameEn.trim(),
+          nameTa: dish.nameTa.trim() || suggestTamilName(dish.nameEn.trim()),
+          ingredients: original?.ingredients ?? [],
+        });
+        dishes.push({
+          id: dish.id,
+          courseId: created.id,
+          nameEn: created.nameEn,
+          nameTa: created.nameTa,
+          ingredients: created.ingredients,
+        });
+        continue;
+      }
+      const course = coursesById.get(dish.courseId);
+      const original = template?.dishes.find((d) => d.id === dish.id);
+      dishes.push({
+        id: dish.id,
+        courseId: dish.courseId,
+        nameEn: (course?.nameEn ?? dish.nameEn).trim(),
+        nameTa: (course?.nameTa ?? dish.nameTa).trim(),
+        ingredients: course?.ingredients ?? original?.ingredients ?? [],
+      });
+    }
     const input: FoodTemplateInput = {
       nameEn: values.nameEn.trim(),
       nameTa: backfillTamil(values.nameEn, values.nameTa),
-      dishes: values.dishes
-        .map((dish) => {
-          const course = coursesById.get(dish.courseId);
-          return {
-            id: dish.id,
-            courseId: dish.courseId,
-            nameEn: (course?.nameEn ?? dish.nameEn).trim(),
-            nameTa: (course?.nameTa ?? dish.nameTa).trim(),
-            ingredients: course?.ingredients ?? [],
-          };
-        })
-        .filter((dish) => dish.courseId !== "" || dish.nameEn !== ""),
+      dishes,
     };
     if (template) {
       updateTemplate(template.id, input);
@@ -414,13 +435,6 @@ export function TemplateFormModal({ opened, template, onClose }: TemplateFormMod
             </Button>
           </Group>
 
-          <CourseFormModal
-            opened={courseFormOpened}
-            course={null}
-            onClose={() => setCourseFormOpened(false)}
-            onSaved={(created) => linkCourse(created)}
-          />
-
           <Group justify="flex-end" mt="md">
             <Button variant="default" onClick={onClose}>
               <Bilingual label={ui.common.cancel} />
@@ -431,6 +445,12 @@ export function TemplateFormModal({ opened, template, onClose }: TemplateFormMod
           </Group>
         </Stack>
       </form>
+      <CourseFormModal
+        opened={courseFormOpened}
+        course={null}
+        onClose={() => setCourseFormOpened(false)}
+        onSaved={(created) => linkCourse(created)}
+      />
     </Modal>
   );
 }

@@ -62,8 +62,9 @@ export function clearOutbox(): void {
 /**
  * Replays queued ops in order. Stops at the first retryable failure (order
  * matters: a POST must precede its DELETE). Permanent client errors
- * (400/403/404 — e.g. a permission the user will never gain) are dropped
- * instead of clogging the queue; 401/429 and network errors are retried.
+ * (400/403/404/409 — e.g. a permission the user will never gain, or a
+ * delete refused by server-side guards) are dropped instead of clogging
+ * the queue; 401/429 and network errors are retried.
  */
 export async function flushOutbox(): Promise<{ flushed: number; failed: number }> {
   if (typeof window === "undefined") return { flushed: 0, failed: 0 };
@@ -88,7 +89,9 @@ export async function flushOutbox(): Promise<{ flushed: number; failed: number }
       writeOps(ops);
       continue;
     }
-    if (status === 400 || status === 403 || status === 404) {
+    if (status === 400 || status === 403 || status === 404 || status === 409) {
+      // 409 today means a refused course DELETE (still linked in templates):
+      // retrying can never succeed, and keeping it would clog every later op.
       ops = ops.filter((item) => item.id !== op.id);
       writeOps(ops);
       continue;

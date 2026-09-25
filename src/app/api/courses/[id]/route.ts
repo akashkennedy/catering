@@ -43,19 +43,20 @@ export async function PATCH(
   if (existing.length === 0) {
     return NextResponse.json({ error: "Course not found." }, { status: 404 });
   }
-  await sql`
-    UPDATE courses SET name_en = ${parsed.data.nameEn}, name_ta = ${parsed.data.nameTa}, updated_at = NOW()
-    WHERE id = ${id}
-  `;
-  await sql`DELETE FROM course_ingredients WHERE course_id = ${id}`;
-  await Promise.all(
-    parsed.data.ingredients.map((item) =>
-      sql`
+  // Atomic: course update + ingredient replacement commit or roll back together.
+  await sql.transaction((txn) => [
+    txn`
+      UPDATE courses SET name_en = ${parsed.data.nameEn}, name_ta = ${parsed.data.nameTa}, updated_at = NOW()
+      WHERE id = ${id}
+    `,
+    txn`DELETE FROM course_ingredients WHERE course_id = ${id}`,
+    ...parsed.data.ingredients.map((item) =>
+      txn`
         INSERT INTO course_ingredients (id, course_id, ingredient_id, qty_per_100)
         VALUES (${newId("ci")}, ${id}, ${item.ingredientId}, ${item.qtyPer100})
       `
-    )
-  );
+    ),
+  ]);
   const full = await fetchFullCourse(sql, id);
   return NextResponse.json({ course: full });
 }

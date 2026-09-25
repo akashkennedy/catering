@@ -45,22 +45,6 @@ export async function fetchFullCourse(
   };
 }
 
-async function writeIngredients(
-  sql: ReturnType<typeof db>,
-  courseId: string,
-  ingredients: z.infer<typeof courseIngredientSchema>[]
-): Promise<void> {
-  await sql`DELETE FROM course_ingredients WHERE course_id = ${courseId}`;
-  await Promise.all(
-    ingredients.map((item) =>
-      sql`
-        INSERT INTO course_ingredients (id, course_id, ingredient_id, qty_per_100)
-        VALUES (${newId("ci")}, ${courseId}, ${item.ingredientId}, ${item.qtyPer100})
-      `
-    )
-  );
-}
-
 /** Lists every course with its ingredient lines. */
 export async function GET() {
   const auth = await requireSession();
@@ -89,12 +73,21 @@ export async function POST(request: Request) {
   }
   const sql = db();
   const id = parsed.data.id ?? newId("course");
-  await sql`
-    INSERT INTO courses (id, name_en, name_ta, updated_at)
-    VALUES (${id}, ${parsed.data.nameEn}, ${parsed.data.nameTa}, NOW())
-    ON CONFLICT (id) DO NOTHING
-  `;
-  await writeIngredients(sql, id, parsed.data.ingredients);
+  // Atomic: course write + ingredient replacement commit or roll back together.
+  await sql.transaction((txn) => [
+    txn`
+      INSERT INTO courses (id, name_en, name_ta, updated_at)
+      VALUES (${id}, ${parsed.data.nameEn}, ${parsed.data.nameTa}, NOW())
+      ON CONFLICT (id) DO NOTHING
+    `,
+    txn`DELETE FROM course_ingredients WHERE course_id = ${id}`,
+    ...parsed.data.ingredients.map((item) =>
+      txn`
+        INSERT INTO course_ingredients (id, course_id, ingredient_id, qty_per_100)
+        VALUES (${newId("ci")}, ${id}, ${item.ingredientId}, ${item.qtyPer100})
+      `
+    ),
+  ]);
   const full = await fetchFullCourse(sql, id);
   if (!full) {
     return NextResponse.json({ error: "Could not save course." }, { status: 500 });

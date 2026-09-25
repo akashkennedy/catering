@@ -18,6 +18,7 @@
  * (npm script loads .env via --env-file automatically)
  */
 import { neon } from "@neondatabase/serverless";
+import { createHash } from "node:crypto";
 
 import { INGREDIENT_CATALOG } from "../src/lib/ingredientCatalog.ts";
 import { LEGACY_MEALS } from "../src/lib/legacySeed.ts";
@@ -42,6 +43,15 @@ function slug(text) {
     .replace(/[^a-z0-9]+/g, "-")
     .replace(/^-+|-+$/g, "");
   return s || "item";
+}
+
+/**
+ * Matches migration 0008's backfill id format (`course-<md5(lower(trim(name)))>`)
+ * so re-running the seed reuses the existing course row instead of duplicating it.
+ */
+function courseIdFor(nameEn) {
+  const norm = String(nameEn ?? "").trim().toLowerCase();
+  return `course-${createHash("md5").update(norm).digest("hex")}`;
 }
 
 const sql = neon(url);
@@ -112,7 +122,7 @@ for (const meal of LEGACY_MEALS) {
         });
       }
       courseEntry = {
-        id: `course-${slug(course.nameEn)}`,
+        id: courseIdFor(course.nameEn),
         nameEn: String(course.nameEn).trim(),
         nameTa: String(course.nameTa ?? "").trim(),
         links,

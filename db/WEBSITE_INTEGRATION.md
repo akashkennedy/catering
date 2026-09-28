@@ -36,6 +36,7 @@ export type WebsiteContent = {
   };
   menus: {
     id?: string; nameEn: string; nameTa: string; imageUrl: string;
+    imageId?: string; // one DB photo per menu (bytes in site_menu_images, §6)
     mainDishes: { en: string; ta: string }[];
     sideDishes: { en: string; ta: string }[];
     price: number; // per plate ₹, 0 hides the price
@@ -109,6 +110,10 @@ Point the CRM's `SITE_PUBLISH_URL` at
   Serve bytes from the CRM origin —
   `GET /api/site-gallery-images/[imageId]` (`image/webp`, immutable cache) —
   or proxy them into the website project; hotlinking the CRM URL also works.
+- Menus carry **one DB photo each**: `imageId` (bytes in `site_menu_images`,
+  `db/migrations/0010_menu_images.sql`, same 1600px WebP pipeline) with the
+  legacy `imageUrl` path as fallback when empty. Serve via the landing's own
+  `GET /api/menu-photo/[imageId]` the same way as gallery bytes.
   Render a uniform grid in document order so uploads of any ratio never
   malform:
   ```css

@@ -6,8 +6,10 @@ import { DbNotConfiguredError } from "@/lib/db";
 import { GALLERY_MAX_IMAGES } from "@/lib/galleryImage";
 import {
   deleteOrphanGalleryImages,
+  deleteOrphanMenuImages,
   galleryImageIdsExist,
   getSiteContentRow,
+  menuImageIdsExist,
   publishSiteContentRow,
 } from "@/lib/siteDb";
 import { PUBLISH_HOOK_URL } from "@/lib/sitePublish";
@@ -25,6 +27,7 @@ const menuSchema = z.object({
   nameEn: z.string(),
   nameTa: z.string(),
   imageUrl: z.string(),
+  imageId: z.string().optional().default(""),
   mainDishes: z.array(dishLineSchema),
   sideDishes: z.array(dishLineSchema),
   price: z.number(),
@@ -87,7 +90,8 @@ export async function GET() {
  * The landing (mampallicatering.vercel.app) reads the SAME `site_content`
  * row in the flat shape:
  *   { business: { phones, whatsapp, addressEn, addressTa, serviceZones? },
- *     menus: [{ nameEn/nameTa, imageUrl, mainDishes[{en,ta}], sideDishes[{en,ta}], price }],
+ *     menus: [{ nameEn/nameTa, imageUrl (legacy fallback), imageId? (bytes in site_menu_images),
+ *       mainDishes[{en,ta}], sideDishes[{en,ta}], price }],
  *   gallery: [{ imageId, altTitle }],  // max 10; bytes in site_gallery_images,
  *     testimonials: [{ rating, review (EN), author, location }] }
  * We write the CRM doc through AS-IS — never transform it.
@@ -122,6 +126,18 @@ export async function POST(request: Request) {
   const warnings: string[] = [];
   if (doc.menus.length === 0) {
     warnings.push("Zero menus — the site falls back to its built-in menus.");
+  }
+  // Every referenced menu photo must have stored (compressed) bytes.
+  try {
+    const missingMenu = await menuImageIdsExist(doc.menus.map((menu) => menu.imageId));
+    if (missingMenu.length > 0) {
+      return NextResponse.json(
+        { error: "A menu photo was not uploaded yet. Re-upload it and try again." },
+        { status: 400 }
+      );
+    }
+  } catch (error) {
+    return dbErrorResponse(error);
   }
   for (const menu of doc.menus) {
     if (!menu.nameEn.trim()) {
@@ -177,6 +193,7 @@ export async function POST(request: Request) {
     // Best-effort: drop bytes no longer referenced (never blocks publish).
     try {
       await deleteOrphanGalleryImages(doc.gallery.map((item) => item.imageId));
+      await deleteOrphanMenuImages(doc.menus.map((menu) => menu.imageId));
     } catch {
       /* orphan sweep is best-effort */
     }

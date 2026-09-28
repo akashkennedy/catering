@@ -39,6 +39,19 @@ export function galleryImageUrl(imageId: string): string {
   return `/api/site-gallery-images/${imageId}`;
 }
 
+/** One compressed photo per menu — same 1600px WebP pipeline as gallery. */
+export function newMenuImageId(): string {
+  try {
+    return `mimg-${crypto.randomUUID()}`;
+  } catch {
+    return `mimg-${Date.now()}-${Math.floor(Math.random() * 1e6)}`;
+  }
+}
+
+export function menuImageUrl(imageId: string): string {
+  return `/api/site-menu-images/${imageId}`;
+}
+
 /** Compress an uploaded image buffer to WebP. Throws on invalid input. */
 export async function compressGalleryImage(
   input: Buffer,

@@ -24,12 +24,19 @@ export type SiteMenu = {
   id: string;
   nameEn: string;
   nameTa: string;
+  /** Legacy path photo (still served when imageId is empty). */
   imageUrl: string;
+  /** Row id in site_menu_images; served via /api/site-menu-images/[imageId]. */
+  imageId: string;
   mainDishes: DishLine[];
   sideDishes: DishLine[];
   /** Price per plate in ₹ (0 hides the price). */
   price: number;
 };
+
+export function menuPhotoUrl(imageId: string): string {
+  return `/api/site-menu-images/${imageId}`;
+}
 
 export type SiteGalleryItem = {
   id: string;
@@ -107,6 +114,7 @@ function seedMenus(): SiteMenu[] {
       nameEn: "Royal Travancore Wedding Sadya",
       nameTa: "ராயல் திருவிதாங்கூர் திருமண சாத்யா",
       imageUrl: `${IMG}/img_03.jpg`,
+      imageId: "",
       price: 280,
       mainDishes: [
         { en: "Kerala Red Matta Rice & Ponni Rice", ta: "கேரள மட்டை அரிசி & பொன்னி அரிசி" },
@@ -127,6 +135,7 @@ function seedMenus(): SiteMenu[] {
       nameEn: "Tamil Virundhu Sappadu",
       nameTa: "தமிழ் விருந்து சாப்பாடு",
       imageUrl: `${IMG}/img_02.jpg`,
+      imageId: "",
       price: 250,
       mainDishes: [
         { en: "Ponni Rice & Paruppu Nei", ta: "பொன்னி அரிசி & பருப்பு நெய்" },
@@ -143,6 +152,7 @@ function seedMenus(): SiteMenu[] {
       nameEn: "Live Tiffin & Evening Counters",
       nameTa: "நேரடி டிபன் & மாலை கவுண்டர்கள்",
       imageUrl: `${IMG}/img_06.jpg`,
+      imageId: "",
       price: 180,
       mainDishes: [
         { en: "Filter Coffee & Poori Masala", ta: "பில்டர் காபி & பூரி மசாலா" },
@@ -263,6 +273,7 @@ export function normalizeRemoteContent(data: unknown): RemoteSiteContent | null 
       nameEn,
       nameTa: strOr(raw.nameTa, nameEn),
       imageUrl: asString(raw.imageUrl) || asString(raw.photoUrl) || `${IMG}/img_02.jpg`,
+      imageId: asString(raw.imageId),
       mainDishes: asDishLines(raw.mainDishes).length
         ? asDishLines(raw.mainDishes)
         : legacyMains,
@@ -408,7 +419,7 @@ export const useSiteContentStore = create<SiteContentState>()(
     {
       name: "catering-site",
       storage: createJSONStorage(() => localStorage),
-      version: 6,
+      version: 7,
       partialize: (state) => ({
         business: state.business,
         menus: state.menus,

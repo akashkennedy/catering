@@ -74,6 +74,43 @@ export async function deleteOrphanGalleryImages(keepIds: string[]): Promise<void
   }
 }
 
+/** True when every menu imageId has stored bytes. */
+export async function menuImageIdsExist(imageIds: string[]): Promise<string[]> {
+  const ids = imageIds.filter(Boolean);
+  if (ids.length === 0) return [];
+  const sql = siteDb();
+  const rows = (await sql`
+    SELECT id FROM site_menu_images WHERE id = ANY(${ids})
+  `) as { id: string }[];
+  const found = new Set(rows.map((row) => row.id));
+  return ids.filter((id) => !found.has(id));
+}
+
+/** Delete menu bytes no longer referenced by the published menus. */
+export async function deleteOrphanMenuImages(keepIds: string[]): Promise<void> {
+  const sql = siteDb();
+  const rows = (await sql`
+    SELECT data FROM site_content WHERE id = 'default'
+  `) as { data: unknown }[];
+  const referenced = new Set(keepIds.filter(Boolean));
+  // Also keep ids referenced by the currently stored doc, so a failed
+  // publish never orphans the live images.
+  try {
+    const data = rows[0]?.data as { menus?: { imageId?: unknown }[] } | null;
+    for (const menu of data?.menus ?? []) {
+      if (typeof menu?.imageId === "string" && menu.imageId) referenced.add(menu.imageId);
+    }
+  } catch {
+    /* keep the incoming ids only */
+  }
+  const keep = [...referenced];
+  if (keep.length === 0) {
+    await sql`DELETE FROM site_menu_images`;
+  } else {
+    await sql`DELETE FROM site_menu_images WHERE id <> ALL(${keep})`;
+  }
+}
+
 export async function publishSiteContentRow(data: unknown): Promise<string> {
   const sql = siteDb();
   const rows = await sql`

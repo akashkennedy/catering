@@ -28,6 +28,7 @@ import { useMobileSheet } from "@/hooks/useMobileSheet";
 import {
   GALLERY_MAX_IMAGES,
   galleryPhotoUrl,
+  menuPhotoUrl,
   useSiteContentStore,
   type SiteGalleryItem,
   type SiteMenu,
@@ -333,7 +334,6 @@ function dishesToText(items: { en: string; ta: string }[]): string {
 const menuSchema = z.object({
   nameEn: z.string().trim().min(1, "Meal name is required"),
   nameTa: z.string(),
-  imageUrl: z.string().trim().min(1, "Image is required"),
   price: z.coerce.number().min(0, "Price must be 0 or more"),
   mainText: z.string().trim().min(1, "Add at least one main dish"),
   sideText: z.string(),
@@ -362,12 +362,19 @@ function MenuFormModal({
       defaultValues: {
         nameEn: "",
         nameTa: "",
-        imageUrl: "/images/img_02.jpg",
         price: 0,
         mainText: "",
         sideText: "",
       },
     });
+
+  // One DB photo per menu (compressed server-side). Legacy imageUrl paths
+  // are preserved untouched so old menus keep rendering until replaced.
+  const [imageId, setImageId] = useState("");
+  const [legacyUrl, setLegacyUrl] = useState("/images/img_02.jpg");
+  const [uploading, setUploading] = useState(false);
+  const [uploadError, setUploadError] = useState("");
+  const fileRef = useRef<HTMLInputElement | null>(null);
 
   const [lastOpened, setLastOpened] = useState(false);
   if (opened !== lastOpened) {
@@ -376,20 +383,84 @@ function MenuFormModal({
       reset({
         nameEn: menu?.nameEn ?? "",
         nameTa: menu?.nameTa ?? "",
-        imageUrl: menu?.imageUrl ?? "/images/img_02.jpg",
         price: menu?.price ?? 0,
         mainText: dishesToText(menu?.mainDishes ?? []),
         sideText: dishesToText(menu?.sideDishes ?? []),
       });
+      setImageId(menu?.imageId ?? "");
+      setLegacyUrl(menu?.imageUrl ?? "/images/img_02.jpg");
+      setUploadError("");
     }
   }
+
+  const handleFile = async (files: FileList | null) => {
+    const file = files?.[0];
+    if (!file || uploading) return;
+    setUploadError("");
+    setUploading(true);
+    try {
+      const form = new FormData();
+      form.append("file", file);
+      const response = await fetch("/api/site-menu-images", {
+        method: "POST",
+        credentials: "same-origin",
+        body: form,
+      });
+      if (!response.ok) {
+        let message = "Upload failed. Try again.";
+        try {
+          const body = (await response.json()) as { error?: string };
+          if (body.error) message = body.error;
+        } catch {
+          /* keep fallback */
+        }
+        throw new Error(message);
+      }
+      const body = (await response.json()) as { imageId?: string };
+      if (!body.imageId) throw new Error("Upload failed. Try again.");
+      const previous = imageId;
+      setImageId(body.imageId);
+      // Best-effort: drop the replaced bytes (publish also sweeps orphans).
+      if (previous) {
+        try {
+          await fetch(`/api/site-menu-images/${previous}`, {
+            method: "DELETE",
+            credentials: "same-origin",
+          });
+        } catch {
+          /* orphan sweep covers failures */
+        }
+      }
+    } catch (error) {
+      setUploadError(error instanceof Error ? error.message : "Upload failed. Try again.");
+    } finally {
+      setUploading(false);
+      if (fileRef.current) fileRef.current.value = "";
+    }
+  };
+
+  const handleRemovePhoto = async () => {
+    const previous = imageId;
+    setImageId("");
+    if (previous) {
+      try {
+        await fetch(`/api/site-menu-images/${previous}`, {
+          method: "DELETE",
+          credentials: "same-origin",
+        });
+      } catch {
+        /* orphan sweep covers failures */
+      }
+    }
+  };
 
   const onSubmit = (values: MenuFormValues) => {
     const nameEn = values.nameEn.trim();
     const input: SiteMenuInput = {
       nameEn,
       nameTa: values.nameTa.trim() || nameEn,
-      imageUrl: values.imageUrl.trim(),
+      imageUrl: legacyUrl,
+      imageId,
       price: values.price,
       mainDishes: parseItems(values.mainText),
       sideDishes: parseItems(values.sideText),
@@ -424,14 +495,74 @@ function MenuFormModal({
               {...register("nameTa")}
             />
           </Group>
-          <TextInput
-            label="Image"
-            withAsterisk
-            placeholder="/images/img_02.jpg"
-            description="Single meal photo — site-hosted /images/… path"
-            {...register("imageUrl")}
-            error={errors.imageUrl?.message}
-          />
+          <div>
+            <Text size="sm" fw={500} mb={4}>
+              <Bilingual label={ui.site.menuPhoto} />
+            </Text>
+            {imageId ? (
+              <Group wrap="nowrap" align="flex-start" gap="sm">
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img
+                  src={menuPhotoUrl(imageId)}
+                  alt={menu?.nameEn ?? "Meal photo"}
+                  loading="lazy"
+                  style={{
+                    width: 120,
+                    aspectRatio: "4 / 3",
+                    objectFit: "cover",
+                    borderRadius: 8,
+                    flexShrink: 0,
+                  }}
+                />
+                <Stack gap="xs">
+                  <Button
+                    variant="light"
+                    size="xs"
+                    onClick={() => fileRef.current?.click()}
+                    loading={uploading}
+                  >
+                    <Bilingual label={ui.site.replacePhoto} />
+                  </Button>
+                  <Button
+                    variant="subtle"
+                    size="xs"
+                    color="kumkum"
+                    onClick={() => void handleRemovePhoto()}
+                  >
+                    <Bilingual label={ui.site.removePhoto} />
+                  </Button>
+                </Stack>
+              </Group>
+            ) : (
+              <Stack gap="xs">
+                <Button
+                  variant="light"
+                  size="xs"
+                  leftSection={<Upload size={14} />}
+                  onClick={() => fileRef.current?.click()}
+                  loading={uploading}
+                >
+                  <Bilingual label={ui.site.uploadPhoto} />
+                </Button>
+                <Text size="xs" c="dimmed">
+                  <Bilingual label={ui.site.menuPhotoHint} />
+                  Current fallback: {legacyUrl}
+                </Text>
+              </Stack>
+            )}
+            <input
+              ref={fileRef}
+              type="file"
+              accept="image/jpeg,image/png,image/webp,image/avif,image/gif"
+              hidden
+              onChange={(e) => void handleFile(e.currentTarget.files)}
+            />
+            {uploadError && (
+              <Text size="sm" c="red" mt="xs">
+                {uploadError}
+              </Text>
+            )}
+          </div>
           <Controller
             name="price"
             control={control}

@@ -4,7 +4,9 @@
  *
  * Flat shape (top-level keys NEVER renamed/deleted):
  *   business: { phones, whatsapp, addressEn, addressTa, serviceZones }
- *   menus: [{ nameEn/nameTa, imageUrl, mainDishes[{en,ta}], sideDishes[{en,ta}], price }]
+ *   menus: [{ nameEn/nameTa, imageUrl (legacy fallback), imageId? (bytes in
+ *     site_menu_images, served via /api/site-menu-images/[imageId]),
+ *     mainDishes[{en,ta}], sideDishes[{en,ta}], price }]
  *   gallery: [{ imageId, altTitle }]  // max 10; bytes in site_gallery_images,
  *     served via /api/site-gallery-images/[imageId]; landing renders a
  *     uniform 4:3 object-fit:cover grid (no Instagram embeds)
@@ -77,6 +79,7 @@ export type CrmMenu = {
   nameEn: string;
   nameTa: string;
   imageUrl: string;
+  imageId?: string;
   mainDishes: CrmDishLine[];
   sideDishes: CrmDishLine[];
   price: number;

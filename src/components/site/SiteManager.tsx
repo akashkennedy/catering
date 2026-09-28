@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { zodResolver } from "@hookform/resolvers/zod";
 import {
   ActionIcon,
@@ -15,7 +15,7 @@ import {
   TextInput,
   Title,
 } from "@mantine/core";
-import { Check, Plus, Trash } from "lucide-react";
+import { Check, Plus, Trash, Upload } from "lucide-react";
 import { Controller, useForm } from "react-hook-form";
 import { z } from "zod";
 
@@ -26,9 +26,9 @@ import { useAuthStore } from "@/store/auth";
 import { useSettingsStore } from "@/store/settings";
 import { useMobileSheet } from "@/hooks/useMobileSheet";
 import {
-  DEFAULT_GALLERY_FALLBACKS,
+  GALLERY_MAX_IMAGES,
+  galleryPhotoUrl,
   useSiteContentStore,
-  type SiteGalleryInput,
   type SiteGalleryItem,
   type SiteMenu,
   type SiteMenuInput,
@@ -587,134 +587,112 @@ function MenusManager() {
   );
 }
 
-const gallerySchema = z.object({
-  instagramUrl: z
-    .string()
-    .trim()
-    .min(1, "Instagram link is required")
-    .refine((url) => url.toLowerCase().includes("instagram.com/"), {
-      message: "Enter an Instagram post link.",
-    }),
-  altTitle: z.string().trim().min(1, "Alt title is required"),
-  fallbackImage: z.string().trim().min(1, "Fallback image is required"),
-});
-
-type GalleryFormValues = z.infer<typeof gallerySchema>;
-
-function GalleryFormModal({
-  opened,
-  item,
-  onClose,
-}: {
-  opened: boolean;
-  item: SiteGalleryItem | null;
-  onClose: () => void;
-}) {
-  const sheet = useMobileSheet("sheet");
-  const addGalleryItem = useSiteContentStore((state) => state.addGalleryItem);
-  const updateGalleryItem = useSiteContentStore((state) => state.updateGalleryItem);
-
-  const { register, handleSubmit, reset, formState: { errors, isSubmitting } } =
-    useForm<GalleryFormValues>({
-      resolver: zodResolver(gallerySchema),
-      defaultValues: {
-        instagramUrl: "https://www.instagram.com/p/PLACEHOLDER/",
-        altTitle: "",
-        fallbackImage: DEFAULT_GALLERY_FALLBACKS[0],
-      },
-    });
-
-  const [lastOpened, setLastOpened] = useState(false);
-  if (opened !== lastOpened) {
-    setLastOpened(opened);
-    if (opened) {
-      reset({
-        instagramUrl: item?.instagramUrl ?? "https://www.instagram.com/p/PLACEHOLDER/",
-        altTitle: item?.altTitle ?? "",
-        fallbackImage: item?.fallbackImage ?? DEFAULT_GALLERY_FALLBACKS[0],
-      });
-    }
-  }
-
-  return (
-    <Modal
-      opened={opened}
-      onClose={onClose}
-      title={<Bilingual label={ui.site.gallery} />}
-      {...sheet}
-    >
-      <form
-        onSubmit={handleSubmit((values) => {
-          const input: SiteGalleryInput = {
-            instagramUrl: values.instagramUrl.trim(),
-            altTitle: values.altTitle.trim(),
-            fallbackImage: values.fallbackImage.trim(),
-          };
-          if (item) updateGalleryItem(item.id, input);
-          else addGalleryItem(input);
-          onClose();
-        })}
-      >
-        <Stack gap="sm">
-          <TextInput
-            label="Instagram post link"
-            placeholder="https://www.instagram.com/p/…"
-            withAsterisk
-            {...register("instagramUrl")}
-            error={errors.instagramUrl?.message}
-            description="Public post — embedded on the landing gallery."
-          />
-          <TextInput
-            label="Alt title (shown if the embed fails to load)"
-            withAsterisk
-            placeholder="2,500 Guests Vazhaillai Virundhu"
-            {...register("altTitle")}
-            error={errors.altTitle?.message}
-          />
-          <TextInput
-            label="Fallback image (shown if the embed fails to load)"
-            placeholder="/images/img_02.jpg"
-            {...register("fallbackImage")}
-            error={errors.fallbackImage?.message}
-          />
-          <Group justify="flex-end" className="form-actions">
-            <Button variant="default" onClick={onClose}>
-              <Bilingual label={ui.common.cancel} />
-            </Button>
-            <Button type="submit" loading={isSubmitting}>
-              <Bilingual label={item ? ui.common.save : ui.common.add} />
-            </Button>
-          </Group>
-        </Stack>
-      </form>
-    </Modal>
-  );
+function defaultAltTitle(fileName: string): string {
+  const base = fileName.replace(/\.[a-z0-9]+$/i, "").replace(/[-_]+/g, " ").trim();
+  return base.slice(0, 120);
 }
 
 function GalleryManager() {
   const gallery = useSiteContentStore((state) => state.gallery);
+  const addGalleryItem = useSiteContentStore((state) => state.addGalleryItem);
+  const updateGalleryItem = useSiteContentStore((state) => state.updateGalleryItem);
   const deleteGalleryItem = useSiteContentStore((state) => state.deleteGalleryItem);
   const uiLanguage = useSettingsStore((state) => state.uiLanguage);
-  const [formOpened, setFormOpened] = useState(false);
-  const [editing, setEditing] = useState<SiteGalleryItem | null>(null);
   const [deleting, setDeleting] = useState<SiteGalleryItem | null>(null);
+  const [uploading, setUploading] = useState(false);
+  const [uploadError, setUploadError] = useState("");
+  const fileRef = useRef<HTMLInputElement | null>(null);
+
+  const full = gallery.length >= GALLERY_MAX_IMAGES;
+
+  const handleFiles = async (files: FileList | null) => {
+    if (!files || files.length === 0 || uploading) return;
+    setUploadError("");
+    const remaining = GALLERY_MAX_IMAGES - gallery.length;
+    if (remaining <= 0) return;
+    const picked = [...files].slice(0, remaining);
+    setUploading(true);
+    try {
+      for (const file of picked) {
+        const form = new FormData();
+        form.append("file", file);
+        const response = await fetch("/api/site-gallery-images", {
+          method: "POST",
+          credentials: "same-origin",
+          body: form,
+        });
+        if (!response.ok) {
+          let message = preferredText(ui.site.galleryUploadFailed, uiLanguage);
+          try {
+            const body = (await response.json()) as { error?: string };
+            if (body.error) message = body.error;
+          } catch {
+            /* keep fallback */
+          }
+          throw new Error(message);
+        }
+        const body = (await response.json()) as { imageId?: string };
+        if (!body.imageId) throw new Error(preferredText(ui.site.galleryUploadFailed, uiLanguage));
+        addGalleryItem({ imageId: body.imageId, altTitle: defaultAltTitle(file.name) });
+      }
+    } catch (error) {
+      setUploadError(error instanceof Error ? error.message : preferredText(ui.site.galleryUploadFailed, uiLanguage));
+    } finally {
+      setUploading(false);
+      if (fileRef.current) fileRef.current.value = "";
+    }
+  };
+
+  const handleDelete = async (item: SiteGalleryItem) => {
+    deleteGalleryItem(item.id);
+    setDeleting(null);
+    // Best-effort: drop the stored bytes too (publish also sweeps orphans).
+    try {
+      await fetch(`/api/site-gallery-images/${item.imageId}`, {
+        method: "DELETE",
+        credentials: "same-origin",
+      });
+    } catch {
+      /* orphan sweep on next publish covers failures */
+    }
+  };
 
   return (
     <div className="dash-card">
-      <Group justify="space-between" mb="sm">
+      <Group justify="space-between" mb="xs">
         <Title order={3}>
-          <Bilingual label={ui.site.gallery} />
+          <Bilingual label={ui.site.gallery} /> ({gallery.length}/{GALLERY_MAX_IMAGES})
         </Title>
         <Button
-          leftSection={<Plus size={16} />}
-          onClick={() => {
-            setEditing(null);
-            setFormOpened(true);
-          }}
+          leftSection={<Upload size={16} />}
+          loading={uploading}
+          disabled={full}
+          onClick={() => fileRef.current?.click()}
         >
           <Bilingual label={ui.common.add} />
         </Button>
       </Group>
+      <Text size="xs" c="dimmed" mb="sm">
+        <Bilingual label={ui.site.galleryUploadHint} />
+      </Text>
+      {full && (
+        <Text size="sm" c="dimmed" mb="sm">
+          <Bilingual label={ui.site.galleryFull} />
+        </Text>
+      )}
+      {uploadError && (
+        <Text size="sm" c="red" mb="sm">
+          {uploadError}
+        </Text>
+      )}
+      <input
+        ref={fileRef}
+        type="file"
+        accept="image/jpeg,image/png,image/webp,image/avif,image/gif"
+        multiple
+        hidden
+        onChange={(e) => void handleFiles(e.currentTarget.files)}
+      />
       {gallery.length === 0 ? (
         <Text size="sm" c="dimmed">
           <Bilingual label={ui.site.emptyGallery} />
@@ -722,43 +700,50 @@ function GalleryManager() {
       ) : (
         <Stack gap="xs">
           {gallery.map((item) => (
-            <Card
-              key={item.id}
-              withBorder
-              padding="sm"
-              role="button"
-              tabIndex={0}
-              aria-label={item.altTitle}
-              style={{ cursor: "pointer" }}
-              onClick={() => {
-                setEditing(item);
-                setFormOpened(true);
-              }}
-              onKeyDown={(e) => {
-                if (e.key === "Enter" || e.key === " ") {
-                  e.preventDefault();
-                  setEditing(item);
-                  setFormOpened(true);
-                }
-              }}
-            >
-              <Group justify="space-between" wrap="nowrap">
-                <Stack gap={0} style={{ minWidth: 0 }}>
-                  <Text size="sm" fw={500} truncate>
-                    IG · {item.altTitle}
-                  </Text>
-                  <Text size="xs" c="dimmed" truncate>
-                    {item.instagramUrl}
-                  </Text>
-                </Stack>
+            <Card key={item.id} withBorder padding="sm">
+              <Group wrap="nowrap" align="flex-start" gap="sm">
+                {/* Fixed 4:3 cover thumbnail — mirrors the landing grid so
+                    uploads of any ratio preview without malforming. */}
+                {/* DB bytes served as-is; next/image has no loader for them. */}
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img
+                  src={galleryPhotoUrl(item.imageId)}
+                  alt={item.altTitle || "Gallery photo"}
+                  loading="lazy"
+                  style={{
+                    width: 96,
+                    aspectRatio: "4 / 3",
+                    objectFit: "cover",
+                    borderRadius: 8,
+                    flexShrink: 0,
+                    background: "var(--mantine-color-gray-1)",
+                  }}
+                />
+                <TextInput
+                  label={<Bilingual label={ui.site.caption} />}
+                  placeholder={preferredText(ui.site.galleryAltPlaceholder, uiLanguage)}
+                  value={item.altTitle}
+                  onChange={(e) =>
+                    updateGalleryItem(item.id, {
+                      imageId: item.imageId,
+                      altTitle: e.currentTarget.value.slice(0, 120),
+                    })
+                  }
+                  error={
+                    item.altTitle.trim() === ""
+                      ? uiLanguage === "ta"
+                        ? "தலைப்பு தேவை."
+                        : "Caption is required."
+                      : undefined
+                  }
+                  style={{ flex: 1, minWidth: 0 }}
+                />
                 <ActionIcon
                   variant="subtle"
                   color="kumkum"
-                  aria-label="Delete post"
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    setDeleting(item);
-                  }}
+                  aria-label={`Delete ${item.altTitle || "photo"}`}
+                  onClick={() => setDeleting(item)}
+                  style={{ marginTop: 22, flexShrink: 0 }}
                 >
                   <Trash size={16} />
                 </ActionIcon>
@@ -767,15 +752,13 @@ function GalleryManager() {
           ))}
         </Stack>
       )}
-      <GalleryFormModal opened={formOpened} item={editing} onClose={() => setFormOpened(false)} />
       <ConfirmModal
         opened={deleting !== null}
         title={preferredText(ui.templates.deleteTitle, uiLanguage)}
-        message={deleting ? `Delete "${deleting.altTitle}"?` : ""}
+        message={deleting ? `Delete "${deleting.altTitle || "photo"}"?` : ""}
         onCancel={() => setDeleting(null)}
         onConfirm={() => {
-          if (deleting) deleteGalleryItem(deleting.id);
-          setDeleting(null);
+          if (deleting) void handleDelete(deleting);
         }}
       />
     </div>
@@ -993,6 +976,10 @@ function TestimonialsManager() {
 
 export function SiteManager() {
   const canViewWebsite = useAuthStore((state) => state.permissions.canViewWebsite);
+  const loadRemote = useSiteContentStore((state) => state.loadRemote);
+  useEffect(() => {
+    if (canViewWebsite) void loadRemote();
+  }, [canViewWebsite, loadRemote]);
   if (!canViewWebsite) {
     return <NoAccess />;
   }

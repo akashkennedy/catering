@@ -38,6 +38,42 @@ export async function getSiteContentRow(): Promise<SiteContentRow | null> {
   };
 }
 
+/** True when every gallery imageId has stored bytes. */
+export async function galleryImageIdsExist(imageIds: string[]): Promise<string[]> {
+  if (imageIds.length === 0) return [];
+  const sql = siteDb();
+  const rows = (await sql`
+    SELECT id FROM site_gallery_images WHERE id = ANY(${imageIds})
+  `) as { id: string }[];
+  const found = new Set(rows.map((row) => row.id));
+  return imageIds.filter((id) => !found.has(id));
+}
+
+/** Delete stored bytes no longer referenced by the published gallery. */
+export async function deleteOrphanGalleryImages(keepIds: string[]): Promise<void> {
+  const sql = siteDb();
+  const rows = (await sql`
+    SELECT data FROM site_content WHERE id = 'default'
+  `) as { data: unknown }[];
+  const referenced = new Set(keepIds);
+  // Also keep ids referenced by the currently stored doc, so a failed
+  // publish never orphans the live images.
+  try {
+    const data = rows[0]?.data as { gallery?: { imageId?: unknown }[] } | null;
+    for (const item of data?.gallery ?? []) {
+      if (typeof item?.imageId === "string" && item.imageId) referenced.add(item.imageId);
+    }
+  } catch {
+    /* keep the incoming ids only */
+  }
+  const keep = [...referenced];
+  if (keep.length === 0) {
+    await sql`DELETE FROM site_gallery_images`;
+  } else {
+    await sql`DELETE FROM site_gallery_images WHERE id <> ALL(${keep})`;
+  }
+}
+
 export async function publishSiteContentRow(data: unknown): Promise<string> {
   const sql = siteDb();
   const rows = await sql`

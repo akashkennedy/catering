@@ -41,8 +41,8 @@ export type WebsiteContent = {
     price: number; // per plate ₹, 0 hides the price
   }[];
   gallery: {
-    id?: string; instagramUrl: string; altTitle: string; fallbackImage: string;
-  }[];
+    id?: string; imageId: string; altTitle: string;
+  }[]; // max 10; bytes in site_gallery_images (see §6)
   testimonials: {
     id?: string; rating: number; review: string; author: string; location: string;
   }[];
@@ -101,11 +101,29 @@ Point the CRM's `SITE_PUBLISH_URL` at
   **Main Dishes** list, **Side Dishes** list, and `price` per plate
   (hide the price when `0`). Dish lines are `{ en, ta }` — show `ta || en`
   when the visitor picks Tamil.
-- Gallery items are **Instagram-only**: render `blockquote.instagram-media`
-  with `data-instgrm-permalink={instagramUrl}` +
-  `https://www.instagram.com/embed.js`. When the embed fails (or offline),
-  render `fallbackImage` with `alt={altTitle}` + a "View on Instagram" link
-  to `instagramUrl`. No categories — one grid, document order.
+- Gallery is **DB photos, max 10, no Instagram embeds** (embed.js +
+  `blockquote.instagram-media` are deleted landing-side). Each item is
+  `{ imageId, altTitle }`; bytes live in `site_gallery_images`
+  (`db/migrations/0009_gallery_images.sql`), uploaded compressed
+  (1600px max edge, WebP q75, EXIF stripped) via the CRM site manager.
+  Serve bytes from the CRM origin —
+  `GET /api/site-gallery-images/[imageId]` (`image/webp`, immutable cache) —
+  or proxy them into the website project; hotlinking the CRM URL also works.
+  Render a uniform grid in document order so uploads of any ratio never
+  malform:
+  ```css
+  .gallery-grid { display: grid; gap: 16px; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); }
+  .gallery-grid figure { margin: 0; aspect-ratio: 4 / 3; overflow: hidden; border-radius: 12px; }
+  .gallery-grid img { width: 100%; height: 100%; object-fit: cover; display: block; }
+  ```
+  ```tsx
+  {gallery.map((item) => (
+    <figure key={item.imageId}>
+      <img src={`https://<crm-origin>/api/site-gallery-images/${item.imageId}`} alt={item.altTitle} loading="lazy" />
+      <figcaption>{item.altTitle}</figcaption>
+    </figure>
+  ))}
+  ```
 - Testimonials: show stars (`rating`), `review`, author, and location only.
   `review` is English — when the visitor picks Tamil, translate it
   landing-side (e.g. a small EN→TA map with English fallback).

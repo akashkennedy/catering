@@ -47,6 +47,7 @@ import { useIngredientsStore } from "@/store/ingredients";
 import { useAuthStore } from "@/store/auth";
 import { useSettingsStore } from "@/store/settings";
 import { useVesselStockLedgerStore } from "@/store/vesselStockLedger";
+import { useSiteContentStore } from "@/store/siteContent";
 import { useTemplatesStore } from "@/store/templates";
 import { useVendorSuggestionsStore } from "@/store/vendorSuggestions";
 import { PrintPreviewModal } from "./PrintPreviewModal";
@@ -102,6 +103,7 @@ export function EventDetail() {
   const loadVendorSuggestions = useVendorSuggestionsStore(
     (state) => state.loadVendorSuggestions
   );
+  const loadSiteContent = useSiteContentStore((state) => state.loadRemote);
 
   useEffect(() => {
     void loadEvents();
@@ -109,7 +111,8 @@ export function EventDetail() {
     void loadIngredients();
     void loadVesselLedger();
     void loadVendorSuggestions();
-  }, [loadEvents, loadTemplates, loadIngredients, loadVesselLedger, loadVendorSuggestions]);
+    void loadSiteContent();
+  }, [loadEvents, loadTemplates, loadIngredients, loadVesselLedger, loadVendorSuggestions, loadSiteContent]);
 
   if (!event) {
     if (!eventsLoaded) {
@@ -159,6 +162,12 @@ export function EventDetail() {
   const rescaleForGroups = (groups: EventMealGroup[]) =>
     buildScaledIngredientsForGroups(groups, templates, ingredients);
 
+  const groupsHeadcount = mealGroups.reduce(
+    (sum, group) =>
+      sum + (Number.isFinite(group.headcount) && group.headcount > 0 ? Math.floor(group.headcount) : 0),
+    0
+  );
+
   const handleHeadcountChange = (headcount: number) => {
     const patch: Partial<CateringEventInput> = { headcount };
     if (mealGroups.length === 0) {
@@ -172,11 +181,25 @@ export function EventDetail() {
   };
 
   const handleGroupsChange = (groups: EventMealGroup[]) => {
-    update({
+    const sum = groups.reduce(
+      (total, group) =>
+        total + (Number.isFinite(group.headcount) && group.headcount > 0 ? Math.floor(group.headcount) : 0),
+      0
+    );
+    const patch: Partial<CateringEventInput> = {
       mealGroups: groups,
       templateId: groups[0]?.templateId ?? null,
       ingredients: rescaleForGroups(groups),
-    });
+    };
+    // Keep the event headcount (guests, rate × headcount) in sync with the
+    // per-meal headcounts — the standalone headcount input was removed.
+    if (sum > 0) {
+      patch.headcount = sum;
+      if (!event.totalAmountOverridden) {
+        patch.totalAmount = roundMoney(event.ratePerPerson * sum);
+      }
+    }
+    update(patch);
   };
 
   const handleStatusChange = (status: CateringEventInput["status"]) => {
@@ -216,9 +239,23 @@ export function EventDetail() {
     lineId: string,
     patch: { qty?: number; price?: number }
   ) => {
+    const line = eventIngredients.find((item) => item.id === lineId);
+    // Qty edits re-price from the master rate at edit time, but only write
+    // to this event's line — the master ingredient list is never touched.
+    // Explicit price edits are respected as manual overrides.
+    let resolvedPatch = patch;
+    if (patch.qty !== undefined && patch.price === undefined && line) {
+      const master = ingredients.find((item) => item.id === line.ingredientId);
+      if (master) {
+        resolvedPatch = {
+          ...patch,
+          price: Math.round(patch.qty * master.globalPrice * 100) / 100,
+        };
+      }
+    }
     update({
-      ingredients: eventIngredients.map((line) =>
-        line.id === lineId ? { ...line, ...patch } : line
+      ingredients: eventIngredients.map((item) =>
+        item.id === lineId ? { ...item, ...resolvedPatch } : item
       ),
     });
   };
@@ -375,17 +412,26 @@ export function EventDetail() {
             <Bilingual label={ui.events.eventDetails} />
           </Text>
           <Group gap="md" wrap="wrap">
-            <NumberInput
-              label={<Bilingual label={ui.common.headcount} />}
-              value={event.headcount}
-              min={1}
-              allowNegative={false}
-              w={{ base: "100%", sm: 160 }}
-              onKeyDown={(e) => {
-                if (e.key === "ArrowUp" || e.key === "ArrowDown") e.preventDefault();
-              }}
-              onChange={(value) => handleHeadcountChange(typeof value === "number" ? value : 1)}
-            />
+            {mealGroups.length === 0 ? (
+              <NumberInput
+                label={<Bilingual label={ui.common.headcount} />}
+                value={event.headcount}
+                min={1}
+                allowNegative={false}
+                w={{ base: "100%", sm: 160 }}
+                onKeyDown={(e) => {
+                  if (e.key === "ArrowUp" || e.key === "ArrowDown") e.preventDefault();
+                }}
+                onChange={(value) => handleHeadcountChange(typeof value === "number" ? value : 1)}
+              />
+            ) : (
+              <Text size="sm">
+                <Bilingual label={ui.common.headcount} />:{" "}
+                <Text span fw={700}>
+                  {groupsHeadcount > 0 ? groupsHeadcount : event.headcount}
+                </Text>
+              </Text>
+            )}
             <div style={{ flex: "1 1 100%" }}>
               <Text fw={500} size="sm" mb={4}>
                 <Bilingual label={ui.events.meals} />
@@ -393,7 +439,7 @@ export function EventDetail() {
               <MealGroupsEditor
                 groups={mealGroups}
                 templates={templates}
-                defaultHeadcount={event.headcount}
+                defaultHeadcount={groupsHeadcount > 0 ? groupsHeadcount : event.headcount}
                 onChange={handleGroupsChange}
               />
             </div>

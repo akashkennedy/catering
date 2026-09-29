@@ -33,14 +33,18 @@ const IngredientTableRow = memo(function IngredientTableRow({
       <Table.Td c="dimmed">{index + 1}</Table.Td>
       <Table.Td>
         {ingredient.tamilName ? (
-          <Text size="sm" fw={500}>
+          <Text size="sm" fw={700}>
             {ingredient.tamilName}
           </Text>
         ) : (
           <Text size="sm" c="dimmed">—</Text>
         )}
       </Table.Td>
-      <Table.Td>{ingredient.name || "—"}</Table.Td>
+      <Table.Td>
+        <Text size="sm" fw={700}>
+          {ingredient.name || "—"}
+        </Text>
+      </Table.Td>
       <Table.Td>
         <Bilingual label={ui.ingredients.tags[ingredient.tag]} />
       </Table.Td>

@@ -2,6 +2,7 @@
 
 import { ActionIcon, Anchor, Badge, Card, Group, Stack, Text } from "@mantine/core";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { Pencil, Trash } from "lucide-react";
 
 import { Bilingual } from "@/components/Bilingual";
@@ -27,16 +28,23 @@ type EventCardsProps = {
 };
 
 export function EventCards({ events, onEdit, onDelete }: EventCardsProps) {
+  const router = useRouter();
   const statusLabel = (status: EventStatus) =>
     EVENT_STATUS_OPTIONS.find((option) => option.value === status)?.label ?? { en: status, ta: "" };
 
   return (
     <Stack gap="sm" className="sm:hidden">
       {events.map((event) => (
-        <Card key={event.id} withBorder padding="sm">
+        <Card
+          key={event.id}
+          withBorder
+          padding="sm"
+          style={{ cursor: "pointer" }}
+          onClick={() => router.push(`/events/${event.id}`)}
+        >
           <Group justify="space-between" align="flex-start" wrap="nowrap">
             <Stack gap={4}>
-              <Anchor component={Link} href={`/events/${event.id}`} fw={600}>
+              <Anchor component={Link} href={`/events/${event.id}`} fw={600} onClick={(e) => e.stopPropagation()}>
                 {event.name}
               </Anchor>
               <Group gap="xs">
@@ -57,7 +65,7 @@ export function EventCards({ events, onEdit, onDelete }: EventCardsProps) {
                 <Bilingual label={ui.events.balance} />: {formatINR(eventBalance(event))}
               </Text>
             </Stack>
-            <Group gap="xs">
+            <Group gap="xs" onClick={(e) => e.stopPropagation()}>
               <ActionIcon
                 variant="subtle"
                 aria-label={`Edit ${event.name}`}

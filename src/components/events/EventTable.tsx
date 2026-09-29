@@ -2,6 +2,7 @@
 
 import { ActionIcon, Anchor, Badge, Group, Table } from "@mantine/core";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { Pencil, Trash } from "lucide-react";
 
 import { Bilingual } from "@/components/Bilingual";
@@ -27,6 +28,7 @@ type EventTableProps = {
 };
 
 export function EventTable({ events, onEdit, onDelete }: EventTableProps) {
+  const router = useRouter();
   const statusLabel = (status: EventStatus) =>
     EVENT_STATUS_OPTIONS.find((option) => option.value === status)?.label ?? { en: status, ta: "" };
 
@@ -45,9 +47,13 @@ export function EventTable({ events, onEdit, onDelete }: EventTableProps) {
         </Table.Thead>
         <Table.Tbody>
           {events.map((event) => (
-            <Table.Tr key={event.id}>
+            <Table.Tr
+              key={event.id}
+              style={{ cursor: "pointer" }}
+              onClick={() => router.push(`/events/${event.id}`)}
+            >
               <Table.Td>
-                <Anchor component={Link} href={`/events/${event.id}`} fw={500}>
+                <Anchor component={Link} href={`/events/${event.id}`} fw={500} onClick={(e) => e.stopPropagation()}>
                   {event.name}
                 </Anchor>
               </Table.Td>
@@ -61,7 +67,7 @@ export function EventTable({ events, onEdit, onDelete }: EventTableProps) {
                 </Badge>
               </Table.Td>
               <Table.Td>{formatINR(eventBalance(event))}</Table.Td>
-              <Table.Td>
+              <Table.Td onClick={(e) => e.stopPropagation()}>
                 <Group gap="xs">
                   <ActionIcon
                     variant="subtle"

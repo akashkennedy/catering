@@ -35,11 +35,11 @@ const IngredientCardItem = memo(function IngredientCardItem({
           <Text size="xs" c="dimmed">
             #{index + 1}
           </Text>
-          <Text fw={600} lineClamp={2}>
+          <Text fw={700} lineClamp={2}>
             {ingredient.tamilName || ingredient.name || "—"}
           </Text>
           {ingredient.name && (
-            <Text size="sm" c="dimmed" lineClamp={1}>
+            <Text size="sm" fw={700} lineClamp={1}>
               {ingredient.name}
             </Text>
           )}

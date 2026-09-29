@@ -25,7 +25,7 @@ import {
 } from "@/store/templates";
 import type { EventMealGroup } from "@/store/events";
 
-export const MEAL_HEADCOUNT_PRESETS = [100, 200, 300, 500];
+export const MEAL_HEADCOUNT_PRESETS = [100, 200, 300, 500, 1000, 2000];
 
 function groupId(): string {
   try {

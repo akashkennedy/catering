@@ -11,7 +11,8 @@
     "db:check": "node --env-file=.env scripts/db-check.mjs",
     "db:seed-admin": "node --env-file=.env scripts/db-seed-admin.mjs",
     "db:seed-catalog": "node --env-file=.env scripts/db-seed-catalog.mjs",
-    "db:seed-mock": "node --env-file=.env scripts/db-seed-mock-courses.mjs"
+    "db:seed-mock": "node --env-file=.env scripts/db-seed-mock-courses.mjs",
+    "db:copy-remote-templates": "node --env-file=.env scripts/copy-remote-templates.mjs"
   },
   "dependencies": {
     "@hookform/resolvers": "^5.9.1",

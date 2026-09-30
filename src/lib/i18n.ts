@@ -283,16 +283,19 @@ export const ui = {
     gallery: lab("Gallery", "புகைப்படங்கள்"),
     testimonials: lab("Testimonials", "வாடிக்கையாளர் கருத்துகள்"),
     address: lab("Office address", "அலுவலக முகவரி"),
-    kindPhoto: lab("Photo link", "புகைப்பட இணைப்பு"),
-    kindInstagram: lab("Instagram post", "இன்ஸ்டாகிராம் பதிவு"),
-    itemUrl: lab("Link", "இணைப்பு"),
-    instagramHint: lab(
-      "Paste the post's Share → Copy link URL. The post must be public. Offline visitors see a link instead of the preview.",
-      "பதிவின் Share → Copy link இணைப்பை ஒட்டவும். பதிவு பொதுவில் இருக்க வேண்டும்."
+    galleryUpload: lab("Upload photos (max 10)", "புகைப்படங்களைப் பதிவேற்று (அதிகபட்சம் 10)"),
+    galleryUploadHint: lab(
+      "JPG, PNG, or WebP up to 10MB each. Compressed to WebP (1600px) and stored in the database.",
+      "JPG, PNG அல்லது WebP, ஒவ்வொன்றும் 10MB வரை. WebP (1600px) ஆகச் சுருக்கி தரவுத்தளத்தில் சேமிக்கப்படும்."
     ),
-    invalidLink: lab("Enter a valid link.", "சரியான இணைப்பை உள்ளிடவும்."),
-    photo: lab("Photo link", "புகைப்பட இணைப்பு"),
-    photoPlaceholder: lab("https://…", "https://…"),
+    galleryFull: lab("Gallery is full (10 photos). Delete one to add another.", "புகைப்பட தொகுப்பு நிரம்பிவிட்டது (10)."),
+    galleryAltPlaceholder: lab("e.g. 2,500 Guests Vazhaillai Virundhu", "எ.கா. வாழை இலை விருந்து"),
+    galleryUploadFailed: lab("Upload failed. Try again.", "பதிவேற்றம் தோல்வி. மீண்டும் முயற்சிக்கவும்."),
+    menuPhoto: lab("Meal photo (one — compressed & stored in the database)", "உணவு புகைப்படம் (ஒன்று — சுருக்கப்பட்டு சேமிக்கப்படும்)"),
+    uploadPhoto: lab("Upload photo", "புகைப்படத்தைப் பதிவேற்று"),
+    replacePhoto: lab("Replace photo", "புகைப்படத்தை மாற்று"),
+    removePhoto: lab("Remove photo", "புகைப்படத்தை நீக்கு"),
+    menuPhotoHint: lab("JPG, PNG, or WebP up to 10MB — compressed to WebP (1600px).", "JPG, PNG அல்லது WebP, 10MB வரை — WebP (1600px) ஆகச் சுருக்கப்படும்."),
     rating: lab("Stars (1–5)", "நட்சத்திரங்கள் (1–5)"),
     source: lab("Source", "ஆதாரம்"),
     sourceManual: lab("Direct / manual", "நேரடி"),

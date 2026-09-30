@@ -12,7 +12,6 @@ import { Bilingual } from "@/components/Bilingual";
 import { ListPageSkeleton } from "@/components/LoadingSkeletons";
 import { preferredText, ui } from "@/lib/i18n";
 import { INGREDIENT_TAGS, type IngredientTag } from "@/lib/ingredientTags";
-import { seedIngredientCatalog } from "@/lib/seedIngredients";
 import { useSettingsStore } from "@/store/settings";
 import { useIngredientsStore, type Ingredient } from "@/store/ingredients";
 
@@ -31,6 +30,10 @@ export function IngredientsManager() {
   useEffect(() => {
     void loadIngredients();
   }, [loadIngredients]);
+  // NOTE: no client-side catalog seeding here. The ingredient catalog is
+  // seeded server-side (npm run db:seed-catalog) and loaded via GET.
+  // Auto-POSTing the ~192-row catalog on mount caused a burst of 409s on
+  // preview/shared DBs where those names already exist under stable ids.
   const [formOpened, setFormOpened] = useState(false);
   const [editingIngredient, setEditingIngredient] = useState<Ingredient | null>(null);
   const [deletingIngredient, setDeletingIngredient] = useState<Ingredient | null>(null);
@@ -39,10 +42,6 @@ export function IngredientsManager() {
   const deferredQuery = useDeferredValue(query);
   const uiLanguage = useSettingsStore((state) => state.uiLanguage);
   const searchPlaceholder = preferredText(ui.ingredients.searchIngredients, uiLanguage);
-
-  useEffect(() => {
-    seedIngredientCatalog();
-  }, []);
 
   const counts = useMemo(() => {
     const byTag: Record<string, number> = {};

@@ -4,11 +4,7 @@ import { formatIndianDate } from "@/lib/date";
 import { eventBalance } from "@/lib/eventFinances";
 import { ui, preferredText } from "@/lib/i18n";
 import { useSettingsStore, type AlertKey } from "@/store/settings";
-import {
-  useTemplatesStore,
-  templateDisplayName,
-  dishDisplayName,
-} from "@/store/templates";
+import { useSiteContentStore } from "@/store/siteContent";
 import {
   buildWhatsAppMessage,
   makeInvoiceNumber,
@@ -57,7 +53,9 @@ export function openEnquiryMenus(event: CateringEvent): boolean {
 }
 
 function enquiryMenusMessage(event: CateringEvent, lang: PdfLang): string {
-  const templates = useTemplatesStore.getState().templates;
+  // Landing menus (Site Manager / Website page) — the same doc the live
+  // landing page reads from the shared `site_content` row.
+  const menus = useSiteContentStore.getState().menus;
   const lines = [
     "Mampalli Cloud Kitchen and Catering",
     preferredText(ui.autoMsg.enquiryGreeting, lang),
@@ -66,30 +64,20 @@ function enquiryMenusMessage(event: CateringEvent, lang: PdfLang): string {
     `${preferredText(ui.events.totalHeadcount, lang)}: ${event.headcount}`,
     preferredText(ui.autoMsg.enquiryMenusTitle, lang),
   ];
-  const groups = event.mealGroups ?? [];
-  if (groups.length > 0) {
-    groups.forEach((group, index) => {
-      const template = templates.find((item) => item.id === group.templateId) ?? null;
-      const templateName = template ? templateDisplayName(template, lang) : "—";
-      lines.push(`${preferredText(ui.events.mealNumber(index + 1), lang)}: ${templateName}`);
-      const dishes = (template?.dishes ?? []).filter((dish) =>
-        group.selectedDishIds.includes(dish.id)
-      );
-      if (dishes.length === 0) {
-        lines.push(`  ${preferredText(ui.autoMsg.enquiryNoDishes, lang)}`);
-      } else {
-        for (const dish of dishes) {
-          lines.push(`  • ${dishDisplayName(dish, lang)}`);
-        }
-      }
-    });
-  } else if (event.templateId) {
-    const template = templates.find((item) => item.id === event.templateId) ?? null;
-    if (template) {
-      lines.push(`${templateDisplayName(template, lang)}`);
-      for (const dish of template.dishes) {
-        lines.push(`  • ${dishDisplayName(dish, lang)}`);
-      }
+  if (menus.length === 0) {
+    lines.push(`  ${preferredText(ui.autoMsg.enquiryNoDishes, lang)}`);
+  }
+  for (const menu of menus) {
+    const name = lang === "ta" ? menu.nameTa.trim() || menu.nameEn : menu.nameEn;
+    const priceSuffix = menu.price > 0 ? ` — ${formatINR(menu.price)}/plate` : "";
+    lines.push(`${name}${priceSuffix}`);
+    for (const dish of menu.mainDishes) {
+      const dishName = lang === "ta" ? dish.ta.trim() || dish.en : dish.en;
+      lines.push(`  • ${dishName}`);
+    }
+    for (const dish of menu.sideDishes) {
+      const dishName = lang === "ta" ? dish.ta.trim() || dish.en : dish.en;
+      lines.push(`  • ${dishName}`);
     }
   }
   lines.push(preferredText(ui.events.thankYou, lang));

@@ -24,22 +24,34 @@ export type SiteMenu = {
   id: string;
   nameEn: string;
   nameTa: string;
+  /** Legacy path photo (still served when imageId is empty). */
   imageUrl: string;
+  /** Row id in site_menu_images; served via /api/site-menu-images/[imageId]. */
+  imageId: string;
   mainDishes: DishLine[];
   sideDishes: DishLine[];
   /** Price per plate in ₹ (0 hides the price). */
   price: number;
 };
 
+export function menuPhotoUrl(imageId: string): string {
+  return `/api/site-menu-images/${imageId}`;
+}
+
 export type SiteGalleryItem = {
   id: string;
-  /** Public Instagram post link, e.g. https://www.instagram.com/p/…. */
-  instagramUrl: string;
-  /** Shown when the embed fails to load. */
+  /** Row id in site_gallery_images; served via /api/site-gallery-images/[imageId]. */
+  imageId: string;
+  /** Alt text / caption for the photo. */
   altTitle: string;
-  /** Old default image shown when the embed fails. */
-  fallbackImage: string;
 };
+
+/** Landing gallery cap: at most 10 DB photos, no Instagram embeds. */
+export const GALLERY_MAX_IMAGES = 10;
+
+export function galleryPhotoUrl(imageId: string): string {
+  return `/api/site-gallery-images/${imageId}`;
+}
 
 export type SiteBusiness = {
   phones: string[];
@@ -59,18 +71,6 @@ export const DEFAULT_SERVICE_ZONES = [
   "Karungal",
   "Trivandrum Border",
 ];
-
-/** Fallback pool shown when an Instagram embed fails (old default images). */
-export const DEFAULT_GALLERY_FALLBACKS = [
-  "/images/img_02.jpg",
-  "/images/img_03.jpg",
-  "/images/img_04.jpg",
-  "/images/img_05.jpg",
-  "/images/img_06.jpg",
-  "/images/img_07.jpg",
-];
-
-export const INSTAGRAM_PLACEHOLDER_URL = "https://www.instagram.com/p/PLACEHOLDER/";
 
 export type SiteMenuInput = Omit<SiteMenu, "id">;
 export type SiteTestimonialInput = Omit<SiteTestimonial, "id">;
@@ -114,6 +114,7 @@ function seedMenus(): SiteMenu[] {
       nameEn: "Royal Travancore Wedding Sadya",
       nameTa: "ராயல் திருவிதாங்கூர் திருமண சாத்யா",
       imageUrl: `${IMG}/img_03.jpg`,
+      imageId: "",
       price: 280,
       mainDishes: [
         { en: "Kerala Red Matta Rice & Ponni Rice", ta: "கேரள மட்டை அரிசி & பொன்னி அரிசி" },
@@ -134,6 +135,7 @@ function seedMenus(): SiteMenu[] {
       nameEn: "Tamil Virundhu Sappadu",
       nameTa: "தமிழ் விருந்து சாப்பாடு",
       imageUrl: `${IMG}/img_02.jpg`,
+      imageId: "",
       price: 250,
       mainDishes: [
         { en: "Ponni Rice & Paruppu Nei", ta: "பொன்னி அரிசி & பருப்பு நெய்" },
@@ -150,6 +152,7 @@ function seedMenus(): SiteMenu[] {
       nameEn: "Live Tiffin & Evening Counters",
       nameTa: "நேரடி டிபன் & மாலை கவுண்டர்கள்",
       imageUrl: `${IMG}/img_06.jpg`,
+      imageId: "",
       price: 180,
       mainDishes: [
         { en: "Filter Coffee & Poori Masala", ta: "பில்டர் காபி & பூரி மசாலா" },
@@ -163,28 +166,7 @@ function seedMenus(): SiteMenu[] {
 }
 
 function seedGallery(): SiteGalleryItem[] {
-  const item = (
-    instagramUrl: string,
-    altTitle: string,
-    fallbackImage: string
-  ): SiteGalleryItem => ({ id: newId(), instagramUrl, altTitle, fallbackImage });
-  return [
-    item(
-      "https://www.instagram.com/p/PLACEHOLDER_SADYA/",
-      "2,500 Guests Vazhaillai Virundhu",
-      `${IMG}/img_02.jpg`
-    ),
-    item(
-      "https://www.instagram.com/p/PLACEHOLDER_URULI/",
-      "Pure Brass Uruli Cooking",
-      `${IMG}/img_04.jpg`
-    ),
-    item(
-      "https://www.instagram.com/p/PLACEHOLDER_TIFFIN/",
-      "Interactive Live Tiffin Experience",
-      `${IMG}/img_06.jpg`
-    ),
-  ];
+  return [];
 }
 
 function seedBusiness(): SiteBusiness {
@@ -209,6 +191,10 @@ export type RemoteSiteContent = {
 type SiteContentState = RemoteSiteContent & {
   /** Local-only publish metadata; never sent to the database. */
   lastPublishedAt: string | null;
+  /** True once the shared DB row has been pulled this session. */
+  loaded: boolean;
+  /** Pull the landing doc (shared `site_content` row) into the store. */
+  loadRemote: () => Promise<void>;
   setLastPublishedAt: (value: string | null) => void;
   replaceAll: (input: RemoteSiteContent) => void;
   setBusiness: (input: SiteBusiness) => void;
@@ -256,7 +242,7 @@ function flattenLegacyCourses(courses: unknown): DishLine[] {
  * Validate + normalize a content doc pulled from the database.
  * Returns null when the payload is unusable. Missing ids are regenerated
  * so older payloads still load safely (legacy courses flatten into Main
- * Dishes; legacy photo gallery items become embed-failure fallbacks).
+ * Dishes; legacy Instagram gallery items are dropped — no embeds).
  */
 export function normalizeRemoteContent(data: unknown): RemoteSiteContent | null {
   if (!data || typeof data !== "object") return null;
@@ -287,6 +273,7 @@ export function normalizeRemoteContent(data: unknown): RemoteSiteContent | null 
       nameEn,
       nameTa: strOr(raw.nameTa, nameEn),
       imageUrl: asString(raw.imageUrl) || asString(raw.photoUrl) || `${IMG}/img_02.jpg`,
+      imageId: asString(raw.imageId),
       mainDishes: asDishLines(raw.mainDishes).length
         ? asDishLines(raw.mainDishes)
         : legacyMains,
@@ -294,27 +281,19 @@ export function normalizeRemoteContent(data: unknown): RemoteSiteContent | null 
       price: asNumber(raw.price, 0),
     };
   });
-  const gallery: SiteGalleryItem[] = (doc.gallery as Record<string, unknown>[]).map(
-    (raw, index) => {
-      const instagramUrl = asString(raw.instagramUrl) || asString(raw.url);
-      const isInsta = instagramUrl.toLowerCase().includes("instagram.com/");
-      return {
-        id: asString(raw.id) || newId(),
-        instagramUrl,
-        altTitle:
-          asString(raw.altTitle) ||
-          asString(raw.captionEn) ||
-          `Gallery post ${index + 1}`,
-        // Legacy photo items (and anything non-Instagram) become the
-        // fallback image shown when the embed fails.
-        fallbackImage:
-          asString(raw.fallbackImage) ||
-          (!isInsta && instagramUrl
-            ? instagramUrl
-            : DEFAULT_GALLERY_FALLBACKS[index % DEFAULT_GALLERY_FALLBACKS.length]),
-      };
-    }
-  );
+  // DB-photo gallery (max 10). Legacy Instagram items have no bytes
+  // and are dropped — the manager re-uploads them as compressed photos.
+  const gallery: SiteGalleryItem[] = (doc.gallery as Record<string, unknown>[])
+    .map((raw, index) => ({
+      id: asString(raw.id) || newId(),
+      imageId: asString(raw.imageId),
+      altTitle:
+        asString(raw.altTitle) ||
+        asString(raw.captionEn) ||
+        `Gallery photo ${index + 1}`,
+    }))
+    .filter((item) => item.imageId !== "")
+    .slice(0, 10);
   const testimonials: SiteTestimonial[] = (doc.testimonials as Record<string, unknown>[]).map(
     (raw) => {
       const nested = raw.quote;
@@ -347,11 +326,54 @@ export function defaultSiteContent(): Pick<
   };
 }
 
+// Shared in-flight load so simultaneous mounts fire a single request.
+let loadSiteContentRequest: Promise<void> | null = null;
+
 export const useSiteContentStore = create<SiteContentState>()(
   persist(
     (set) => ({
       ...defaultSiteContent(),
       lastPublishedAt: null,
+      loaded: false,
+      loadRemote: async () => {
+        if (useSiteContentStore.getState().loaded) return;
+        if (!loadSiteContentRequest) {
+          loadSiteContentRequest = (async () => {
+            try {
+              const response = await fetch("/api/site-content", {
+                credentials: "same-origin",
+              });
+              if (!response.ok) return;
+              const body = (await response.json()) as {
+                data?: unknown;
+                updatedAt?: string;
+              };
+              if (body.data == null) {
+                set({ loaded: true });
+                return;
+              }
+              const normalized = normalizeRemoteContent(body.data);
+              if (!normalized) return;
+              set({
+                business: normalized.business,
+                menus: normalized.menus,
+                gallery: normalized.gallery,
+                testimonials: normalized.testimonials,
+                lastPublishedAt:
+                  typeof body.updatedAt === "string"
+                    ? body.updatedAt
+                    : useSiteContentStore.getState().lastPublishedAt,
+                loaded: true,
+              });
+            } catch {
+              // Offline: keep the localStorage cache as the read source.
+            }
+          })().finally(() => {
+            loadSiteContentRequest = null;
+          });
+        }
+        await loadSiteContentRequest;
+      },
       setLastPublishedAt: (value) => set({ lastPublishedAt: value }),
       replaceAll: (input) =>
         set({
@@ -370,7 +392,11 @@ export const useSiteContentStore = create<SiteContentState>()(
       deleteMenu: (id) =>
         set((state) => ({ menus: state.menus.filter((menu) => menu.id !== id) })),
       addGalleryItem: (input) =>
-        set((state) => ({ gallery: [...state.gallery, { id: newId(), ...input }] })),
+        set((state) =>
+          state.gallery.length >= 10
+            ? state
+            : { gallery: [...state.gallery, { id: newId(), ...input }] }
+        ),
       updateGalleryItem: (id, input) =>
         set((state) => ({
           gallery: state.gallery.map((item) => (item.id === id ? { ...input, id } : item)),
@@ -393,7 +419,14 @@ export const useSiteContentStore = create<SiteContentState>()(
     {
       name: "catering-site",
       storage: createJSONStorage(() => localStorage),
-      version: 5,
+      version: 7,
+      partialize: (state) => ({
+        business: state.business,
+        menus: state.menus,
+        gallery: state.gallery,
+        testimonials: state.testimonials,
+        lastPublishedAt: state.lastPublishedAt,
+      }),
       migrate: (persistedState) => {
         const state = persistedState as {
           menus?: Array<Record<string, unknown>> | null;
@@ -410,6 +443,7 @@ export const useSiteContentStore = create<SiteContentState>()(
         });
         return {
           ...state,
+          loaded: false,
           lastPublishedAt:
             typeof state.lastPublishedAt === "string" ? state.lastPublishedAt : null,
           business: normalized?.business ?? seedBusiness(),

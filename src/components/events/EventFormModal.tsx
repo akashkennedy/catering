@@ -169,6 +169,13 @@ export function EventFormModal({ opened, event, onClose }: EventFormModalProps) 
   const [amountOverridden, setAmountOverridden] = useState(false);
   const [mealGroups, setMealGroups] = useState<EventMealGroup[]>([]);
   const balance = roundMoney(asNumber(totalAmount) - asNumber(advancePaid));
+  // Single source of truth for headcount: sum of per-meal headcounts.
+  // The old standalone headcount input was removed to avoid two diverging values.
+  const groupsHeadcount = mealGroups.reduce(
+    (sum, group) =>
+      sum + (Number.isFinite(group.headcount) && group.headcount > 0 ? Math.floor(group.headcount) : 0),
+    0
+  );
 
   useEffect(() => {
     if (amountOverridden) return;
@@ -196,13 +203,18 @@ export function EventFormModal({ opened, event, onClose }: EventFormModalProps) 
             ]
           : [{ ...emptyMealGroup(initialHeadcount), templateId: null }];
     setMealGroups(initialGroups);
+    const initialGroupsSum = initialGroups.reduce(
+      (total, group) =>
+        total + (Number.isFinite(group.headcount) && group.headcount > 0 ? Math.floor(group.headcount) : 0),
+      0
+    );
     reset({
       name: event?.name ?? "",
       phone: event?.phone ?? "",
       venue: event?.venue ?? "",
       address: event?.address ?? "",
       functionType: event?.functionType ?? "",
-      headcount: initialHeadcount,
+      headcount: initialGroupsSum > 0 ? initialGroupsSum : initialHeadcount,
       date: event?.date ?? "",
       status: event?.status ?? "enquiry",
       templateId: initialTemplateId,
@@ -215,6 +227,14 @@ export function EventFormModal({ opened, event, onClose }: EventFormModalProps) 
   const handleGroupsChange = (groups: EventMealGroup[]) => {
     setMealGroups(groups);
     setValue("templateId", groups[0]?.templateId ?? null, { shouldValidate: false });
+    const sum = groups.reduce(
+      (total, group) =>
+        total + (Number.isFinite(group.headcount) && group.headcount > 0 ? Math.floor(group.headcount) : 0),
+      0
+    );
+    if (sum > 0) {
+      setValue("headcount", sum, { shouldValidate: true });
+    }
   };
 
   const onSubmit = (values: EventFormValues) => {
@@ -366,31 +386,24 @@ export function EventFormModal({ opened, event, onClose }: EventFormModalProps) 
                   <MealGroupsEditor
                     groups={mealGroups}
                     templates={templates}
-                    defaultHeadcount={typeof headcount === "number" ? headcount : 100}
+                    defaultHeadcount={groupsHeadcount > 0 ? groupsHeadcount : typeof headcount === "number" && headcount > 0 ? headcount : 100}
                     onChange={handleGroupsChange}
                   />
                   <Text size="xs" c="dimmed" mt="xs">
                     <Bilingual label={ui.events.headcountNote} />
                   </Text>
-                </div>
-                <Controller
-                  name="headcount"
-                  control={control}
-                  render={({ field }) => (
-                    <NumberInput
-                      label={<Bilingual label={ui.common.headcount} />}
-                      placeholder={preferredText(ui.events.headcountPlaceholder, uiLanguage)}
-                      min={1}
-                      allowNegative={false}
-                      withAsterisk
-                      {...field}
-                      onKeyDown={(e) => {
-                        if (e.key === "ArrowUp" || e.key === "ArrowDown") e.preventDefault();
-                      }}
-                      error={errors.headcount?.message}
-                    />
+                  <Text size="sm" mt="xs">
+                    <Bilingual label={ui.common.headcount} />:{" "}
+                    <Text span fw={700}>
+                      {groupsHeadcount > 0 ? groupsHeadcount : asNumber(headcount)}
+                    </Text>
+                  </Text>
+                  {errors.headcount?.message && (
+                    <Text size="xs" c="red" mt={4}>
+                      {errors.headcount.message}
+                    </Text>
                   )}
-                />
+                </div>
               </div>
             </div>
 

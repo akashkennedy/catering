@@ -11,7 +11,8 @@
     "db:check": "node --env-file=.env scripts/db-check.mjs",
     "db:seed-admin": "node --env-file=.env scripts/db-seed-admin.mjs",
     "db:seed-catalog": "node --env-file=.env scripts/db-seed-catalog.mjs",
-    "db:seed-mock": "node --env-file=.env scripts/db-seed-mock-courses.mjs"
+    "db:seed-mock": "node --env-file=.env scripts/db-seed-mock-courses.mjs",
+    "db:copy-remote-templates": "node --env-file=.env scripts/copy-remote-templates.mjs"
   },
   "dependencies": {
     "@hookform/resolvers": "^5.9.1",
@@ -29,6 +30,7 @@
     "react-dom": "19.2.8",
     "react-hook-form": "^7.88.0",
     "serwist": "^9.5.12",
+    "sharp": "^0.35.4",
     "xlsx": "^0.18.5",
     "zod": "^3.25.76",
     "zustand": "^5.0.15"
@@ -40,7 +42,6 @@
     "@types/react-dom": "^19",
     "eslint": "^9",
     "eslint-config-next": "16.3.5",
-    "sharp": "^0.35.4",
     "tailwindcss": "^4",
     "typescript": "^5"
   }

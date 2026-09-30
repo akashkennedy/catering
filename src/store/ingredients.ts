@@ -38,7 +38,7 @@ function newClientId(): string {
   }
 }
 
-async function postJson(path: string, body: unknown): Promise<boolean> {
+async function postJson(path: string, body: unknown): Promise<number | null> {
   try {
     const response = await fetch(path, {
       method: "POST",
@@ -46,13 +46,13 @@ async function postJson(path: string, body: unknown): Promise<boolean> {
       credentials: "same-origin",
       body: JSON.stringify(body),
     });
-    return response.ok;
+    return response.status;
   } catch {
-    return false;
+    return null;
   }
 }
 
-async function patchJson(path: string, body: unknown): Promise<boolean> {
+async function patchJson(path: string, body: unknown): Promise<number | null> {
   try {
     const response = await fetch(path, {
       method: "PATCH",
@@ -60,22 +60,27 @@ async function patchJson(path: string, body: unknown): Promise<boolean> {
       credentials: "same-origin",
       body: JSON.stringify(body),
     });
-    return response.ok;
+    return response.status;
   } catch {
-    return false;
+    return null;
   }
 }
 
-async function deletePath(path: string): Promise<boolean> {
+async function deletePath(path: string): Promise<number | null> {
   try {
     const response = await fetch(path, {
       method: "DELETE",
       credentials: "same-origin",
     });
-    return response.ok;
+    return response.status;
   } catch {
-    return false;
+    return null;
   }
+}
+
+async function shouldQueueStatus(status: number | null): Promise<boolean> {
+  const { isRetryableWriteStatus } = await import("@/lib/outbox");
+  return isRetryableWriteStatus(status);
 }
 
 // Shared in-flight load so simultaneous mounts fire a single request.
@@ -90,8 +95,8 @@ export const useIngredientsStore = create<IngredientsState>()(
       addIngredient: async (input) => {
         const ingredient: Ingredient = { id: newClientId(), ...input };
         set((state) => ({ ingredients: [...state.ingredients, ingredient] }));
-        const ok = await postJson("/api/ingredients", ingredient);
-        if (!ok) {
+        const status = await postJson("/api/ingredients", ingredient);
+        if (await shouldQueueStatus(status)) {
           const { queueOp } = await import("@/lib/outbox");
           queueOp({ method: "POST", path: "/api/ingredients", body: ingredient });
         }
@@ -102,8 +107,8 @@ export const useIngredientsStore = create<IngredientsState>()(
             ingredient.id === id ? { ...ingredient, ...input } : ingredient
           ),
         }));
-        const ok = await patchJson(`/api/ingredients/${encodeURIComponent(id)}`, input);
-        if (!ok) {
+        const status = await patchJson(`/api/ingredients/${encodeURIComponent(id)}`, input);
+        if (await shouldQueueStatus(status)) {
           const { queueOp } = await import("@/lib/outbox");
           queueOp({ method: "PATCH", path: `/api/ingredients/${encodeURIComponent(id)}`, body: input });
         }
@@ -114,8 +119,8 @@ export const useIngredientsStore = create<IngredientsState>()(
             ingredient.id === id ? { ...ingredient, globalPrice } : ingredient
           ),
         }));
-        const ok = await patchJson(`/api/ingredients/${encodeURIComponent(id)}`, { globalPrice });
-        if (!ok) {
+        const status = await patchJson(`/api/ingredients/${encodeURIComponent(id)}`, { globalPrice });
+        if (await shouldQueueStatus(status)) {
           const { queueOp } = await import("@/lib/outbox");
           queueOp({
             method: "PATCH",
@@ -128,8 +133,8 @@ export const useIngredientsStore = create<IngredientsState>()(
         set((state) => ({
           ingredients: state.ingredients.filter((ingredient) => ingredient.id !== id),
         }));
-        const ok = await deletePath(`/api/ingredients/${encodeURIComponent(id)}`);
-        if (!ok) {
+        const status = await deletePath(`/api/ingredients/${encodeURIComponent(id)}`);
+        if (await shouldQueueStatus(status)) {
           const { queueOp } = await import("@/lib/outbox");
           queueOp({ method: "DELETE", path: `/api/ingredients/${encodeURIComponent(id)}` });
         }

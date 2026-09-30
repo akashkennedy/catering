@@ -3,8 +3,13 @@ import { z } from "zod";
 
 import { requirePermission } from "@/lib/requirePermission";
 import { DbNotConfiguredError } from "@/lib/db";
+import { GALLERY_MAX_IMAGES } from "@/lib/galleryImage";
 import {
+  deleteOrphanGalleryImages,
+  deleteOrphanMenuImages,
+  galleryImageIdsExist,
   getSiteContentRow,
+  menuImageIdsExist,
   publishSiteContentRow,
 } from "@/lib/siteDb";
 import { PUBLISH_HOOK_URL } from "@/lib/sitePublish";
@@ -22,15 +27,15 @@ const menuSchema = z.object({
   nameEn: z.string(),
   nameTa: z.string(),
   imageUrl: z.string(),
+  imageId: z.string().optional().default(""),
   mainDishes: z.array(dishLineSchema),
   sideDishes: z.array(dishLineSchema),
   price: z.number(),
 });
 
 const gallerySchema = z.object({
-  instagramUrl: z.string(),
+  imageId: z.string().min(1),
   altTitle: z.string(),
-  fallbackImage: z.string(),
 });
 
 const testimonialSchema = z.object({
@@ -43,7 +48,7 @@ const testimonialSchema = z.object({
 const payloadSchema = z.object({
   business: businessSchema,
   menus: z.array(menuSchema),
-  gallery: z.array(gallerySchema),
+  gallery: z.array(gallerySchema).max(GALLERY_MAX_IMAGES),
   testimonials: z.array(testimonialSchema),
 });
 
@@ -85,8 +90,9 @@ export async function GET() {
  * The landing (mampallicatering.vercel.app) reads the SAME `site_content`
  * row in the flat shape:
  *   { business: { phones, whatsapp, addressEn, addressTa, serviceZones? },
- *     menus: [{ nameEn/nameTa, imageUrl, mainDishes[{en,ta}], sideDishes[{en,ta}], price }],
- *     gallery: [{ instagramUrl, altTitle, fallbackImage }],
+ *     menus: [{ nameEn/nameTa, imageUrl (legacy fallback), imageId? (bytes in site_menu_images),
+ *       mainDishes[{en,ta}], sideDishes[{en,ta}], price }],
+ *   gallery: [{ imageId, altTitle }],  // max 10; bytes in site_gallery_images,
  *     testimonials: [{ rating, review (EN), author, location }] }
  * We write the CRM doc through AS-IS — never transform it.
  *
@@ -121,6 +127,18 @@ export async function POST(request: Request) {
   if (doc.menus.length === 0) {
     warnings.push("Zero menus — the site falls back to its built-in menus.");
   }
+  // Every referenced menu photo must have stored (compressed) bytes.
+  try {
+    const missingMenu = await menuImageIdsExist(doc.menus.map((menu) => menu.imageId));
+    if (missingMenu.length > 0) {
+      return NextResponse.json(
+        { error: "A menu photo was not uploaded yet. Re-upload it and try again." },
+        { status: 400 }
+      );
+    }
+  } catch (error) {
+    return dbErrorResponse(error);
+  }
   for (const menu of doc.menus) {
     if (!menu.nameEn.trim()) {
       return NextResponse.json({ error: "A menu is missing its meal name." }, { status: 400 });
@@ -133,13 +151,31 @@ export async function POST(request: Request) {
       );
     }
   }
+  if (doc.gallery.length > GALLERY_MAX_IMAGES) {
+    return NextResponse.json(
+      { error: `Gallery allows a maximum of ${GALLERY_MAX_IMAGES} photos.` },
+      { status: 400 }
+    );
+  }
   for (const item of doc.gallery) {
-    if (!item.instagramUrl.toLowerCase().includes("instagram.com/")) {
-      return NextResponse.json({ error: "A gallery item is not an Instagram link." }, { status: 400 });
+    if (!item.imageId.trim()) {
+      return NextResponse.json({ error: "A gallery item is missing its photo." }, { status: 400 });
     }
     if (!item.altTitle.trim()) {
       return NextResponse.json({ error: "A gallery item is missing its alt title." }, { status: 400 });
     }
+  }
+  // Every referenced photo must have stored (compressed) bytes.
+  try {
+    const missing = await galleryImageIdsExist(doc.gallery.map((item) => item.imageId));
+    if (missing.length > 0) {
+      return NextResponse.json(
+        { error: "A gallery photo was not uploaded yet. Re-upload it and try again." },
+        { status: 400 }
+      );
+    }
+  } catch (error) {
+    return dbErrorResponse(error);
   }
   for (const t of doc.testimonials) {
     if (!t.author.trim() || !t.review.trim() || !t.location.trim()) {
@@ -154,6 +190,13 @@ export async function POST(request: Request) {
   let updatedAt: string;
   try {
     updatedAt = await publishSiteContentRow(doc);
+    // Best-effort: drop bytes no longer referenced (never blocks publish).
+    try {
+      await deleteOrphanGalleryImages(doc.gallery.map((item) => item.imageId));
+      await deleteOrphanMenuImages(doc.menus.map((menu) => menu.imageId));
+    } catch {
+      /* orphan sweep is best-effort */
+    }
   } catch (error) {
     // Write failed → do NOT call the publish hook.
     return dbErrorResponse(error);

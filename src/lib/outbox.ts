@@ -53,6 +53,20 @@ export function pendingOpCount(): number {
   return readOps().length;
 }
 
+/**
+ * True when a failed write should be queued for replay.
+ * `null` = network/offline, `401/429/5xx` = retryable. Permanent client
+ * errors (`400/403/404/409` — e.g. duplicate ingredient name) must NOT be
+ * queued: retrying can never succeed and the op would clog every later op.
+ * Mirrors the drop-list in `flushOutbox()` below.
+ */
+export function isRetryableWriteStatus(status: number | null): boolean {
+  if (status === null) return true;
+  if (status === 401 || status === 429) return true;
+  if (status >= 500) return true;
+  return false;
+}
+
 /** Drops all queued ops (e.g. after a full local wipe so cleared data cannot replay). */
 export function clearOutbox(): void {
   if (typeof window === "undefined") return;

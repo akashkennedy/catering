@@ -6,6 +6,10 @@
 --     read-only pooled role), caches aggressively, revalidates on publish ping.
 --   * CRM project: writes ONLY through its /api/site-content route, which
 --     requires the CRM login session. DATABASE_URL stays server-side.
+--
+-- Gallery photos (max 10, no Instagram embeds): bytes live in
+-- site_gallery_images (db/migrations/0009_gallery_images.sql); the
+-- site_content.gallery array holds [{ imageId, altTitle }] references.
 
 CREATE TABLE IF NOT EXISTS site_content (
   id TEXT PRIMARY KEY,

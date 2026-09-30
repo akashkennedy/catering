@@ -14,7 +14,7 @@ export function newClientId(): string {
 
 type WriteMethod = "POST" | "PATCH" | "DELETE";
 
-async function request(path: string, method: WriteMethod, body?: unknown): Promise<boolean> {
+async function request(path: string, method: WriteMethod, body?: unknown): Promise<number | null> {
   try {
     const response = await fetch(path, {
       method,
@@ -22,20 +22,24 @@ async function request(path: string, method: WriteMethod, body?: unknown): Promi
       credentials: "same-origin",
       body: body === undefined ? undefined : JSON.stringify(body),
     });
-    return response.ok;
+    return response.status;
   } catch {
-    return false;
+    return null;
   }
 }
 
-/** Fire-and-forget sync: attempts the request, queues it on failure. */
+/**
+ * Fire-and-forget sync: attempts the request, queues only retryable failures.
+ * Permanent client errors (400/403/404/409) are dropped, matching flushOutbox().
+ */
 export async function syncOrQueue(
   method: "POST" | "PATCH" | "DELETE",
   path: string,
   body?: unknown
 ): Promise<void> {
-  const ok = await request(path, method, body);
-  if (!ok) {
+  const status = await request(path, method, body);
+  const { isRetryableWriteStatus } = await import("./outbox");
+  if (isRetryableWriteStatus(status)) {
     const { queueOp } = await import("./outbox");
     queueOp({ method, path, body });
   }

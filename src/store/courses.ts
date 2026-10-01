@@ -48,7 +48,7 @@ function newClientId(): string {
   }
 }
 
-async function sendJson(path: string, method: "POST" | "PATCH", body: unknown): Promise<boolean> {
+async function sendJson(path: string, method: "POST" | "PATCH", body: unknown): Promise<number | null> {
   try {
     const response = await fetch(path, {
       method,
@@ -56,10 +56,15 @@ async function sendJson(path: string, method: "POST" | "PATCH", body: unknown): 
       credentials: "same-origin",
       body: JSON.stringify(body),
     });
-    return response.ok;
+    return response.status;
   } catch {
-    return false;
+    return null;
   }
+}
+
+async function shouldQueueStatus(status: number | null): Promise<boolean> {
+  const { isRetryableWriteStatus } = await import("@/lib/outbox");
+  return isRetryableWriteStatus(status);
 }
 
 // Shared in-flight load so simultaneous mounts fire a single request.
@@ -74,8 +79,8 @@ export const useCoursesStore = create<CoursesState>()(
       addCourse: async (input) => {
         const course: Course = { id: newClientId(), ...input };
         set((state) => ({ courses: [...state.courses, course] }));
-        const ok = await sendJson("/api/courses", "POST", course);
-        if (!ok) {
+        const status = await sendJson("/api/courses", "POST", course);
+        if (await shouldQueueStatus(status)) {
           const { queueOp } = await import("@/lib/outbox");
           queueOp({ method: "POST", path: "/api/courses", body: course });
         }
@@ -87,8 +92,8 @@ export const useCoursesStore = create<CoursesState>()(
             course.id === id ? { ...course, ...input } : course
           ),
         }));
-        const ok = await sendJson(`/api/courses/${encodeURIComponent(id)}`, "PATCH", input);
-        if (!ok) {
+        const status = await sendJson(`/api/courses/${encodeURIComponent(id)}`, "PATCH", input);
+        if (await shouldQueueStatus(status)) {
           const { queueOp } = await import("@/lib/outbox");
           queueOp({ method: "PATCH", path: `/api/courses/${encodeURIComponent(id)}`, body: input });
         }
@@ -122,8 +127,11 @@ export const useCoursesStore = create<CoursesState>()(
             removeLocal();
             return { ok: true };
           }
-          const { queueOp } = await import("@/lib/outbox");
-          queueOp({ method: "DELETE", path: `/api/courses/${encodeURIComponent(id)}` });
+          const { isRetryableWriteStatus } = await import("@/lib/outbox");
+          if (isRetryableWriteStatus(response.status)) {
+            const { queueOp } = await import("@/lib/outbox");
+            queueOp({ method: "DELETE", path: `/api/courses/${encodeURIComponent(id)}` });
+          }
         } catch {
           const { queueOp } = await import("@/lib/outbox");
           queueOp({ method: "DELETE", path: `/api/courses/${encodeURIComponent(id)}` });
@@ -138,8 +146,8 @@ export const useCoursesStore = create<CoursesState>()(
         if (get().loaded) return;
         if (!loadCoursesRequest) {
           loadCoursesRequest = (async () => {
-            const { flushOutbox } = await import("@/lib/outbox");
-            await flushOutbox();
+            const { scheduleOutboxFlush } = await import("@/lib/outbox");
+            scheduleOutboxFlush();
             try {
               const response = await fetch("/api/courses", { credentials: "same-origin" });
               if (!response.ok) return;

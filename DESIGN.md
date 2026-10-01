@@ -77,7 +77,7 @@ Same roles, shifted for contrast on dark surfaces:
 ## 7. Forms & inputs
 
 - Two-column field grid on desktop, single column on mobile; label-above-input; thin `--border` inputs, no heavy shadows.
-- All money in INR (₹), no number-input spinners, Indian-mobile phone validation, standardized units (`gm / kg / litre / piece`).
+- All money in INR (₹), no number-input spinners, Indian-mobile phone validation, standardized units (`gm / kg / litre / ml / piece / packet`).
 - Bottom action bar: `default`-variant secondary + filled primary (leaf) actions; destructive confirms in kumkum.
 
 ## 8. Principles

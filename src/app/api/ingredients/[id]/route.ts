@@ -16,6 +16,7 @@ const ingredientPatchSchema = z
     globalPrice: z.number().finite().min(0).optional(),
     openingStock: z.number().finite().optional(),
     lowStockThreshold: z.number().finite().optional(),
+    packets: z.number().finite().min(0).optional(),
   })
   .refine((value) => Object.keys(value).length > 0, { message: "Empty patch." });
 
@@ -37,7 +38,7 @@ export async function PATCH(
     return NextResponse.json({ error: "Invalid ingredient patch." }, { status: 400 });
   }
   const sql = db();
-  const existing = await sql`SELECT * FROM ingredients WHERE id = ${id} LIMIT 1`;
+  const existing = await sql`SELECT * FROM ingredients WHERE id = ${id} AND deleted_at IS NULL LIMIT 1`;
   if (existing.length === 0) {
     return NextResponse.json({ error: "Ingredient not found." }, { status: 404 });
   }
@@ -52,6 +53,7 @@ export async function PATCH(
       global_price = ${merged.globalPrice},
       opening_stock = ${merged.openingStock},
       low_stock_threshold = ${merged.lowStockThreshold},
+      packets = ${merged.packets},
       updated_at = NOW()
     WHERE id = ${id}
   `;
@@ -66,6 +68,6 @@ export async function DELETE(
   if ("response" in auth) return auth.response;
   const { id } = await params;
   const sql = db();
-  await sql`DELETE FROM ingredients WHERE id = ${id}`;
+  await sql`UPDATE ingredients SET deleted_at = NOW(), updated_at = NOW() WHERE id = ${id}`;
   return NextResponse.json({ ok: true });
 }

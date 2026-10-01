@@ -4,11 +4,12 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { Button, Group, Modal, NumberInput, Select, Stack, TextInput } from "@mantine/core";
 import { Controller, useForm, useWatch } from "react-hook-form";
 import { z } from "zod";
-import { useEffect } from "react";
+import { useEffect, useRef, useState } from "react";
 
 import { Bilingual } from "@/components/Bilingual";
 import { ui, preferredText } from "@/lib/i18n";
-import { lookupIngredient } from "@/lib/ingredientTranslations";
+import { lookupIngredient, suggestTamilName } from "@/lib/ingredientTranslations";
+import { fetchOnlineTamil, getCachedOnlineTamil } from "@/lib/translateTamil";
 import { INGREDIENT_TAGS } from "@/lib/ingredientTags";
 import { useSettingsStore } from "@/store/settings";
 import { useMobileSheet } from "@/hooks/useMobileSheet";
@@ -25,6 +26,7 @@ const ingredientSchema = z.object({
   tag: z.enum(INGREDIENT_TAGS),
   unit: z.string().trim().min(1, "Unit is required"),
   globalPrice: z.coerce.number().min(0, "Price must be 0 or more"),
+  packets: z.coerce.number().min(0, "Packets must be 0 or more"),
 });
 
 type IngredientFormValues = z.infer<typeof ingredientSchema>;
@@ -47,6 +49,7 @@ export function IngredientFormModal({ opened, ingredient, onClose }: IngredientF
     reset,
     control,
     setValue,
+    getValues,
     formState: { errors, dirtyFields, isSubmitting },
   } = useForm<IngredientFormValues>({
     resolver: zodResolver(ingredientSchema),
@@ -56,10 +59,14 @@ export function IngredientFormModal({ opened, ingredient, onClose }: IngredientF
       tag: "grocery",
       unit: "",
       globalPrice: 0,
+      packets: 0,
     },
   });
 
   const watchedName = useWatch({ control, name: "name" });
+
+  const [translating, setTranslating] = useState(false);
+  const requestId = useRef(0);
 
   useEffect(() => {
     if (!opened) return;
@@ -69,38 +76,102 @@ export function IngredientFormModal({ opened, ingredient, onClose }: IngredientF
       tag: ingredient?.tag ?? "grocery",
       unit: normalizeUnit(ingredient?.unit) || UNITS[0],
       globalPrice: ingredient?.globalPrice ?? 0,
+      packets: ingredient?.packets ?? 0,
     });
   }, [opened, ingredient, reset]);
 
+  // Dictionary tag auto-fill (kept): only the offline dictionary/catalog can
+  // infer a category — online translation returns Tamil text, never a tag.
   useEffect(() => {
     if (ingredient) return;
     const name = watchedName?.trim();
     if (!name) return;
     const suggestion = lookupIngredient(name);
     if (!suggestion) return;
-    if (!dirtyFields.tamilName) {
-      setValue("tamilName", suggestion.tamilName);
-    }
     if (!dirtyFields.tag) {
       setValue("tag", suggestion.tag);
     }
-  }, [watchedName, ingredient, dirtyFields.tamilName, dirtyFields.tag, setValue]);
+  }, [watchedName, ingredient, dirtyFields.tag, setValue]);
 
-  const onSubmit = (values: IngredientFormValues) => {
+  // Instant offline Tamil fill while the Tamil field is untouched (same as
+  // CourseFormModal). suggestTamilName always returns something non-empty via
+  // dictionary + transliteration, so unknown names work without hardcoding.
+  useEffect(() => {
+    if (!opened) return;
+    if (dirtyFields.tamilName) return;
+    const name = (watchedName ?? "").trim();
+    if (!name) return;
+    const current = (getValues("tamilName") ?? "").trim();
+    if (ingredient?.tamilName?.trim() && current) return;
+    const suggestion = suggestTamilName(name);
+    if (suggestion && suggestion !== current) {
+      setValue("tamilName", suggestion, { shouldValidate: false });
+    }
+  }, [watchedName, dirtyFields.tamilName, opened, ingredient, getValues, setValue]);
+
+  // Online enhancement with wider coverage (same as CourseFormModal).
+  useEffect(() => {
+    if (!opened) return;
+    if (dirtyFields.tamilName) return;
+    const name = (watchedName ?? "").trim();
+    if (name.length < 2) return;
+    if (ingredient?.tamilName?.trim() && (getValues("tamilName") ?? "").trim()) return;
+    const cached = getCachedOnlineTamil(name);
+    if (cached?.tamil) {
+      const current = (getValues("tamilName") ?? "").trim();
+      if (!current || current === suggestTamilName(name)) {
+        setValue("tamilName", cached.tamil, { shouldValidate: false });
+      }
+      return;
+    }
+    const id = ++requestId.current;
+    const timer = setTimeout(() => {
+      void (async () => {
+        if (typeof navigator !== "undefined" && !navigator.onLine) return;
+        setTranslating(true);
+        try {
+          const result = await fetchOnlineTamil(name);
+          if (id !== requestId.current) return;
+          if (!result?.tamil) return;
+          if ((getValues("name") ?? "").trim() !== name) return;
+          const current = (getValues("tamilName") ?? "").trim();
+          if (!current || current === suggestTamilName(name)) {
+            setValue("tamilName", result.tamil, { shouldValidate: false });
+          }
+        } finally {
+          if (id === requestId.current) setTranslating(false);
+        }
+      })();
+    }, 600);
+    return () => clearTimeout(timer);
+  }, [watchedName, dirtyFields.tamilName, opened, ingredient, getValues, setValue]);
+
+  const nameRegister = register("name", {
+    onChange: (e) => {
+      const current = getValues("tamilName");
+      if (current && current.trim()) return;
+      const suggestion = suggestTamilName(e.target.value);
+      if (suggestion) setValue("tamilName", suggestion, { shouldValidate: false });
+    },
+  });
+
+  const onSubmit = async (values: IngredientFormValues) => {
+    const name = values.name.trim();
     const input: IngredientInput = {
-      name: values.name,
-      tamilName: values.tamilName,
+      name,
+      tamilName: values.tamilName.trim() || suggestTamilName(name),
       tag: values.tag,
       unit: normalizeUnit(values.unit),
       qty: 0,
       globalPrice: values.globalPrice,
       openingStock: 0,
       lowStockThreshold: 0,
+      packets: values.packets,
     };
     if (ingredient) {
-      updateIngredient(ingredient.id, input);
+      await updateIngredient(ingredient.id, input);
     } else {
-      addIngredient(input);
+      await addIngredient(input);
     }
     onClose();
   };
@@ -119,15 +190,21 @@ export function IngredientFormModal({ opened, ingredient, onClose }: IngredientF
             description={<Bilingual label={ui.ingredients.autoFillHint} />}
             placeholder={preferredText(ui.ingredients.namePlaceholder, uiLanguage)}
             withAsterisk
-            {...register("name")}
+            {...nameRegister}
             error={errors.name?.message}
           />
           <TextInput
             label={<Bilingual label={ui.ingredients.tamilName} />}
             placeholder={preferredText(ui.ingredients.tamilNamePlaceholder, uiLanguage)}
+            dir="auto"
             {...register("tamilName")}
             error={errors.tamilName?.message}
           />
+          {translating && (
+            <p style={{ fontSize: 12, color: "var(--ink-muted)", marginTop: -8 }}>
+              Translating…
+            </p>
+          )}
           <Controller
             name="tag"
             control={control}
@@ -180,6 +257,25 @@ export function IngredientFormModal({ opened, ingredient, onClose }: IngredientF
                     if (e.key === "ArrowUp" || e.key === "ArrowDown") e.preventDefault();
                   }}
                   error={errors.globalPrice?.message}
+                />
+              )}
+            />
+            <Controller
+              name="packets"
+              control={control}
+              render={({ field }) => (
+                <NumberInput
+                  label={<Bilingual label={ui.ingredients.packets} />}
+                  placeholder={preferredText(ui.ingredients.packetsPlaceholder, uiLanguage)}
+                  min={0}
+                  allowNegative={false}
+                  decimalScale={2}
+                  style={{ flex: "1 1 140px" }}
+                  {...field}
+                  onKeyDown={(e) => {
+                    if (e.key === "ArrowUp" || e.key === "ArrowDown") e.preventDefault();
+                  }}
+                  error={errors.packets?.message}
                 />
               )}
             />

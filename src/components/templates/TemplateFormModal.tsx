@@ -13,6 +13,7 @@ import {
   TextInput,
 } from "@mantine/core";
 import { Link2Off, Plus, Trash } from "lucide-react";
+import { useMediaQuery } from "@mantine/hooks";
 import {
   useFieldArray,
   useForm,
@@ -79,7 +80,10 @@ type TemplateFormModalProps = {
 
 export function TemplateFormModal({ opened, template, onClose }: TemplateFormModalProps) {
   const uiLanguage = useSettingsStore((state) => state.uiLanguage);
-  const sheet = useMobileSheet("full", "xl");
+  const sheet = useMobileSheet("sheet", "xl");
+  // Mobile (<=639px): picker buttons go full-width below the select so they
+  // wrap cleanly and are easy to tap. Desktop keeps natural button widths.
+  const isMobile = useMediaQuery("(max-width: 639px)") ?? false;
   const addTemplate = useTemplatesStore((state) => state.addTemplate);
   const updateTemplate = useTemplatesStore((state) => state.updateTemplate);
   const ingredients = useIngredientsStore((state) => state.ingredients);
@@ -283,11 +287,12 @@ export function TemplateFormModal({ opened, template, onClose }: TemplateFormMod
     >
       <form onSubmit={handleSubmit(onSubmit)}>
         <Stack gap="md">
-          <Group grow align="flex-start">
+          <Group grow align="flex-start" wrap="wrap">
             <TextInput
               label={<Bilingual label={ui.templates.englishName} />}
               placeholder={preferredText(ui.templates.englishNamePlaceholder, uiLanguage)}
               withAsterisk
+              style={{ flex: "1 1 220px", minWidth: 0 }}
               {...templateNameEnRegister}
               error={errors.nameEn?.message}
             />
@@ -295,6 +300,7 @@ export function TemplateFormModal({ opened, template, onClose }: TemplateFormMod
               label={<Bilingual label={ui.templates.tamilName} />}
               placeholder={preferredText(ui.templates.tamilNamePlaceholder, uiLanguage)}
               dir="auto"
+              style={{ flex: "1 1 220px", minWidth: 0 }}
               {...register("nameTa")}
               error={errors.nameTa?.message}
             />
@@ -329,15 +335,17 @@ export function TemplateFormModal({ opened, template, onClose }: TemplateFormMod
             return (
               <Card key={field.id} withBorder padding="sm">
                 <Stack gap="sm">
-                  <Group justify="space-between" align="flex-start">
-                    <Stack gap={0}>
-                      <Text fw={600}>{title}</Text>
+                  <Group justify="space-between" align="flex-start" wrap="nowrap">
+                    <Stack gap={0} style={{ minWidth: 0, flex: 1 }}>
+                      <Text fw={600} lineClamp={2} style={{ overflowWrap: "anywhere" }}>
+                        {title}
+                      </Text>
                       <Text size="xs" c="dimmed">
                         <Bilingual label={ui.ingredientsCount(lines.length)} />
                         {dishCost > 0 ? ` · ≈ ${formatINR(Math.round(dishCost * 100) / 100)} / 100` : ""}
                       </Text>
                     </Stack>
-                    <Group gap={4} wrap="nowrap">
+                    <Group gap={4} wrap="nowrap" style={{ flexShrink: 0 }}>
                       {course && (
                         <ActionIcon
                           variant="subtle"
@@ -381,12 +389,12 @@ export function TemplateFormModal({ opened, template, onClose }: TemplateFormMod
                           ? Math.round(Number(row.qtyPer100 || 0) * masterItem.globalPrice * 100) / 100
                           : null;
                         return (
-                          <Group key={row.ingredientId} justify="space-between" gap="xs">
-                            <Text size="sm">
+                          <Group key={row.ingredientId} justify="space-between" gap="xs" wrap="wrap">
+                            <Text size="sm" lineClamp={1} style={{ minWidth: 0, flex: 1, overflowWrap: "anywhere" }}>
                               {name} · {row.qtyPer100}
                               {unit ? ` ${unit}` : ""}
                             </Text>
-                            <Text size="sm" c="dimmed">
+                            <Text size="sm" c="dimmed" style={{ flexShrink: 0 }}>
                               {lineCost !== null && lineCost > 0 ? `≈ ${formatINR(lineCost)}` : "—"}
                             </Text>
                           </Group>
@@ -413,7 +421,7 @@ export function TemplateFormModal({ opened, template, onClose }: TemplateFormMod
               data={ingredientOptions}
               searchable
               clearable
-              style={{ flex: 1, minWidth: 180 }}
+              style={{ flex: "1 1 220px", minWidth: 0 }}
               value={coursePick}
               onChange={setCoursePick}
             />
@@ -421,6 +429,7 @@ export function TemplateFormModal({ opened, template, onClose }: TemplateFormMod
               variant="light"
               leftSection={<Plus size={16} />}
               disabled={!coursePick}
+              style={isMobile ? { flex: "1 1 100%" } : undefined}
               onClick={() => {
                 const course = coursePick ? coursesById.get(coursePick) : undefined;
                 if (!course) return;
@@ -430,7 +439,11 @@ export function TemplateFormModal({ opened, template, onClose }: TemplateFormMod
             >
               <Bilingual label={ui.templates.addCourse} />
             </Button>
-            <Button variant="light" onClick={() => setCourseFormOpened(true)}>
+            <Button
+              variant="light"
+              onClick={() => setCourseFormOpened(true)}
+              style={isMobile ? { flex: "1 1 100%" } : undefined}
+            >
               <Bilingual label={ui.templates.createCourse} />
             </Button>
           </Group>

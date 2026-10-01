@@ -76,8 +76,6 @@ export function OverviewGrid() {
     0
   );
 
-  const loaded = eventsLoaded && financeLoaded;
-
   return (
     <Stack gap="md">
       <Group>
@@ -91,7 +89,7 @@ export function OverviewGrid() {
           ]}
         />
       </Group>
-      {!loaded ? (
+      {!eventsLoaded ? (
         <LoadingSpinner />
       ) : (
         <div
@@ -113,11 +111,17 @@ export function OverviewGrid() {
                 title={<Bilingual label={ui.dashboard.totalAmount} />}
                 value={formatINR(totalAmount)}
               />
-              <StatCard
-                icon={<TrendingDown size={18} style={iconStyle} />}
-                title={<Bilingual label={ui.dashboard.totalExpenses} />}
-                value={formatINR(summary.expense)}
-              />
+              {financeLoaded ? (
+                <StatCard
+                  icon={<TrendingDown size={18} style={iconStyle} />}
+                  title={<Bilingual label={ui.dashboard.totalExpenses} />}
+                  value={formatINR(summary.expense)}
+                />
+              ) : (
+                <div className="dash-card" style={{ display: "flex", flexDirection: "column", gap: 16 }}>
+                  <LoadingSpinner />
+                </div>
+              )}
               <StatCard
                 icon={<CreditCard size={18} style={iconStyle} />}
                 title={<Bilingual label={ui.dashboard.pendingAmount} />}

@@ -2,8 +2,8 @@
 
 import { useEffect } from "react";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { Button, Group, Modal, NumberInput, Select, Stack, TextInput } from "@mantine/core";
-import { Controller, useForm } from "react-hook-form";
+import { Button, Group, Modal, NumberInput, Select, Stack, Text, TextInput } from "@mantine/core";
+import { Controller, useForm, useWatch } from "react-hook-form";
 import { z } from "zod";
 
 import { Bilingual } from "@/components/Bilingual";
@@ -62,6 +62,9 @@ export function PurchaseEntryModal({ opened, onClose }: PurchaseEntryModalProps)
     reset({ ingredientId: "", qty: 1, price: 0, date: todayLocalISO(), note: "", eventId: "" });
   }, [opened, reset, loadEvents]);
 
+  const watchedIngredientId = useWatch({ control, name: "ingredientId" });
+  const watchedIngredient = ingredients.find((item) => item.id === watchedIngredientId);
+
   const onSubmit = (values: PurchaseFormValues) => {
     addPurchaseEntry({
       ingredientId: values.ingredientId,
@@ -105,6 +108,11 @@ export function PurchaseEntryModal({ opened, onClose }: PurchaseEntryModalProps)
               />
             )}
           />
+          {watchedIngredient != null && (watchedIngredient.packets ?? 0) > 0 && (
+            <Text size="xs" c="dimmed" mt={-8}>
+              {watchedIngredient.name}: {watchedIngredient.packets} pkt
+            </Text>
+          )}
           <Controller
             name="qty"
             control={control}

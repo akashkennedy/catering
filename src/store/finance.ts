@@ -58,7 +58,7 @@ function newClientId(): string {
   }
 }
 
-async function postJson(path: string, body: unknown): Promise<boolean> {
+async function postJson(path: string, body: unknown): Promise<number | null> {
   try {
     const response = await fetch(path, {
       method: "POST",
@@ -66,22 +66,27 @@ async function postJson(path: string, body: unknown): Promise<boolean> {
       credentials: "same-origin",
       body: JSON.stringify(body),
     });
-    return response.ok;
+    return response.status;
   } catch {
-    return false;
+    return null;
   }
 }
 
-async function deletePath(path: string): Promise<boolean> {
+async function deletePath(path: string): Promise<number | null> {
   try {
     const response = await fetch(path, {
       method: "DELETE",
       credentials: "same-origin",
     });
-    return response.ok;
+    return response.status;
   } catch {
-    return false;
+    return null;
   }
+}
+
+async function shouldQueueStatus(status: number | null): Promise<boolean> {
+  const { isRetryableWriteStatus } = await import("@/lib/outbox");
+  return isRetryableWriteStatus(status);
 }
 
 // Shared in-flight load so simultaneous mounts fire a single request.
@@ -97,8 +102,8 @@ export const useFinanceStore = create<FinanceState>()(
       addExpense: async (input) => {
         const expense: Expense = { id: newClientId(), ...input };
         set((state) => ({ expenses: [...state.expenses, expense] }));
-        const ok = await postJson("/api/expenses", expense);
-        if (!ok) {
+        const status = await postJson("/api/expenses", expense);
+        if (await shouldQueueStatus(status)) {
           const { queueOp } = await import("@/lib/outbox");
           queueOp({ method: "POST", path: "/api/expenses", body: expense });
         }
@@ -107,8 +112,8 @@ export const useFinanceStore = create<FinanceState>()(
         set((state) => ({
           expenses: state.expenses.filter((expense) => expense.id !== id),
         }));
-        const ok = await deletePath(`/api/expenses/${encodeURIComponent(id)}`);
-        if (!ok) {
+        const status = await deletePath(`/api/expenses/${encodeURIComponent(id)}`);
+        if (await shouldQueueStatus(status)) {
           const { queueOp } = await import("@/lib/outbox");
           queueOp({ method: "DELETE", path: `/api/expenses/${encodeURIComponent(id)}` });
         }
@@ -116,8 +121,8 @@ export const useFinanceStore = create<FinanceState>()(
       addOtherIncome: async (input) => {
         const income: OtherIncome = { id: newClientId(), ...input };
         set((state) => ({ otherIncomes: [...state.otherIncomes, income] }));
-        const ok = await postJson("/api/other-incomes", income);
-        if (!ok) {
+        const status = await postJson("/api/other-incomes", income);
+        if (await shouldQueueStatus(status)) {
           const { queueOp } = await import("@/lib/outbox");
           queueOp({ method: "POST", path: "/api/other-incomes", body: income });
         }
@@ -126,8 +131,8 @@ export const useFinanceStore = create<FinanceState>()(
         set((state) => ({
           otherIncomes: state.otherIncomes.filter((income) => income.id !== id),
         }));
-        const ok = await deletePath(`/api/other-incomes/${encodeURIComponent(id)}`);
-        if (!ok) {
+        const status = await deletePath(`/api/other-incomes/${encodeURIComponent(id)}`);
+        if (await shouldQueueStatus(status)) {
           const { queueOp } = await import("@/lib/outbox");
           queueOp({ method: "DELETE", path: `/api/other-incomes/${encodeURIComponent(id)}` });
         }
@@ -136,8 +141,8 @@ export const useFinanceStore = create<FinanceState>()(
         if (useFinanceStore.getState().loaded) return;
         if (!loadFinanceRequest) {
           loadFinanceRequest = (async () => {
-            const { flushOutbox } = await import("@/lib/outbox");
-            await flushOutbox();
+            const { scheduleOutboxFlush } = await import("@/lib/outbox");
+            scheduleOutboxFlush();
             try {
               const [expensesRes, incomesRes] = await Promise.all([
                 fetch("/api/expenses", { credentials: "same-origin" }),

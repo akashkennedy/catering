@@ -210,7 +210,7 @@ function newClientId(): string {
   }
 }
 
-async function sendJson(path: string, method: "POST" | "PATCH", body: unknown): Promise<boolean> {
+async function sendJson(path: string, method: "POST" | "PATCH", body: unknown): Promise<number | null> {
   try {
     const response = await fetch(path, {
       method,
@@ -218,19 +218,24 @@ async function sendJson(path: string, method: "POST" | "PATCH", body: unknown): 
       credentials: "same-origin",
       body: JSON.stringify(body),
     });
-    return response.ok;
+    return response.status;
   } catch {
-    return false;
+    return null;
   }
 }
 
-async function sendDelete(path: string): Promise<boolean> {
+async function sendDelete(path: string): Promise<number | null> {
   try {
     const response = await fetch(path, { method: "DELETE", credentials: "same-origin" });
-    return response.ok;
+    return response.status;
   } catch {
-    return false;
+    return null;
   }
+}
+
+async function shouldQueueStatus(status: number | null): Promise<boolean> {
+  const { isRetryableWriteStatus } = await import("@/lib/outbox");
+  return isRetryableWriteStatus(status);
 }
 
 // Shared in-flight load so simultaneous mounts fire a single request.
@@ -247,8 +252,8 @@ export const useEventsStore = create<EventsState>()(
         const id = providedId ?? newClientId();
         const event: CateringEvent = { id, ...rest };
         set((state) => ({ events: [...state.events, event] }));
-        const ok = await sendJson("/api/events", "POST", event);
-        if (!ok) {
+        const status = await sendJson("/api/events", "POST", event);
+        if (await shouldQueueStatus(status)) {
           const { queueOp } = await import("@/lib/outbox");
           queueOp({ method: "POST", path: "/api/events", body: event });
         }
@@ -260,8 +265,8 @@ export const useEventsStore = create<EventsState>()(
             event.id === id ? { ...event, ...input } : event
           ),
         }));
-        const ok = await sendJson(`/api/events/${encodeURIComponent(id)}`, "PATCH", input);
-        if (!ok) {
+        const status = await sendJson(`/api/events/${encodeURIComponent(id)}`, "PATCH", input);
+        if (await shouldQueueStatus(status)) {
           const { queueOp } = await import("@/lib/outbox");
           queueOp({ method: "PATCH", path: `/api/events/${encodeURIComponent(id)}`, body: input });
         }
@@ -270,8 +275,8 @@ export const useEventsStore = create<EventsState>()(
         set((state) => ({
           events: state.events.filter((event) => event.id !== id),
         }));
-        const ok = await sendDelete(`/api/events/${encodeURIComponent(id)}`);
-        if (!ok) {
+        const status = await sendDelete(`/api/events/${encodeURIComponent(id)}`);
+        if (await shouldQueueStatus(status)) {
           const { queueOp } = await import("@/lib/outbox");
           queueOp({ method: "DELETE", path: `/api/events/${encodeURIComponent(id)}` });
         }
@@ -280,8 +285,8 @@ export const useEventsStore = create<EventsState>()(
         if (useEventsStore.getState().loaded) return;
         if (!loadEventsRequest) {
           loadEventsRequest = (async () => {
-            const { flushOutbox } = await import("@/lib/outbox");
-            await flushOutbox();
+            const { scheduleOutboxFlush } = await import("@/lib/outbox");
+            scheduleOutboxFlush();
             try {
               const response = await fetch("/api/events", { credentials: "same-origin" });
               if (!response.ok) return;

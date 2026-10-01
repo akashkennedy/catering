@@ -362,6 +362,8 @@ export const ui = {
     selectUnit: lab("Select a unit", "அலகைத் தேர்ந்தெடுக்கவும்"),
     globalPrice: lab("Global price", "உலகளாவிய விலை"),
     globalPricePlaceholder: lab("e.g. 150", "எ.கா. 150"),
+    packets: lab("Packets", "பாக்கெட்டுகள்"),
+    packetsPlaceholder: lab("e.g. 2", "எ.கா. 2"),
     unitPrefix: lab("Unit:", "அலகு:"),
     note: lab("Note", "குறிப்பு"),
     notePlaceholder: lab("e.g. Market, vendor", "எ.கா. சந்தை, விற்பனையாளர்"),

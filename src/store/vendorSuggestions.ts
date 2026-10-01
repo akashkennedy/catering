@@ -51,8 +51,8 @@ export const useVendorSuggestionsStore = create<VendorSuggestionsState>()(
         if (useVendorSuggestionsStore.getState().loaded) return;
         if (!loadVendorSuggestionsRequest) {
           loadVendorSuggestionsRequest = (async () => {
-            const { flushOutbox } = await import("@/lib/outbox");
-            await flushOutbox();
+            const { scheduleOutboxFlush } = await import("@/lib/outbox");
+            scheduleOutboxFlush();
             const body = await fetchJson<{ vendorNames?: unknown }>("/api/vendor-names");
             if (body && Array.isArray(body.vendorNames)) {
               const names = body.vendorNames.filter(

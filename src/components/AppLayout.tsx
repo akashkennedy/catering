@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import type { ComponentType } from "react";
 import {
   ActionIcon,
@@ -70,6 +70,11 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
   const permissions = useAuthStore((state) => state.permissions);
   const pathname = usePathname();
   const uiLanguage = useSettingsStore((state) => state.uiLanguage);
+  useEffect(() => {
+    void import("@/lib/progressiveBoot").then(({ startProgressiveBoot }) =>
+      startProgressiveBoot()
+    );
+  }, []);
   const visibleNavItems = NAV_ITEMS.filter((item) => {
     if (item.href === "/finance" && !permissions.canViewFinance) return false;
     if (item.href === "/employees" && !permissions.canViewEmployees) return false;

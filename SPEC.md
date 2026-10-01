@@ -32,7 +32,7 @@ Single admin user throughout — no roles, multi-user auth, or real-time sync re
 | Offline / PWA     | Serwist                                                                                    |
 | Icons             | Lucide React                                                                               |
 | PDF Generation    | Client-side PDF library (e.g. `@react-pdf/renderer` or `pdfmake`) with Tamil font embedded |
-| Deployment        | Vercel                                                                                     |
+| Deployment        | Vercel (previews) + Netlify `mampallicrm.netlify.app` (Runtime v5, `.next` publish)         |
 | AI Coding Tools   | Cursor, Antigravity, Opencode                                                              |
 
 **Note:** Confirm Serwist and Mantine both support Next.js 16 / React 19 before scaffolding — PWA tooling can lag a framework's major version by a few weeks.
@@ -408,7 +408,7 @@ This section records what has been implemented on top of §§1–11 so a new age
 - No `/events/new` or `/events/[id]/edit` routes — create/edit happens in modals (`EventFormModal`, `QuickAddEventModal`).
 - Event status pipeline (actual): `enquiry → confirmed → preparing → completed → paid`.
 - Expense categories (actual): `food materials | other expenses | electricity | transport | gas | custom`. Staff salary is deliberately **not** an expense category (labour is tracked per-event via employee toPay/paid).
-- Ingredient units (actual): `gm | kg | litre | piece` (`src/lib/units.ts`).
+- Ingredient units (actual): `gm | kg | litre | ml | piece | packet` (`src/lib/units.ts`; aliases e.g. `pcs → piece`, `pkt/packets → packet` converge via `normalizeUnit`).
 - Mobile nav: bottom bar (Dashboard, Events, Rental, Calculator + More drawer holding Templates, Ingredients, Employees, Follow-up, Finance, Settings).
 
 ### 12.9 Demo-data route
@@ -424,8 +424,8 @@ This section records only what was built **after** §12 was written. §§1–12 
 ### 13.1 Responsive modal sheets (`useMobileSheet`, supersedes §12 mobile-modal notes)
 
 - New shared hook `src/hooks/useMobileSheet.ts` with two variants, applied to **all** form modals (event, quick-add event, employee, event-employee, event-utensil, ingredient, purchase, template, expense, other-income, utensil, rent-in, assign-to-event):
-  - `"full"` — large forms (event, template): edge-to-edge full-screen sheet on phones (`≤639px`), centered desktop modal with preserved desktop size (`lg` / `xl`).
-  - `"sheet"` — small forms (everything else): bottom sheet on phones (slide-up 250ms, 16px top radius, `max-height: 92dvh`, 8px side/bottom gutters, `overflow-x: clip`), centered desktop modal.
+  - `"full"` — large forms (event): edge-to-edge full-screen sheet on phones (`≤639px`), centered desktop modal with preserved desktop size (`lg` / `xl`).
+  - `"sheet"` — small forms and (since §29) the template form: bottom sheet on phones (slide-up 250ms, 16px top radius, `max-height: 92dvh`, 8px side/bottom gutters, `overflow-x: clip`), centered desktop modal.
 - Supporting CSS in `src/app/globals.css`: `.mobile-sheet` content/body rules, 16px body padding + `safe-area-inset-bottom` inside sheets, touch momentum scroll (`-webkit-overflow-scrolling: touch`, `overscroll-behavior: contain`), `max-width: 100%` guards on inputs/selects/textareas inside modals.
 
 ### 13.2 Mobile "More" navigation is a right-side drawer (corrects §12/DESIGN mobile notes)
@@ -645,7 +645,7 @@ Supersedes §1 (Phase 2 is now), §13.13 (mock gate replaced), and UI-only roles
 ## 22. Session log 2026-09-21 — current truth + next steps (for AI handoff)
 
 ### What is live right now
-- **Branch:** `dev` on `origin/dev` (Vercel previews build `dev`; `main` untouched). HEAD `829633b`, working tree clean.
+- **Branch:** `dev` on `origin/dev` (Vercel previews + Netlify Git-connected site build `dev`; `main` untouched). HEAD `d54b72a`, working tree clean at time of writing (§28).
 - **Auth:** username-based (`username` UNIQUE, lowercased). Login tries DB (bcrypt) first, legacy env-HMAC fallback only when `DATABASE_URL` unset. Wrong passwords show the invalid-credentials Alert; caps-lock warns inline. First admin seeded via `ADMIN_USERNAME`/`ADMIN_PASSWORD` (values live only in local `.env` / Vercel env, never in git). Note: usernames below the 8-char minimum enforced by the seed script and the users API can log in but cannot be re-set via UI.
 - **Permissions (7 flags, server-enforced):** `canViewFinance`, `canViewOtherEmployeeRates`, `canManageEmployees`, `canManageSettings`, `canViewEmployees`, `canViewWebsite`, `canExportExcel`. New logins: everything true except finance/rates/view/export (all false). Admin always full; self/admin edits 403. UI mirrors all of it (nav, search, pages, export card, no-access cards). Sidebar + mobile More drawer both hide `/finance`, `/employees`, `/site-manager` per `canViewFinance` / `canViewEmployees` / `canViewWebsite`.
 - **UI map (current):** `/` dashboard (`OverviewGrid` 2×2 stat grid + Upcoming + Payment Status, single column); `/events` (search, date filter, status filter, list/calendar view toggle pinned right, delete confirm) + `/[id]` detail (invoice button, headcount/pricing, meals editor, status select, Ingredients/Employees/Rental tabs — tab list scrolls horizontally on phones, §24); `/templates` (Templates|Courses tabs, §26), `/ingredients`, `/inventory` (purchase tracker + assign-to-event, §23), `/employees` (+Logins & access), `/finance` (event-linked totals), `/follow-ups`, `/settings` (theme card on all breakpoints, 5 alert toggles, UI language, document language, Excel export gated), `/site-manager` (gated; public `/site` removed in §25). **No** `/utensils`, `/calculator`, `/migrate`, `/vendors`. Desktop sidebar: New Event button on top, nav Dashboard · Events · Follow-up · Templates · Ingredients · Inventory · Employees · Website · Finance, Settings + Logout pinned at bottom (no theme row — theme lives only in Settings). Mobile bar: Dashboard · Events · center Plus FAB (opens full event form) · Ingredients · More drawer (Templates, Inventory, Employees, Follow-up, Website, Finance, Settings, same permission gating). All loading states: text-free spinner. Scrollbars hidden globally.
@@ -661,7 +661,7 @@ Supersedes §1 (Phase 2 is now), §13.13 (mock gate replaced), and UI-only roles
 4. **Utensil/vessel APIs + tables remain** (event Rental tabs depend on them) though the page is gone — intentional.
 5. **Historic `used` stock rows remain readable** but nothing writes them anymore — intentional.
 6. **`main` never merged** — decide merge strategy (merge `dev` → `main` when previews are accepted).
-7. **`.env.example` documents `ADMIN_USERNAME`;** real `.env` is local-only (gitignored) — Vercel env vars must be kept in sync manually (`DATABASE_URL`, `AUTH_SESSION_SECRET`, `AUTH_USERNAME/PASSWORD` legacy fallback). (The old "`.env` still says `ADMIN_EMAIL`" thread is resolved — it now says `ADMIN_USERNAME=`.)
+7. **`.env.example` documents `ADMIN_USERNAME`;** real `.env` is local-only (gitignored) — Vercel + Netlify env vars must be kept in sync manually (`DATABASE_URL` pooled, `AUTH_SESSION_SECRET`, `AUTH_USERNAME/PASSWORD` legacy fallback). Missing `AUTH_*` in production throws in `validate-auth-config`/`server-auth` via `instrumentation.ts` → every route 500s (seen live on Netlify, §28). Env-only saves need a Clear-cache redeploy to rebundle `___netlify-server-handler`. (The old "`.env` still says `ADMIN_EMAIL`" thread is resolved — it now says `ADMIN_USERNAME=`.)
 8. **Mobile button-text report (event detail, light mode) → fixed in §24.** If any button still renders blank, capture a screenshot of the exact spot before changing code.
 
 ### How to work in this repo (conventions Claude should follow)
@@ -766,3 +766,41 @@ Supersedes the offline-only `suggestTamilName()` note in §19. The hardcoded dic
 - **Proxy (`GET /api/translate?text=&from=en&to=ta`, session-gated):** Google `gtx` first (`translate.googleapis.com`, no key), MyMemory fallback. Tamil targets are returned/cached only when the output contains Tamil script (unverified output falls through); other targets keep the non-empty check. In-memory LRU (500), 8s timeouts, 500-char cap.
 - **Client (`src/lib/translateTamil.ts`):** memory + `localStorage` cache, inflight dedup, `navigator.onLine` guard, `null` on any failure so callers keep the offline value.
 - **Forms:** template name + course name fields live-sync while untouched (dirty-gated, never clobbering manual/saved Tamil), ~600ms debounce, `Translating…` hint, request-id guards against stale overwrites; submit backfills empty Tamil from the offline suggester. Course names come from masters, so dish-level translation was removed from the template editor.
+
+---
+
+## 28. V17 Addendum — gallery/menus/events/templates/ingredients + Netlify (current)
+
+Commits since §27 (`5e6e9d4`): `dbb986e`, `5b3ec6e`, `273bd64`, `679391f`, `d54b72a` (HEAD). `tsc` + `eslint` clean on all five.
+
+- **Gallery (`dbb986e`):** DB-backed compressed photos; Instagram embeds dropped. Old embed rows render as fallback `<img>` + post link.
+- **Menus (`5b3ec6e`):** one compressed DB photo per menu (single `imageUrl`); extras in §25.3 stay dropped.
+- **Events + ingredients (`273bd64`):** clickable event/ingredient rows, in-event qty pricing, bold names, single headcount input, 1000/2000 presets.
+- **Templates (`679391f`):** copy live meal courses/templates, Saapadu sync, site-menu enquiry message.
+- **Ingredients 409 fix (`d54b72a`):** preview burst `POST /api/ingredients → 409` was `seedIngredientCatalog()` auto-firing ~192 rows with random ids on mount against a shared DB that already held the catalog under stable `ing-<slug>` ids. Removed the `IngredientsManager` auto-seed (server `db:seed-catalog` is the source of truth; `seedIngredients.ts` kept as deprecated no-op). New `isRetryableWriteStatus()` in `src/lib/outbox.ts`: only `null` (offline) / `401` / `429` / `5xx` queue for replay; `400/403/404/409` drop, matching `flushOutbox()`. Applied in `src/store/ingredients.ts` (`postJson`/`patchJson`/`deletePath` now return `status`) and `src/lib/storeSync.ts` (`syncOrQueue`). Same boolean-helper pattern still exists locally in `templates`/`courses`/`events`/`finance` stores — left untouched, follow-up if similar noise appears.
+
+### Netlify deploy (`mampallicrm.netlify.app`, Git-connected `dev`)
+
+- **Build (proven green 2026-09-30):** Runtime v5.16.0, `npm run build` (Next 16.3.5 Turbopack, 36/36 static), Functions bundled `___netlify-server-handler`, deploy from `.next`. Settings: Base blank, Package blank, Build `npm run build`, Publish `.next`, `NODE_VERSION=20`. No `netlify.toml` in repo (defaults used).
+- **Required prod envs (All scopes / Builds+Functions+Runtime, production context):**
+
+| Var | Value source |
+|---|---|
+| `DATABASE_URL` | Neon **pooled** URL (not `DATABASE_URL_UNPOOLED`); must allow public connections |
+| `AUTH_SESSION_SECRET` | Same as Vercel (32+ char random; rotating logs out sessions) |
+| `AUTH_USERNAME` / `AUTH_PASSWORD` | Same as Vercel (legacy fallback login) |
+| `ADMIN_USERNAME` / `ADMIN_PASSWORD` | Seed script only |
+| `SITE_PUBLISH_URL` / `PUBLISH_SECRET` | Same as Vercel (§25.2) |
+
+- **Live 500 root cause (Function log, verbatim):** `Failed to prepare server Error: An error occurred while loading instrumentation hook: Missing required auth environment variables: AUTH_SESSION_SECRET, AUTH_USERNAME, AUTH_PASSWORD` (`src/instrumentation.ts → validate-auth-config.ts:10`, throws in production before any route). Fix is env + **Trigger deploy → Clear cache and deploy** (env-only saves don't rebundle Functions). Verify: `GET /` → 200, `/api/auth/me` → 401 logged-out JSON (not 500).
+- **File-browser note:** Deploy files show only static CDN output (`_next/*`, `public/*`, auto `netlify.toml`). SSR pages + `/api/*` run inside `___netlify-server-handler` and never appear as files — validate via live URL + Function logs, not the file list.
+
+---
+
+## 29. V18 Addendum — ingredient packets + packet unit + template sheet (current)
+
+Commits since §28 (`d54b72a`): `1b435b3`, `e2aaef5`, `1664745` (HEAD). `tsc` + `eslint` clean, `next build` 36/36 green, live-API smoke test green (login → create/patch/delete `packet` ingredient, rows cleaned up).
+
+- **Packets count (`1b435b3`, migration `0012_ingredients_packets.sql`):** `ingredients.packets NUMERIC NOT NULL DEFAULT 0`, applied to the live branch. API threading: zod schemas + `toIngredient` + `POST` revive/insert + `PATCH` in `src/app/api/ingredients/`; live name-clash merge preserves stock-style fields (`qty`/`opening`/`low`/`packets`), revive/insert write them. Store `Ingredient.packets` with persist `v4` migration filling `0` for old caches. UI: Packets `NumberInput` in `IngredientFormModal`, column in `IngredientTable`, line in `IngredientCards`, `Packets`/`பாக்கெட்டுகள்` labels in `src/lib/i18n.ts`, `Packets` column in Excel export, hints in `CourseFormModal` costing line + `AssignToEventModal` + `PurchaseEntryModal` (math unchanged — display only). Seed (`db:seed-catalog.mjs`) inserts `0` and never overwrites user values on re-seed; `legacyImport.ts` defaults `0`.
+- **Packet unit (`1664745`):** `UNITS` gains `packet`; aliases `packets/pkt/pkts → packet` in `src/lib/units.ts`, so the ingredient-form dropdown offers it and every `normalizeUnit` caller (seed, legacy import, event tables/cards, PDFs, stock formatting) converges automatically. No DB migration (`unit` is free `TEXT`).
+- **Template form mobile (`e2aaef5`, supersedes the `"full"` template note in §13.1):** `TemplateFormModal` moved to the `"sheet"` bottom-sheet variant like all other master forms; name fields + course picker wrap to full width on phones (`flex: 1 1 220px`, picker buttons full-width ≤639px); dish-card headers clamp (`min-width: 0`, `lineClamp`) so long course names can't push actions off-screen; ingredient lines wrap with `overflow-wrap: anywhere` for raw-id fallbacks. Desktop `xl` layout unchanged.

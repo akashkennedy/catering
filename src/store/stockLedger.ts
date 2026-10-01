@@ -86,8 +86,8 @@ export const useStockLedgerStore = create<StockLedgerState>()(
         if (useStockLedgerStore.getState().loaded) return;
         if (!loadStockLedgerRequest) {
           loadStockLedgerRequest = (async () => {
-            const { flushOutbox } = await import("@/lib/outbox");
-            await flushOutbox();
+            const { scheduleOutboxFlush } = await import("@/lib/outbox");
+            scheduleOutboxFlush();
             try {
               const body = await fetchJson<{ entries?: StockLedgerEntry[] }>("/api/stock-entries");
               if (body && Array.isArray(body.entries)) {

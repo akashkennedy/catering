@@ -46,6 +46,7 @@ export async function importLegacyData(): Promise<LegacyImportResult> {
       globalPrice: item.pricePerUnit,
       openingStock: 0,
       lowStockThreshold: 0,
+      packets: 0,
     });
     ingredientsAdded++;
   }

@@ -1,4 +1,4 @@
-export const UNITS = ["gm", "kg", "litre", "ml", "piece"] as const;
+export const UNITS = ["gm", "kg", "litre", "ml", "piece", "packet"] as const;
 
 export type Unit = (typeof UNITS)[number];
 
@@ -40,6 +40,10 @@ const UNIT_ALIASES: Record<string, Unit> = {
   items: "piece",
   unit: "piece",
   units: "piece",
+  packet: "packet",
+  packets: "packet",
+  pkt: "packet",
+  pkts: "packet",
 };
 
 export function normalizeUnit(raw: string | null | undefined): string {

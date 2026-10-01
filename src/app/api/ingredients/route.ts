@@ -16,6 +16,7 @@ const ingredientSchema = z.object({
   globalPrice: z.number().finite().min(0),
   openingStock: z.number().finite(),
   lowStockThreshold: z.number().finite(),
+  packets: z.number().finite().min(0),
 });
 
 type IngredientRow = Record<string, unknown>;
@@ -37,6 +38,7 @@ export function toIngredient(row: IngredientRow): Ingredient {
     globalPrice: Number(row.global_price) || 0,
     openingStock: Number(row.opening_stock) || 0,
     lowStockThreshold: Number(row.low_stock_threshold) || 0,
+    packets: Number(row.packets) || 0,
     ...(updatedAt ? { updatedAt } : {}),
   };
 }
@@ -112,6 +114,7 @@ export async function POST(request: Request) {
   const d = parsed.data;
   const normalizedName = d.name.trim().toLowerCase();
   // Silent merge: same normalized name converges onto one row instead of 409.
+  // Stock-style fields (qty/opening/low/packets) are preserved on live merges.
   const clash =
     (await sql`SELECT * FROM ingredients WHERE LOWER(name) = ${normalizedName} AND id <> ${id} LIMIT 1`) as IngredientRow[];
   if (clash.length > 0 && !clash[0].deleted_at) {
@@ -145,6 +148,7 @@ export async function POST(request: Request) {
         global_price = ${d.globalPrice},
         opening_stock = ${d.openingStock},
         low_stock_threshold = ${d.lowStockThreshold},
+        packets = ${d.packets},
         updated_at = NOW(),
         deleted_at = NULL
       WHERE id = ${existingId}
@@ -156,9 +160,9 @@ export async function POST(request: Request) {
   }
   const inserted = (await sql`
     INSERT INTO ingredients
-      (id, name, tamil_name, tag, unit, qty, global_price, opening_stock, low_stock_threshold, updated_at, deleted_at)
+      (id, name, tamil_name, tag, unit, qty, global_price, opening_stock, low_stock_threshold, packets, updated_at, deleted_at)
     VALUES
-      (${id}, ${d.name}, ${d.tamilName}, ${d.tag}, ${d.unit}, ${d.qty}, ${d.globalPrice}, ${d.openingStock}, ${d.lowStockThreshold}, NOW(), NULL)
+      (${id}, ${d.name}, ${d.tamilName}, ${d.tag}, ${d.unit}, ${d.qty}, ${d.globalPrice}, ${d.openingStock}, ${d.lowStockThreshold}, ${d.packets}, NOW(), NULL)
     ON CONFLICT (id) DO NOTHING
     RETURNING *
   `) as IngredientRow[];

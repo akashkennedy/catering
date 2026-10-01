@@ -26,6 +26,7 @@ const ingredientSchema = z.object({
   tag: z.enum(INGREDIENT_TAGS),
   unit: z.string().trim().min(1, "Unit is required"),
   globalPrice: z.coerce.number().min(0, "Price must be 0 or more"),
+  packets: z.coerce.number().min(0, "Packets must be 0 or more"),
 });
 
 type IngredientFormValues = z.infer<typeof ingredientSchema>;
@@ -58,6 +59,7 @@ export function IngredientFormModal({ opened, ingredient, onClose }: IngredientF
       tag: "grocery",
       unit: "",
       globalPrice: 0,
+      packets: 0,
     },
   });
 
@@ -74,6 +76,7 @@ export function IngredientFormModal({ opened, ingredient, onClose }: IngredientF
       tag: ingredient?.tag ?? "grocery",
       unit: normalizeUnit(ingredient?.unit) || UNITS[0],
       globalPrice: ingredient?.globalPrice ?? 0,
+      packets: ingredient?.packets ?? 0,
     });
   }, [opened, ingredient, reset]);
 
@@ -163,6 +166,7 @@ export function IngredientFormModal({ opened, ingredient, onClose }: IngredientF
       globalPrice: values.globalPrice,
       openingStock: 0,
       lowStockThreshold: 0,
+      packets: values.packets,
     };
     if (ingredient) {
       await updateIngredient(ingredient.id, input);
@@ -253,6 +257,25 @@ export function IngredientFormModal({ opened, ingredient, onClose }: IngredientF
                     if (e.key === "ArrowUp" || e.key === "ArrowDown") e.preventDefault();
                   }}
                   error={errors.globalPrice?.message}
+                />
+              )}
+            />
+            <Controller
+              name="packets"
+              control={control}
+              render={({ field }) => (
+                <NumberInput
+                  label={<Bilingual label={ui.ingredients.packets} />}
+                  placeholder={preferredText(ui.ingredients.packetsPlaceholder, uiLanguage)}
+                  min={0}
+                  allowNegative={false}
+                  decimalScale={2}
+                  style={{ flex: "1 1 140px" }}
+                  {...field}
+                  onKeyDown={(e) => {
+                    if (e.key === "ArrowUp" || e.key === "ArrowDown") e.preventDefault();
+                  }}
+                  error={errors.packets?.message}
                 />
               )}
             />

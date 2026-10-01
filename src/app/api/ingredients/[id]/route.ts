@@ -16,6 +16,7 @@ const ingredientPatchSchema = z
     globalPrice: z.number().finite().min(0).optional(),
     openingStock: z.number().finite().optional(),
     lowStockThreshold: z.number().finite().optional(),
+    packets: z.number().finite().min(0).optional(),
   })
   .refine((value) => Object.keys(value).length > 0, { message: "Empty patch." });
 
@@ -52,6 +53,7 @@ export async function PATCH(
       global_price = ${merged.globalPrice},
       opening_stock = ${merged.openingStock},
       low_stock_threshold = ${merged.lowStockThreshold},
+      packets = ${merged.packets},
       updated_at = NOW()
     WHERE id = ${id}
   `;

@@ -16,6 +16,7 @@ export type Ingredient = {
   globalPrice: number;
   openingStock: number;
   lowStockThreshold: number;
+  packets: number;
   updatedAt?: string;
 };
 
@@ -329,7 +330,7 @@ export const useIngredientsStore = create<IngredientsState>()(
       name: "catering-ingredients",
       storage: createJSONStorage(() => localStorage),
       partialize: (state) => ({ ingredients: state.ingredients, syncedAt: state.syncedAt }),
-      version: 3,
+      version: 4,
       migrate: (persistedState) => {
         const state = persistedState as {
           ingredients?: Array<Record<string, unknown>> | null;
@@ -345,6 +346,7 @@ export const useIngredientsStore = create<IngredientsState>()(
               typeof raw.openingStock === "number" ? raw.openingStock : 0,
             lowStockThreshold:
               typeof raw.lowStockThreshold === "number" ? raw.lowStockThreshold : 0,
+            packets: typeof raw.packets === "number" ? raw.packets : 0,
           })),
         };
       },

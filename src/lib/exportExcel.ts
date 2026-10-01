@@ -62,6 +62,7 @@ export async function exportDatabaseToExcel(): Promise<ExcelExportSummary> {
       Tag: i.tag,
       Unit: i.unit,
       Price: i.globalPrice,
+      Packets: i.packets ?? 0,
       Stock: i.qty,
       OpeningStock: i.openingStock,
       LowStockAt: i.lowStockThreshold,

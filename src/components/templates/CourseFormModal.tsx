@@ -320,6 +320,7 @@ export function CourseFormModal({ opened, course, onClose, onSaved }: CourseForm
                   <Text size="xs" c="dimmed">
                     {normalizeUnit(masterItem.unit)} · {formatINR(masterItem.globalPrice)}/
                     {normalizeUnit(masterItem.unit)}
+                    {(masterItem.packets ?? 0) > 0 ? ` · ${masterItem.packets} pkt` : ""}
                     {lineCost !== null && qty > 0 ? ` · ≈ ${formatINR(lineCost)} / 100` : ""}
                   </Text>
                 )}

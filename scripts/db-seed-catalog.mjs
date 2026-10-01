@@ -178,9 +178,9 @@ if (probe.length > 0) {
 for (const ing of ingredients) {
   await sql`
     INSERT INTO ingredients
-      (id, name, tamil_name, tag, unit, qty, global_price, opening_stock, low_stock_threshold, updated_at)
+      (id, name, tamil_name, tag, unit, qty, global_price, opening_stock, low_stock_threshold, packets, updated_at)
     VALUES
-      (${ing.id}, ${ing.name}, ${ing.tamilName}, ${ing.tag}, ${ing.unit}, 0, ${ing.globalPrice}, 0, 0, NOW())
+      (${ing.id}, ${ing.name}, ${ing.tamilName}, ${ing.tag}, ${ing.unit}, 0, ${ing.globalPrice}, 0, 0, 0, NOW())
     ON CONFLICT (id) DO UPDATE SET
       name = EXCLUDED.name,
       tamil_name = EXCLUDED.tamil_name,

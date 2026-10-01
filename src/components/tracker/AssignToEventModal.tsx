@@ -69,6 +69,7 @@ export function AssignToEventModal({ opened, onClose }: AssignToEventModalProps)
   );
 
   const numericQty = typeof qty === "number" ? qty : Number(qty);
+  const selectedIngredient = ingredientId ? ingredientsById.get(ingredientId) : undefined;
 
   const handleAdd = () => {
     const ingredient = ingredientsById.get(ingredientId);
@@ -144,6 +145,11 @@ export function AssignToEventModal({ opened, onClose }: AssignToEventModalProps)
             <Bilingual label={ui.tracker.addItem} />
           </Button>
         </Group>
+        {selectedIngredient != null && (selectedIngredient.packets ?? 0) > 0 && (
+          <Text size="xs" c="dimmed">
+            {selectedIngredient.name}: {selectedIngredient.packets} pkt
+          </Text>
+        )}
 
         {staged.length === 0 ? (
           <Text size="sm" c="dimmed">
@@ -163,7 +169,8 @@ export function AssignToEventModal({ opened, onClose }: AssignToEventModalProps)
                   <Text size="sm" lineClamp={1}>
                     {name}{" "}
                     <Text span size="xs" c="dimmed">
-                      ({formatStock(line.qty, ingredient?.unit)} · {formatINR(line.price)})
+                      ({formatStock(line.qty, ingredient?.unit)} · {formatINR(line.price)}
+                      {(ingredient?.packets ?? 0) > 0 ? ` · ${ingredient?.packets} pkt` : ""})
                     </Text>
                   </Text>
                   <ActionIcon

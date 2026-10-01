@@ -54,6 +54,9 @@ const IngredientCardItem = memo(function IngredientCardItem({
           <Text size="sm" fw={500}>
             {formatINR(ingredient.globalPrice)}
           </Text>
+          <Text size="sm" c="dimmed">
+            <Bilingual label={ui.ingredients.packets} />: {ingredient.packets ?? 0}
+          </Text>
         </Stack>
         <Group gap="xs">
           <ActionIcon

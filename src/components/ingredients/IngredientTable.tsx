@@ -50,6 +50,7 @@ const IngredientTableRow = memo(function IngredientTableRow({
       </Table.Td>
       <Table.Td>{ingredient.unit || "—"}</Table.Td>
       <Table.Td>{formatINR(ingredient.globalPrice)}</Table.Td>
+      <Table.Td>{ingredient.packets ?? 0}</Table.Td>
       <Table.Td>
         <Group gap="xs">
           <ActionIcon
@@ -89,6 +90,7 @@ export function IngredientTable({
             <Table.Th><Bilingual label={ui.ingredients.category} /></Table.Th>
             <Table.Th><Bilingual label={ui.common.unit} /></Table.Th>
             <Table.Th><Bilingual label={ui.common.price} /></Table.Th>
+            <Table.Th><Bilingual label={ui.ingredients.packets} /></Table.Th>
             <Table.Th style={{ width: 110 }}><Bilingual label={ui.common.actions} /></Table.Th>
           </Table.Tr>
         </Table.Thead>

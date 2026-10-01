@@ -37,7 +37,7 @@ export async function PATCH(
     return NextResponse.json({ error: "Invalid ingredient patch." }, { status: 400 });
   }
   const sql = db();
-  const existing = await sql`SELECT * FROM ingredients WHERE id = ${id} LIMIT 1`;
+  const existing = await sql`SELECT * FROM ingredients WHERE id = ${id} AND deleted_at IS NULL LIMIT 1`;
   if (existing.length === 0) {
     return NextResponse.json({ error: "Ingredient not found." }, { status: 404 });
   }
@@ -66,6 +66,6 @@ export async function DELETE(
   if ("response" in auth) return auth.response;
   const { id } = await params;
   const sql = db();
-  await sql`DELETE FROM ingredients WHERE id = ${id}`;
+  await sql`UPDATE ingredients SET deleted_at = NOW(), updated_at = NOW() WHERE id = ${id}`;
   return NextResponse.json({ ok: true });
 }

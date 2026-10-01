@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useMemo, useState } from "react";
 import {
   ActionIcon,
   Badge,
@@ -57,14 +57,9 @@ export function NotificationCenter() {
   const dismissReminder = useRemindersStore((s) => s.dismissReminder);
   const dismissAllReminders = useRemindersStore((s) => s.dismissAll);
   const events = useEventsStore((s) => s.events);
-  const loadEvents = useEventsStore((s) => s.loadEvents);
   const ingredients = useIngredientsStore((s) => s.ingredients);
   const ledgerEntries = useStockLedgerStore((s) => s.entries);
   const alerts = useSettingsStore((s) => s.alerts);
-
-  useEffect(() => {
-    void loadEvents();
-  }, [loadEvents]);
 
   const dismiss = useCallback((id: string) => {
     if (id.startsWith("reminder-")) {

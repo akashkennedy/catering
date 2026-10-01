@@ -80,37 +80,77 @@ export function clearOutbox(): void {
  * delete refused by server-side guards) are dropped instead of clogging
  * the queue; 401/429 and network errors are retried.
  */
+let flushOutboxRequest: Promise<{ flushed: number; failed: number }> | null = null;
+
 export async function flushOutbox(): Promise<{ flushed: number; failed: number }> {
   if (typeof window === "undefined") return { flushed: 0, failed: 0 };
-  let ops = readOps();
-  let flushed = 0;
-  for (const op of ops) {
-    let status: number | null = null;
-    try {
-      const response = await fetch(op.path, {
-        method: op.method,
-        headers: { "Content-Type": "application/json" },
-        credentials: "same-origin",
-        body: op.body === undefined ? undefined : JSON.stringify(op.body),
-      });
-      status = response.status;
-    } catch {
-      status = null;
-    }
-    if (status !== null && status >= 200 && status < 300) {
-      flushed += 1;
-      ops = ops.filter((item) => item.id !== op.id);
-      writeOps(ops);
-      continue;
-    }
-    if (status === 400 || status === 403 || status === 404 || status === 409) {
-      // 409 today means a refused course DELETE (still linked in templates):
-      // retrying can never succeed, and keeping it would clog every later op.
-      ops = ops.filter((item) => item.id !== op.id);
-      writeOps(ops);
-      continue;
-    }
-    break;
+  if (!flushOutboxRequest) {
+    flushOutboxRequest = (async () => {
+      let ops = readOps();
+      let flushed = 0;
+      for (const op of ops) {
+        let status: number | null = null;
+        try {
+          const controller = new AbortController();
+          const timeout = window.setTimeout(() => controller.abort(), 10_000);
+          try {
+            const response = await fetch(op.path, {
+              method: op.method,
+              headers: { "Content-Type": "application/json" },
+              credentials: "same-origin",
+              body: op.body === undefined ? undefined : JSON.stringify(op.body),
+              signal: controller.signal,
+            });
+            status = response.status;
+          } finally {
+            window.clearTimeout(timeout);
+          }
+        } catch {
+          status = null;
+        }
+        if (status !== null && status >= 200 && status < 300) {
+          flushed += 1;
+          ops = ops.filter((item) => item.id !== op.id);
+          writeOps(ops);
+          continue;
+        }
+        if (status === 400 || status === 403 || status === 404 || status === 409) {
+          // 409 today means a refused course DELETE (still linked in templates):
+          // retrying can never succeed, and keeping it would clog every later op.
+          // Ingredient POSTs no longer 409 (server upserts), so any leftover
+          // 409 op is stale and safe to drop.
+          ops = ops.filter((item) => item.id !== op.id);
+          writeOps(ops);
+          continue;
+        }
+        break;
+      }
+      return { flushed, failed: readOps().length };
+    })().finally(() => {
+      flushOutboxRequest = null;
+    });
   }
-  return { flushed, failed: readOps().length };
+  return flushOutboxRequest;
+}
+
+/**
+ * Fire-and-forget flush for the critical boot path. Loads must paint from
+ * cache first and never `await flushOutbox()` before their GET.
+ */
+export function scheduleOutboxFlush(): void {
+  if (typeof window === "undefined") return;
+  try {
+    const schedule = (cb: () => void) => {
+      const ric = (window as unknown as {
+        requestIdleCallback?: (cb: () => void, opts?: { timeout: number }) => void;
+      }).requestIdleCallback;
+      if (typeof ric === "function") ric.call(window, cb, { timeout: 2000 });
+      else window.setTimeout(cb, 0);
+    };
+    schedule(() => {
+      void flushOutbox();
+    });
+  } catch {
+    // Never let background sync break rendering.
+  }
 }

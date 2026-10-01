@@ -86,10 +86,10 @@ export function IngredientFormModal({ opened, ingredient, onClose }: IngredientF
     }
   }, [watchedName, ingredient, dirtyFields.tamilName, dirtyFields.tag, setValue]);
 
-  const onSubmit = (values: IngredientFormValues) => {
+  const onSubmit = async (values: IngredientFormValues) => {
     const input: IngredientInput = {
-      name: values.name,
-      tamilName: values.tamilName,
+      name: values.name.trim(),
+      tamilName: values.tamilName.trim(),
       tag: values.tag,
       unit: normalizeUnit(values.unit),
       qty: 0,
@@ -98,9 +98,9 @@ export function IngredientFormModal({ opened, ingredient, onClose }: IngredientF
       lowStockThreshold: 0,
     };
     if (ingredient) {
-      updateIngredient(ingredient.id, input);
+      await updateIngredient(ingredient.id, input);
     } else {
-      addIngredient(input);
+      await addIngredient(input);
     }
     onClose();
   };

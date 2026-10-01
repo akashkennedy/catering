@@ -57,8 +57,8 @@ export const useUtensilsStore = create<UtensilsState>()(
         if (useUtensilsStore.getState().loaded) return;
         if (!loadUtensilsRequest) {
           loadUtensilsRequest = (async () => {
-            const { flushOutbox } = await import("@/lib/outbox");
-            await flushOutbox();
+            const { scheduleOutboxFlush } = await import("@/lib/outbox");
+            scheduleOutboxFlush();
             const body = await fetchJson<{ utensils?: Utensil[] }>("/api/utensils");
             if (body && Array.isArray(body.utensils)) {
               set({ utensils: body.utensils, loaded: true });

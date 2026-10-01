@@ -103,8 +103,8 @@ export const useVesselStockLedgerStore = create<VesselStockLedgerState>()(
         if (useVesselStockLedgerStore.getState().loaded) return;
         if (!loadVesselLedgerRequest) {
           loadVesselLedgerRequest = (async () => {
-            const { flushOutbox } = await import("@/lib/outbox");
-            await flushOutbox();
+            const { scheduleOutboxFlush } = await import("@/lib/outbox");
+            scheduleOutboxFlush();
             const body = await fetchJson<{ entries?: VesselStockEntry[] }>("/api/vessel-entries");
             if (body && Array.isArray(body.entries)) {
               set({ entries: body.entries, loaded: true });

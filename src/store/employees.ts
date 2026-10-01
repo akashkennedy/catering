@@ -56,8 +56,8 @@ export const useEmployeesStore = create<EmployeesState>()(
         if (useEmployeesStore.getState().loaded) return;
         if (!loadEmployeesRequest) {
           loadEmployeesRequest = (async () => {
-            const { flushOutbox } = await import("@/lib/outbox");
-            await flushOutbox();
+            const { scheduleOutboxFlush } = await import("@/lib/outbox");
+            scheduleOutboxFlush();
             const body = await fetchJson<{ employees?: Employee[] }>("/api/employees");
             if (body && Array.isArray(body.employees)) {
               set({ employees: body.employees, loaded: true });

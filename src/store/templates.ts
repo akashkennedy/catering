@@ -72,7 +72,7 @@ function newClientId(): string {
   }
 }
 
-async function sendJson(path: string, method: "POST" | "PATCH", body: unknown): Promise<boolean> {
+async function sendJson(path: string, method: "POST" | "PATCH", body: unknown): Promise<number | null> {
   try {
     const response = await fetch(path, {
       method,
@@ -80,19 +80,24 @@ async function sendJson(path: string, method: "POST" | "PATCH", body: unknown): 
       credentials: "same-origin",
       body: JSON.stringify(body),
     });
-    return response.ok;
+    return response.status;
   } catch {
-    return false;
+    return null;
   }
 }
 
-async function sendDelete(path: string): Promise<boolean> {
+async function sendDelete(path: string): Promise<number | null> {
   try {
     const response = await fetch(path, { method: "DELETE", credentials: "same-origin" });
-    return response.ok;
+    return response.status;
   } catch {
-    return false;
+    return null;
   }
+}
+
+async function shouldQueueStatus(status: number | null): Promise<boolean> {
+  const { isRetryableWriteStatus } = await import("@/lib/outbox");
+  return isRetryableWriteStatus(status);
 }
 
 // Shared in-flight load so simultaneous mounts fire a single request.
@@ -111,8 +116,8 @@ export const useTemplatesStore = create<TemplatesState>()(
           dishes: input.dishes.map((dish) => ({ ...dish, id: dish.id || newClientId() })),
         };
         set((state) => ({ templates: [...state.templates, template] }));
-        const ok = await sendJson("/api/templates", "POST", template);
-        if (!ok) {
+        const status = await sendJson("/api/templates", "POST", template);
+        if (await shouldQueueStatus(status)) {
           const { queueOp } = await import("@/lib/outbox");
           queueOp({ method: "POST", path: "/api/templates", body: template });
         }
@@ -123,8 +128,8 @@ export const useTemplatesStore = create<TemplatesState>()(
             template.id === id ? { ...template, ...input } : template
           ),
         }));
-        const ok = await sendJson(`/api/templates/${encodeURIComponent(id)}`, "PATCH", input);
-        if (!ok) {
+        const status = await sendJson(`/api/templates/${encodeURIComponent(id)}`, "PATCH", input);
+        if (await shouldQueueStatus(status)) {
           const { queueOp } = await import("@/lib/outbox");
           queueOp({ method: "PATCH", path: `/api/templates/${encodeURIComponent(id)}`, body: input });
         }
@@ -133,8 +138,8 @@ export const useTemplatesStore = create<TemplatesState>()(
         set((state) => ({
           templates: state.templates.filter((template) => template.id !== id),
         }));
-        const ok = await sendDelete(`/api/templates/${encodeURIComponent(id)}`);
-        if (!ok) {
+        const status = await sendDelete(`/api/templates/${encodeURIComponent(id)}`);
+        if (await shouldQueueStatus(status)) {
           const { queueOp } = await import("@/lib/outbox");
           queueOp({ method: "DELETE", path: `/api/templates/${encodeURIComponent(id)}` });
         }
@@ -143,8 +148,8 @@ export const useTemplatesStore = create<TemplatesState>()(
         if (useTemplatesStore.getState().loaded) return;
         if (!loadTemplatesRequest) {
           loadTemplatesRequest = (async () => {
-            const { flushOutbox } = await import("@/lib/outbox");
-            await flushOutbox();
+            const { scheduleOutboxFlush } = await import("@/lib/outbox");
+            scheduleOutboxFlush();
             try {
               const response = await fetch("/api/templates", { credentials: "same-origin" });
               if (!response.ok) return;

@@ -82,8 +82,8 @@ export const useRemindersStore = create<RemindersState>()(
         if (useRemindersStore.getState().loaded) return;
         if (!loadRemindersRequest) {
           loadRemindersRequest = (async () => {
-            const { flushOutbox } = await import("@/lib/outbox");
-            await flushOutbox();
+            const { scheduleOutboxFlush } = await import("@/lib/outbox");
+            scheduleOutboxFlush();
             const body = await fetchJson<{ reminders?: Reminder[] }>("/api/reminders");
             if (body && Array.isArray(body.reminders)) {
               set({ reminders: body.reminders, loaded: true });

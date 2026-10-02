@@ -84,25 +84,24 @@ function seedTestimonials(): SiteTestimonial[] {
       id: newId(),
       rating: 5,
       review:
-        "For our daughter's wedding at Marthandam, we booked Mampalli for 1,800 guests. The Kerala Sadya was flawless! Guests were praising the Ada Pradhaman and fresh crispy chips for weeks.",
-      author: "Anand & Priya Ramachandran",
-      location: "Marthandam",
+        "Very tasty dishes Dum biriani Chicken fry Bread halva Thank you!",
+      author: "Verified Google Guest 1",
+      location: "Kanyakumari District",
     },
     {
       id: newId(),
       rating: 5,
       review:
-        "We held my father's 60th Shashti Poorthi pooja at Thiruvarambu. The traditional Tamil Virundhu was pure nostalgia — drumstick sambar with authentic ghee aroma, just like grandmother's feast!",
-      author: "Dr. K. Sundaram",
-      location: "Nagercoil",
+        "Very taste Vegetable stew Beef chaps Porotta Appam!",
+      author: "Verified Google Guest 2",
+      location: "Kanyakumari District",
     },
     {
       id: newId(),
       rating: 5,
-      review:
-        "From morning filter coffee and fluffy poori masala to the grand evening Biryani live counters, Mampalli managed our housewarming seamlessly. Spotlessly clean kitchen afterward!",
-      author: "Meera & Navin",
-      location: "Thuckalay",
+      review: "Delicious food, Excellent taste!",
+      author: "Verified Google Guest 3",
+      location: "Kanyakumari District",
     },
   ];
 }
